@@ -18,13 +18,14 @@
 \makeatletter
 \let\thetitle\@title
 \let\theauthor\@author
+\let\thedate\@date
 \makeatother
 
 \pagestyle{fancy}
 \fancyhead{}
 \fancyfoot{}
 \fancyfoot[C]{\theauthor}
-\fancyfoot[R]{\today}
+\fancyfoot[R]{\thedate}
 
 \begin{document}
 
