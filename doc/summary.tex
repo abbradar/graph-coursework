@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass[a4paper,12pt]{report}
 
 \usepackage[utf8x]{inputenc}
 \usepackage[english,russian]{babel}
@@ -15,13 +15,25 @@
 \author{Николай Амиантов}
 \date{\today}
 
+\makeatletter
+\let\thetitle\@title
+\let\theauthor\@author
+\let\thedate\@date
+\makeatother
+
+\renewcommand{\thesection}{\arabic{section}}
+\setcounter{secnumdepth}{3}
+
 \pagestyle{fancy}
 \fancyhead{}
 \fancyfoot{}
 \fancyfoot[C]{\thepage}
-\fancyfoot[R]{\today}
+\fancyfoot[R]{\thedate}
 
 \begin{document}
+
+% Поправить титульник чтобы был как по ГОСТу потом
+\maketitle
 
 \section{Введение}
 

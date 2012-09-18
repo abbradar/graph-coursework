@@ -15,10 +15,15 @@
 \author{Николай Амиантов}
 \date{\today}
 
+\makeatletter
+\let\thetitle\@title
+\let\theauthor\@author
+\makeatother
+
 \pagestyle{fancy}
 \fancyhead{}
 \fancyfoot{}
-\fancyfoot[C]{\thepage}
+\fancyfoot[C]{\theauthor}
 \fancyfoot[R]{\today}
 
 \begin{document}
