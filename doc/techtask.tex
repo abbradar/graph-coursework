@@ -3,28 +3,35 @@
 \usepackage[utf8x]{inputenc}
 \usepackage[english,russian]{babel}
 \usepackage{ifpdf}
+\usepackage{fancyhdr}
 
 \ifpdf
   \usepackage{cmap}
 \fi
 
+\usepackage[T2A]{fontenc}
+
 \title{Техническое задание по курсовой "Машинная графика"}
 \author{Николай Амиантов}
 \date{\today}
 
+\pagestyle{fancy}
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\fancyfoot[R]{\today}
+
 \begin{document}
 
-\section{Техническое задание по курсовой "Машинная графика"}
-
-\subsection{Основание для разработки}
+\section{Основание для разработки}
 
 Программный продукт разрабатывается в рамках курсовой работы по дисциплине "Машинная графика".
 
-\subsection{Назначение разработки}
+\section{Назначение разработки}
 
 Симуляция виртуальной физической трёхмерной песочницы с возможностью влияния на мир.
 
-\subsection{Функционал}
+\section{Функционал}
 \begin{itemize}
   \item Трёхмерная сцена с плоскостью
   \begin{itemize}
@@ -46,8 +53,5 @@
     \item Физика двух и более тел (столкновения)
   \end{itemize}
 \end{itemize}
-
-\vfill
-\today
 
 \end{document}
