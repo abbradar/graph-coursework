@@ -4,3 +4,9 @@ syntax: regexp
 \.log$
 \.synctex\.gz$
 \.pdf$
+-build$
+CMakeLists\.txt\.user$
+CMakeCache\.txt$
+Makefile$
+CMakeFiles$
+cmake_install\.cmake$
