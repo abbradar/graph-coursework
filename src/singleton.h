@@ -1,5 +1,5 @@
-#ifndef YOBAHACK_COMMON_SINGLETON_H_
-#define YOBAHACK_COMMON_SINGLETON_H_
+#ifndef GRAPH_SINGLETON_H_
+#define GRAPH_SINGLETON_H_
 
 /** Basic class for implementing singletons.
  * You should inherit it from your class and friend it.
@@ -20,4 +20,4 @@ template <class Derived> class Singleton {
   Singleton() = default;
 };
 
-#endif // YOBAHACK_COMMON_SINGLETON_H_
+#endif // GRAPH_SINGLETON_H_

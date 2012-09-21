@@ -1,7 +1,9 @@
 #ifndef GRAPH_COURSEWORK_H_
 #define GRAPH_COURSEWORK_H_
 
+#include <SDL_video.h>
 #include "application.h"
+#include "drawingwindow.h"
 
 class CourseWork : public Runnable
 {
@@ -12,6 +14,8 @@ class CourseWork : public Runnable
 
  private:
   ~CourseWork() = default;
+
+  DrawingWindow window_;
 
   virtual int Run(int argc, const char **argv);
   virtual void Terminate(int error_code) noexcept;
