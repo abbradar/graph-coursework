@@ -44,7 +44,7 @@ void Logger::Log(LogMessageLevel level, const char *msg) noexcept {
 
   try {
     for (auto &dest : destinations_) {
-      dest(level, msg);
+      dest->WriteLog(level, msg);
     }
   } catch (exception& e) {
     set_write_to_stderr(true);

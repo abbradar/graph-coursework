@@ -15,7 +15,7 @@ class CourseWork : public Runnable
  private:
   ~CourseWork() = default;
 
-  CourseWindow window_;
+  CourseWindow window_;//
 
   virtual int Run(int argc, const char **argv);
   virtual void Terminate(int error_code) noexcept;

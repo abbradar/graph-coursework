@@ -3,6 +3,6 @@
 
 using namespace std;
 
-int main(int argc, const char **argv) {
-  return ApplicationRun<CourseWork>(argc, argv);
+int main(int argc, char *argv[]) {
+  return ApplicationRun<CourseWork>(argc, (const char **)argv);
 }

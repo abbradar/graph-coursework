@@ -1,7 +1,9 @@
 #include <boost/format.hpp>
+#include <memory>
 #include <SDL.h>
 #include "logging.h"
 #include "debug.h"
+#include "filelogdestination.h"
 #include "coursework.h"
 
 using namespace std;
@@ -13,6 +15,9 @@ int CourseWork::Run(int argc, const char **argv) {
 #if DEBUG_LEVEL == 4
   logging::Logger::instance().set_level(logging::kDebug);
 #endif
+  // Windows don't have stderr for GUI applications ;_;
+  FileLogDestination *dest = new FileLogDestination("out.log");
+  logging::Logger::instance().destinations().push_back(dest);
 
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
     LogCritical((boost::format("Unable to init SDL: %1%") % SDL_GetError()).str().data());

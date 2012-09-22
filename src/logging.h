@@ -22,13 +22,19 @@ enum LogMessageLevel {
 /** Returns name of givel LogMessageLevel */
 const char *LevelName(const LogMessageLevel level);
 
+/** Logging destination */
+class LogDestination {
+ public:
+  virtual void WriteLog(LogMessageLevel, const char *) = 0;
+};
+
 /** Handles logging; receives messages and sends them to various destinations.
  * Singleton which splits logging messages between different destinations.
  * Not thread-safe.
  */
 class Logger : public Singleton<Logger> {
  public:
-  typedef std::vector<std::function<void(LogMessageLevel, const char *)>> DestinationVector;
+  typedef std::vector<LogDestination *> DestinationVector;
   typedef boost::posix_time::time_facet TimeFacet;
 
   Logger(const Logger &other) = delete;
