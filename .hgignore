@@ -4,6 +4,7 @@ syntax: regexp
 \.log$
 \.synctex\.gz$
 \.pdf$
+\.autosave$
 -build$
 CMakeLists\.txt\.user$
 CMakeCache\.txt$
