@@ -1,6 +1,7 @@
 #include <boost/format.hpp>
 #include <SDL.h>
 #include "logging.h"
+#include "debug.h"
 #include "coursework.h"
 
 using namespace std;
@@ -29,13 +30,15 @@ int CourseWork::Run(int argc, const char **argv) {
   }
   window_.EndDrawing();
 
-  SDL_Delay(-1);
+  while (true) {
+    window_.WaitEvent();
+  }
 
-  LogDebug("Exiting normally");
-  return 0;
+  AssertMsg(false, "Sudden exit from event loop!");
+  return 1;
 }
 
 void CourseWork::Terminate(int exit_code) noexcept {
-  LogDebug("Terminating application");
+  LogDebug((boost::format("Terminating, exit code: %1%") % exit_code).str().data());
   SDL_Quit();
 }

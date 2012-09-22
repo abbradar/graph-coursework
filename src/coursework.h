@@ -3,7 +3,7 @@
 
 #include <SDL_video.h>
 #include "application.h"
-#include "drawingwindow.h"
+#include "coursewindow.h"
 
 class CourseWork : public Runnable
 {
@@ -15,7 +15,7 @@ class CourseWork : public Runnable
  private:
   ~CourseWork() = default;
 
-  DrawingWindow window_;
+  CourseWindow window_;
 
   virtual int Run(int argc, const char **argv);
   virtual void Terminate(int error_code) noexcept;
