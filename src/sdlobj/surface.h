@@ -47,9 +47,12 @@ class Surface {
     SDL_UnlockSurface(surface_->surface);
   }
 
-  void SetAlpha(Uint32 flags, Uint8 alpha) {
-    SDL_SetAlpha(surface_->surface, flags, alpha);
-  }
+  void SetAlpha(Uint32 flags, Uint8 alpha);
+
+  /** Sets transparent pixel for the surface
+   * @param flags set SDL_SRCCOLORKEY to enable transparent pixel, SDL_RLEAXXEL for RLE acceleration
+   */
+  void SetColorKey(Uint32 flags, Uint32 key);
 
   void Blit(const Surface &other, SDL_Rect &rect, short x = 0, short y = 0);
   void Blit(const Surface &other, short x = 0, short y = 0);

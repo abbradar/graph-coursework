@@ -20,6 +20,7 @@ class Font {
   }
 
   Surface RenderUTF8_Solid(const char *text, SDL_Color fg);
+  Surface RenderUTF8_Blended(const char *text, SDL_Color fg);
 
   int height();
   int line_skip();

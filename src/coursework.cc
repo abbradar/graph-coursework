@@ -4,6 +4,7 @@
 #include "common/debug.h"
 #include "sdlobj/sdl.h"
 #include "sdlobj/sdlttf.h"
+#include "sdlobj/surfacepainter.h"
 #include "windowlogdestination.h"
 #include "courseeventhandler.h"
 #include "coursework.h"
@@ -27,6 +28,7 @@ int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
 
   SDL::instance().SetVideoMode(640, 480, 32, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
+  SurfacePainter painter(&SDL::instance().surface());
 
   int timer = 0;
 
@@ -39,6 +41,9 @@ int CourseWork::Run(int argc, const char **argv) {
     }
     while (SDL::instance().PollEvent());
     SDL::instance().surface().Fill(0x0);
+    painter.StartDrawing();
+    painter.DrawLine(0, 0, 100, 100, 0xFFFFFF);
+    painter.FinishDrawing();
     Surface log = window_log_->Render();
     SDL::instance().surface().Blit(log);
     SDL::instance().Flip();

@@ -43,6 +43,13 @@ void Surface::Fill(Uint32 pixel) {
   SDL_FillRect(surface_->surface, nullptr, pixel);
 }
 
+void Surface::SetAlpha(Uint32 flags, Uint8 alpha) {
+  SDL_SetAlpha(surface_->surface, flags, alpha);
+}
+
+void Surface::SetColorKey(Uint32 flags, Uint32 key) {
+  SDL_SetColorKey(surface_->surface, flags, key);
+}
 
 Surface::SurfaceWrapper::~SurfaceWrapper() {
   SDL_FreeSurface(surface);

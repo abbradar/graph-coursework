@@ -62,6 +62,7 @@ Surface WindowLogDestination::Render() {
   }
   int line_skip = font_.line_skip();
   Surface surface(max_width, line_skip * max_items_);
+  surface.SetColorKey(SDL_SRCCOLORKEY | SDL_RLEACCEL, 0x0);
   int y = 0;
   for (auto &i : deque_) {
     surface.Blit(*i.surface, 0, y);
