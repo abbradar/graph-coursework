@@ -33,7 +33,8 @@ Logger::Logger() noexcept : time_facet_(new TimeFacet("%x %X")) {
 }
 
 Logger::~Logger() {
-  delete time_facet_;
+  // boost bug; should not destroy this
+  //delete time_facet_;
 }
 
 void Logger::Log(LogMessageLevel level, const char *msg) noexcept {

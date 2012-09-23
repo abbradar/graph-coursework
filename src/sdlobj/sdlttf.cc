@@ -16,7 +16,6 @@ void SDLTTF::Init() {
 void SDLTTF::Free() {
   if (!initialized()) return;
   TTF_Quit();
-  LogDebug("SDL_ttf freed");
 }
 
 SDLTTF::~SDLTTF() {

@@ -11,7 +11,7 @@ FileLogDestination::FileLogDestination(const char *file_name) :
 }
 
 FileLogDestination::~FileLogDestination() {
-  delete time_facet_;
+  //delete time_facet_;
 }
 
 void FileLogDestination::WriteLog(logging::LogMessageLevel level, const char *line) {

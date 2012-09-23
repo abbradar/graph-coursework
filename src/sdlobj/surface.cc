@@ -3,16 +3,22 @@
 using namespace sdlobj;
 
 Surface::Surface(int width, int height, Uint32 flags, int bpp, Uint32 Rmask, Uint32 Gmask,
-                 Uint32 Bmask, Uint32 Amask) : Surface() {
+                 Uint32 Bmask, Uint32 Amask) : surface_(new SurfaceWrapper()) {
   surface_->surface = SDL_CreateRGBSurface(flags, width, height, bpp, Rmask, Gmask, Bmask, Amask);
 }
 
-Surface::Surface(int width, int height) : Surface() {
+Surface::Surface(int width, int height) : surface_(new SurfaceWrapper()) {
   const SDL_Surface *screen = SDL::instance().surface().surface();
 
   surface_->surface = SDL_CreateRGBSurface(screen->flags, width, height, screen->format->BitsPerPixel,
                                   screen->format->Rmask, screen->format->Gmask, screen->format->Bmask,
                                   screen->format->Amask);
+}
+
+Surface::~Surface() {
+  if (!SDL::instance().initialized() && surface_) {
+    surface_->surface = nullptr;
+  }
 }
 
 Uint32 Surface::ColorToPixel(const SDL_Color &color) {
@@ -52,5 +58,5 @@ void Surface::SetColorKey(Uint32 flags, Uint32 key) {
 }
 
 Surface::SurfaceWrapper::~SurfaceWrapper() {
-  SDL_FreeSurface(surface);
+  if (surface) SDL_FreeSurface(surface);
 }

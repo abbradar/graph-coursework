@@ -19,13 +19,16 @@ int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().set_level(logging::kDebug);
 #endif
 
+  WindowLogDestination *window_log_ = new WindowLogDestination();
+  Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
+
   SDL::instance().event_handler().reset(new CourseEventHandler());
   SDL::instance().Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
   SDLTTF::instance().Init();
 
   default_font_ = font_manager_.GetFont(string(kDefaultFontName), kDefaultFontSize, kDefaultFontIndex);
-  WindowLogDestination *window_log_ = new WindowLogDestination(default_font_);
-  Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
+
+  window_log_->set_font(default_font_);
 
   SDL::instance().SetVideoMode(640, 480, 32, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
   SurfacePainter painter(&SDL::instance().surface());
@@ -42,10 +45,10 @@ int CourseWork::Run(int argc, const char **argv) {
     while (SDL::instance().PollEvent());
     SDL::instance().surface().Fill(0x0);
     painter.StartDrawing();
-    painter.DrawLine(0, 0, 100, 100, 0xFFFFFF);
+    painter.DrawLine(0, 0, 100, 50, 0xFFFFFF);
     painter.FinishDrawing();
     Surface log = window_log_->Render();
-    SDL::instance().surface().Blit(log);
+    SDL::instance().surface().Blit(log, 2, 0);
     SDL::instance().Flip();
     int time = tick_ - (int)(SDL_GetTicks() - last_time);
     if (time > 0) {

@@ -8,12 +8,15 @@
 namespace sdlobj {
 
 class Font {
- public:
-  Font() : font_(new FontWrapper()) { }
+public:
+  Font() : font_() { }
+
   Font(const char *file, int ptsize, long index = 0);
 
   Font(TTF_Font *font) : font_(new FontWrapper(font)) {}
   Font(const Font &other) : font_(other.font_) {}
+
+  ~Font();
 
   inline const TTF_Font *font() {
     return font_->font;

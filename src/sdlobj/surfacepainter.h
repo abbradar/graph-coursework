@@ -42,6 +42,7 @@ class SurfacePainter {
     set_pixel_(p, pixel);
   }
 
+  /** Draws line (integer Bresenham's algorithm) */
   void DrawLine(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2,
                 Uint32 pixel);
 

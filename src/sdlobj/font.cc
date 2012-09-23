@@ -5,10 +5,16 @@
 using namespace std;
 using namespace sdlobj;
 
-Font::Font(const char *file, int ptsize, long index) : Font() {
+Font::Font(const char *file, int ptsize, long index) : font_(new FontWrapper()) {
   font_->font = TTF_OpenFontIndex(file, ptsize, index);
   if (!font_->font) {
     throw runtime_error(TTF_GetError());
+  }
+}
+
+Font::~Font() {
+  if (!SDLTTF::instance().initialized() && font_) {
+    font_->font = nullptr;
   }
 }
 
@@ -29,5 +35,5 @@ int Font::line_skip() {
 }
 
 Font::FontWrapper::~FontWrapper() {
-  TTF_CloseFont(font);
+  if (font) TTF_CloseFont(font);
 }

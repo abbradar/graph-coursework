@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <sstream>
+#include <memory>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include "sdlobj/surface.h"
 #include "sdlobj/font.h"
@@ -12,7 +13,9 @@ class WindowLogDestination : public logging::LogDestination {
  public:
   typedef boost::posix_time::time_facet TimeFacet;
 
-  WindowLogDestination(const sdlobj::Font &font, SDL_Color color = { .r = 0xFF, .g = 0xFF, .b = 0xFF });
+  WindowLogDestination();
+  WindowLogDestination(const sdlobj::Font &font,
+                       SDL_Color color = { .r = 0xFF, .g = 0xFF, .b = 0xFF });
   ~WindowLogDestination();
 
   void WriteLog(logging::LogMessageLevel level, const char *line);
@@ -48,7 +51,7 @@ class WindowLogDestination : public logging::LogDestination {
     WindowMessage(const std::string &&other) : message(other) {}
 
     std::string message;
-    sdlobj::Surface *surface = nullptr;
+    std::unique_ptr<sdlobj::Surface> surface;
   };
 
   TimeFacet *time_facet_;

@@ -7,13 +7,16 @@ using namespace std;
 using namespace sdlobj;
 using namespace boost::posix_time;
 
+WindowLogDestination::WindowLogDestination() :
+  WindowLogDestination(Font(), { .r = 0xFF, .g = 0xFF, .b = 0xFF }) {}
+
 WindowLogDestination::WindowLogDestination(const Font &font, SDL_Color color) :
-  time_facet_(new TimeFacet("%x %X")), font_(font), color_(color) {
+ time_facet_(new TimeFacet("%x %X")), font_(font), color_(color) {
   time_format_.imbue(locale(time_format_.getloc(), time_facet_));
 }
 
 WindowLogDestination::~WindowLogDestination() {
-  delete time_facet_;
+  //delete time_facet_;
 }
 
 void WindowLogDestination::WriteLog(logging::LogMessageLevel level, const char *line) {
@@ -28,8 +31,8 @@ void WindowLogDestination::WriteLog(logging::LogMessageLevel level, const char *
 
   WindowMessage message(ss.str());
 
-  while (deque_.size() > max_items_) deque_.pop_front();
-  deque_.push_back(message);
+  while (deque_.size() > max_items_ - 1) deque_.pop_front();
+  deque_.push_back(std::move(message));
 }
 
 void WindowLogDestination::set_time_facet(TimeFacet *time_facet) noexcept {
@@ -57,7 +60,7 @@ Surface WindowLogDestination::Render() {
   unsigned int max_width = 0;
   for (auto &i : deque_) {
     if (!i.surface)
-      i.surface = new Surface(font_.RenderUTF8_Solid(i.message.data(), color_));
+      i.surface.reset(new Surface(font_.RenderUTF8_Solid(i.message.data(), color_)));
     max_width = max_width > i.surface->width() ? max_width : i.surface->width();
   }
   int line_skip = font_.line_skip();
@@ -73,7 +76,6 @@ Surface WindowLogDestination::Render() {
 
 void WindowLogDestination::ClearRendered() {
   for (auto &i : deque_) {
-    delete i.surface;
-    i.surface = nullptr;
+    i.surface.reset(nullptr);
   }
 }
