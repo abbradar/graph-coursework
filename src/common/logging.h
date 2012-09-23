@@ -25,6 +25,8 @@ const char *LevelName(const LogMessageLevel level);
 /** Logging destination */
 class LogDestination {
  public:
+  virtual ~LogDestination() {}
+
   virtual void WriteLog(LogMessageLevel, const char *) = 0;
 };
 
@@ -34,8 +36,8 @@ class LogDestination {
  */
 class Logger : public Singleton<Logger> {
  public:
-  typedef std::unique_ptr<LogDestination> LogDestinationPointer;
-  typedef std::vector<LogDestinationPointer> DestinationVector;
+  typedef std::unique_ptr<LogDestination> DestinationPointer;
+  typedef std::vector<DestinationPointer> DestinationVector;
   typedef boost::posix_time::time_facet TimeFacet;
 
   Logger(const Logger &other) = delete;

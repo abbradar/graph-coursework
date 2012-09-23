@@ -24,7 +24,7 @@ int CourseWork::Run(int argc, const char **argv) {
 
   default_font_ = font_manager_.GetFont(string(kDefaultFontName), kDefaultFontSize, kDefaultFontIndex);
   WindowLogDestination *window_log_ = new WindowLogDestination(default_font_);
-  Logger::instance().destinations().push_back(Logger::LogDestinationPointer(window_log_));
+  Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
 
   SDL::instance().SetVideoMode(640, 480, 32, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
 
@@ -54,6 +54,4 @@ int CourseWork::Run(int argc, const char **argv) {
 
 void CourseWork::Terminate(int exit_code) noexcept {
   LogDebug((boost::format("Terminating, exit code: %1%") % exit_code).str().data());
-  SDLTTF::instance().Free();
-  SDL::instance().Free();
 }

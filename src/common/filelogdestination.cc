@@ -11,7 +11,6 @@ FileLogDestination::FileLogDestination(const char *file_name) :
 }
 
 FileLogDestination::~FileLogDestination() {
-  stream_.close();
   delete time_facet_;
 }
 

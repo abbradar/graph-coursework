@@ -6,6 +6,7 @@ using namespace std;
 using namespace sdlobj;
 
 void SDLTTF::Init() {
+  if (initialized()) return;
   if (TTF_Init()) {
     throw runtime_error(TTF_GetError());
   }
@@ -13,6 +14,7 @@ void SDLTTF::Init() {
 }
 
 void SDLTTF::Free() {
+  if (!initialized()) return;
   TTF_Quit();
   LogDebug("SDL_ttf freed");
 }

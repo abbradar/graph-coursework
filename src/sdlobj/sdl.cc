@@ -8,6 +8,7 @@ using namespace std;
 using namespace sdlobj;
 
 void SDL::Init(Uint32 flags) {
+  if (initialized()) return;
   if (SDL_Init(flags)) {
     throw runtime_error(SDL_GetError());
   }
@@ -18,6 +19,7 @@ void SDL::Init(Uint32 flags) {
 void DummyDelete(SDL_Surface *) {}
 
 void SDL::Free() {
+  if (!initialized()) return;
   initialized_ = false;
   surface_.surface_->surface = nullptr;
   SDL_Quit();

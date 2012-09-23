@@ -8,6 +8,7 @@ namespace sdlobj {
 class EventHandler {
  public:
   EventHandler() = default;
+  virtual ~EventHandler() {}
   EventHandler(const EventHandler &) = delete;
 
   virtual void ProcessActive(const SDL_ActiveEvent &) {}
