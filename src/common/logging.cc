@@ -32,6 +32,10 @@ Logger::Logger() noexcept : time_facet_(new TimeFacet("%x %X")) {
   time_format_.imbue(locale(time_format_.getloc(), time_facet_));
 }
 
+Logger::~Logger() {
+  delete time_facet_;
+}
+
 void Logger::Log(LogMessageLevel level, const char *msg) noexcept {
   if (level > level_) return;
 

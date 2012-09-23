@@ -1,13 +1,17 @@
 #ifndef GRAPH_COURSEWORK_H_
 #define GRAPH_COURSEWORK_H_
 
-#include <SDL_video.h>
-#include "application.h"
-#include "coursewindow.h"
+#include "common/application.h"
+#include "fontmanager.h"
 
 class CourseWork : public Runnable
 {
  public:
+  static constexpr const char *kProgramName = "Course Work";
+  static constexpr const char *kDefaultFontName = "DroidSans.ttf";
+  static constexpr int kDefaultFontIndex = 0;
+  static constexpr int kDefaultFontSize = 12;
+
   CourseWork() = default;
   CourseWork(const CourseWork &other) = delete;
   CourseWork(const CourseWork &&other) = delete;
@@ -15,10 +19,12 @@ class CourseWork : public Runnable
  private:
   ~CourseWork() = default;
 
-  CourseWindow window_;//
+  const int tick_ = 1000 / 60;
+  FontManager font_manager_;
+  sdlobj::Font default_font_;
 
-  virtual int Run(int argc, const char **argv);
-  virtual void Terminate(int error_code) noexcept;
+  int Run(int argc, const char **argv);
+  void Terminate(int error_code) noexcept;
 };
 
 #endif // GRAPH_COURSEWORK_H_

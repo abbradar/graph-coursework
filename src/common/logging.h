@@ -34,7 +34,8 @@ class LogDestination {
  */
 class Logger : public Singleton<Logger> {
  public:
-  typedef std::vector<LogDestination *> DestinationVector;
+  typedef std::unique_ptr<LogDestination> LogDestinationPointer;
+  typedef std::vector<LogDestinationPointer> DestinationVector;
   typedef boost::posix_time::time_facet TimeFacet;
 
   Logger(const Logger &other) = delete;
@@ -78,7 +79,7 @@ class Logger : public Singleton<Logger> {
   friend class Singleton<Logger>;
 
   Logger() noexcept;
-  ~Logger() = default;
+  ~Logger();
 
   DestinationVector destinations_;
   bool write_to_stderr_ = true;

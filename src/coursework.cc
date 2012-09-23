@@ -1,42 +1,51 @@
 #include <boost/format.hpp>
 #include <memory>
-#include <SDL.h>
-#include "logging.h"
-#include "debug.h"
-#include "filelogdestination.h"
+#include "common/logging.h"
+#include "common/debug.h"
+#include "sdlobj/sdl.h"
+#include "sdlobj/sdlttf.h"
+#include "windowlogdestination.h"
+#include "courseeventhandler.h"
 #include "coursework.h"
 
 using namespace std;
-
-const char *kProgramName = "Course Work";
+using namespace sdlobj;
+using namespace logging;
 
 int CourseWork::Run(int argc, const char **argv) {
-  logging::Logger::instance().set_name(kProgramName);
+  Logger::instance().set_name(kProgramName);
 #if DEBUG_LEVEL == 4
-  logging::Logger::instance().set_level(logging::kDebug);
+  Logger::instance().set_level(logging::kDebug);
 #endif
-  // Windows don't have stderr for GUI applications ;_;
-  FileLogDestination *dest = new FileLogDestination("out.log");
-  logging::Logger::instance().destinations().push_back(dest);
 
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
-    LogCritical((boost::format("Unable to init SDL: %1%") % SDL_GetError()).str().data());
-    return 1;
-  }
-  LogDebug("SDL initialized");
+  SDL::instance().event_handler().reset(new CourseEventHandler());
+  SDL::instance().Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+  SDLTTF::instance().Init();
 
-  window_.SetVideoMode(640, 480, 32);
+  default_font_ = font_manager_.GetFont(string(kDefaultFontName), kDefaultFontSize, kDefaultFontIndex);
+  WindowLogDestination *window_log_ = new WindowLogDestination(default_font_);
+  Logger::instance().destinations().push_back(Logger::LogDestinationPointer(window_log_));
 
-  window_.StartDrawing();
-  for (int i = 10; i < 100; ++i) {
-    for (int j = 10; j < 100; ++j) {
-      window_.SetPixel(i, j, 0xFFFFFF);
-    }
-  }
-  window_.EndDrawing();
+  SDL::instance().SetVideoMode(640, 480, 32, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
+
+  int timer = 0;
 
   while (true) {
-    window_.WaitEvent();
+    Uint32 last_time = SDL_GetTicks();
+    ++timer;
+    if (timer == 60) {
+      LogDebug("60 frames passed");
+      timer = 0;
+    }
+    while (SDL::instance().PollEvent());
+    SDL::instance().surface().Fill(0x0);
+    Surface log = window_log_->Render();
+    SDL::instance().surface().Blit(log);
+    SDL::instance().Flip();
+    int time = tick_ - (int)(SDL_GetTicks() - last_time);
+    if (time > 0) {
+      SDL_Delay(time);
+    }
   }
 
   AssertMsg(false, "Sudden exit from event loop!");
@@ -45,5 +54,6 @@ int CourseWork::Run(int argc, const char **argv) {
 
 void CourseWork::Terminate(int exit_code) noexcept {
   LogDebug((boost::format("Terminating, exit code: %1%") % exit_code).str().data());
-  SDL_Quit();
+  SDLTTF::instance().Free();
+  SDL::instance().Free();
 }
