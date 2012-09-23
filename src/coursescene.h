@@ -1,5 +1,5 @@
-#ifndef GRAPH_COURSESCENE_H_
-#define GRAPH_COURSESCENE_H_
+#ifndef COURSESCENE_H
+#define COURSESCENE_H
 
 class CourseScene
 {
@@ -7,4 +7,4 @@ public:
   CourseScene();
 };
 
-#endif // GRAPH_COURSESCENE_H_
+#endif // COURSESCENE_H

@@ -11,6 +11,7 @@ class CourseWork : public Runnable
   static constexpr const char *kDefaultFontName = "DroidSans.ttf";
   static constexpr int kDefaultFontIndex = 0;
   static constexpr int kDefaultFontSize = 12;
+  static const SDL_Color kDefaultFontColor;
 
   CourseWork() = default;
   CourseWork(const CourseWork &other) = delete;

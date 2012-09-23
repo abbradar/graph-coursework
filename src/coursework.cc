@@ -4,14 +4,15 @@
 #include "common/debug.h"
 #include "sdlobj/sdl.h"
 #include "sdlobj/sdlttf.h"
-#include "sdlobj/surfacepainter.h"
+#include "courseinterface.h"
 #include "windowlogdestination.h"
-#include "courseeventhandler.h"
 #include "coursework.h"
 
 using namespace std;
 using namespace sdlobj;
 using namespace logging;
+
+const SDL_Color CourseWork::kDefaultFontColor = { .r = 0xFF, .g = 0xFF, .b = 0xFF };
 
 int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().set_name(kProgramName);
@@ -22,16 +23,18 @@ int CourseWork::Run(int argc, const char **argv) {
   WindowLogDestination *window_log_ = new WindowLogDestination();
   Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
 
-  SDL::instance().event_handler().reset(new CourseEventHandler());
   SDL::instance().Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
   SDLTTF::instance().Init();
 
   default_font_ = font_manager_.GetFont(string(kDefaultFontName), kDefaultFontSize, kDefaultFontIndex);
 
   window_log_->set_font(default_font_);
+  window_log_->set_color(kDefaultFontColor);
 
   SDL::instance().SetVideoMode(640, 480, 32, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
-  SurfacePainter painter(&SDL::instance().surface());
+
+  CourseInterface *interface_ = new CourseInterface();
+  SDL::instance().event_handler().reset(interface_);
 
   int timer = 0;
 
@@ -43,12 +46,15 @@ int CourseWork::Run(int argc, const char **argv) {
       timer = 0;
     }
     while (SDL::instance().PollEvent());
+    interface_->Step();
     SDL::instance().surface().Fill(0x0);
-    painter.StartDrawing();
-    painter.DrawLine(0, 0, 100, 50, 0xFFFFFF);
-    painter.FinishDrawing();
     Surface log = window_log_->Render();
     SDL::instance().surface().Blit(log, 2, 0);
+    string str = (boost::format("Position: x: %1%, y: %2%, y: %3%, p: %4%")
+                  % interface_->position().x % interface_->position().y
+                  % interface_->position().yaw % interface_->position().pitch).str();
+    Surface position = default_font_.RenderUTF8_Solid(str.data(), kDefaultFontColor);
+    SDL::instance().surface().Blit(position, 2, SDL::instance().surface().height() - default_font_.line_skip());
     SDL::instance().Flip();
     int time = tick_ - (int)(SDL_GetTicks() - last_time);
     if (time > 0) {

@@ -13,6 +13,8 @@ class SDL : public Singleton<SDL> {
  public:
   void Init(Uint32 flags);
   void Free();
+
+  void SetVideoMode(int width, int height);
   void SetVideoMode(int width, int height, int bpp, Uint32 flags);
 
   inline Surface &surface() {

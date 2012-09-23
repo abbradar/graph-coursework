@@ -9,8 +9,9 @@ Surface::Surface(int width, int height, Uint32 flags, int bpp, Uint32 Rmask, Uin
 
 Surface::Surface(int width, int height) : surface_(new SurfaceWrapper()) {
   const SDL_Surface *screen = SDL::instance().surface().surface();
+  Uint32 flags = screen->flags & (SDL_SWSURFACE | SDL_HWSURFACE | SDL_SRCCOLORKEY | SDL_SRCALPHA);
 
-  surface_->surface = SDL_CreateRGBSurface(screen->flags, width, height, screen->format->BitsPerPixel,
+  surface_->surface = SDL_CreateRGBSurface(flags, width, height, screen->format->BitsPerPixel,
                                   screen->format->Rmask, screen->format->Gmask, screen->format->Bmask,
                                   screen->format->Amask);
 }
