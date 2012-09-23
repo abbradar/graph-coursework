@@ -33,6 +33,9 @@ int CourseWork::Run(int argc, const char **argv) {
 
   SDL::instance().SetVideoMode(640, 480, 32, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
 
+  SDL::instance().set_caption(kProgramName);
+  SDL::instance().set_icon_caption(kProgramName);
+
   CourseInterface *interface_ = new CourseInterface();
   SDL::instance().event_handler().reset(interface_);
 

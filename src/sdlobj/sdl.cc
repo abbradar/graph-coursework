@@ -72,6 +72,46 @@ void SDL::UpdateRect(int x, int y, int width, int height) {
   SDL_UpdateRect(surface_.surface_->surface, x, y, width, height);
 }
 
+bool SDL::show_cursor() {
+  return SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE;
+}
+
+void SDL::set_show_cursor(bool show) {
+  SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
+}
+
+bool SDL::grab_input() {
+  return SDL_WM_GrabInput(SDL_GRAB_QUERY) == SDL_GRAB_ON;
+}
+
+void SDL::set_grab_input(bool grab) {
+  SDL_WM_GrabInput(grab ? SDL_GRAB_ON : SDL_GRAB_OFF);
+}
+
+const char *SDL::caption() {
+  char *caption;
+  SDL_WM_GetCaption(&caption, nullptr);
+  return caption;
+}
+
+void SDL::set_caption(const char *caption) {
+  SDL_WM_SetCaption(caption, icon_caption());
+}
+
+const char *SDL::icon_caption() {
+  char *caption;
+  SDL_WM_GetCaption(nullptr, &caption);
+  return caption;
+}
+
+void SDL::set_icon_caption(const char *caption) {
+  SDL_WM_SetCaption(this->caption(), caption);
+}
+
+void SDL::set_icon(Surface &surface) {
+  SDL_WM_SetIcon(surface.surface_->surface, nullptr);
+}
+
 void SDL::ProcessEvent(const SDL_Event &event)
 {
   switch (event.type) {

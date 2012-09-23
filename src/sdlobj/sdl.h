@@ -30,6 +30,20 @@ class SDL : public Singleton<SDL> {
 
   void UpdateRect(int x, int y, int width, int height);
 
+  bool show_cursor();
+  void set_show_cursor(bool show);
+
+  bool grab_input();
+  void set_grab_input(bool grab);
+
+  const char *caption();
+  void set_caption(const char *caption);
+
+  const char *icon_caption();
+  void set_icon_caption(const char *caption);
+
+  void set_icon(Surface &surface);
+
   inline std::unique_ptr<EventHandler> &event_handler() {
     return event_handler_;
   }
