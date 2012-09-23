@@ -7,6 +7,7 @@ using namespace sdlobj;
 
 CourseInterface::CourseInterface() {
   rotation_k_ = kPi / 2 / (SDL::instance().surface().height() * kRotationStep);
+  set_grab_mouse(true);
 }
 
 void CourseInterface::ProcessQuit(const SDL_QuitEvent &) {
@@ -47,12 +48,16 @@ void CourseInterface::ProcessKeyUp(const SDL_KeyboardEvent &event) {
     case SDLK_a:
       move_state_.left = 0;
       break;
+    case SDLK_ESCAPE:
+      set_grab_mouse(!grab_mouse());
+      break;
     default:
       break;
   }
 }
 
 void CourseInterface::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
+  if (!grab_mouse_) return;
   move_state_.xrel += event.xrel;
   move_state_.yrel -= event.yrel;
 }
@@ -77,4 +82,18 @@ void CourseInterface::Step() {
   position_.pitch += move_state_.yrel / rotation_k_;
   move_state_.xrel = 0;
   move_state_.yrel = 0;
+}
+
+void CourseInterface::set_grab_mouse(bool grab) {
+  if (grab_mouse_ == grab) return;
+  grab_mouse_ = grab;
+  if (grab) {
+    LogDebug("Started mouse grabbing");
+    SDL::instance().set_grab_input(true);
+    SDL::instance().set_show_cursor(false);
+  } else {
+    LogDebug("Stopped mouse grabbing");
+    SDL::instance().set_grab_input(false);
+    SDL::instance().set_show_cursor(true);
+  }
 }

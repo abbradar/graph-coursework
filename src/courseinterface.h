@@ -22,9 +22,15 @@ class CourseInterface : public sdlobj::EventHandler {
 
   void Step();
 
-  inline const Position &position() const {
+  inline Position &position() {
     return position_;
   }
+
+  inline bool grab_mouse() {
+    return grab_mouse_;
+  }
+
+  void set_grab_mouse(bool grab);
 
  private:
   static constexpr float kStep = 2.0f;
@@ -42,6 +48,8 @@ class CourseInterface : public sdlobj::EventHandler {
     int xrel = 0;
     int yrel = 0;
   };
+
+  bool grab_mouse_;
 
   MoveState move_state_;
   Position position_;
