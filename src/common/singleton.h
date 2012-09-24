@@ -1,5 +1,5 @@
-#ifndef GRAPH_SINGLETON_H_
-#define GRAPH_SINGLETON_H_
+#ifndef COMMON_SINGLETON_H_
+#define COMMON_SINGLETON_H_
 
 /** Basic class for implementing singletons.
  * You should inherit it from your class and friend it.
@@ -20,4 +20,4 @@ template <class Derived> class Singleton {
   Singleton() = default;
 };
 
-#endif // GRAPH_SINGLETON_H_
+#endif // COMMON_SINGLETON_H_

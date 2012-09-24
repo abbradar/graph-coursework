@@ -11,7 +11,7 @@ WindowLogDestination::WindowLogDestination() :
   WindowLogDestination(Font(), { .r = 0xFF, .g = 0xFF, .b = 0xFF }) {}
 
 WindowLogDestination::WindowLogDestination(const Font &font, SDL_Color color) :
- time_facet_(new TimeFacet("%x %X")), font_(font), color_(color) {
+  time_facet_(new TimeFacet("%x %X")), font_(font), color_(color), max_items_(3) {
   time_format_.imbue(locale(time_format_.getloc(), time_facet_));
 }
 
@@ -60,7 +60,7 @@ Surface WindowLogDestination::Render() {
   unsigned int max_width = 0;
   for (auto &i : deque_) {
     if (!i.surface)
-      i.surface.reset(new Surface(font_.RenderUTF8_Solid(i.message.data(), color_)));
+      i.surface.reset(new Surface(font_.RenderUTF8_Blended(i.message.data(), color_)));
     max_width = max_width > i.surface->width() ? max_width : i.surface->width();
   }
   int line_skip = font_.line_skip();

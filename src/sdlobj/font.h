@@ -23,6 +23,7 @@ public:
   }
 
   Surface RenderUTF8_Solid(const char *text, SDL_Color fg);
+  Surface RenderUTF8_Shaded(const char *text, SDL_Color fg, SDL_Color bg);
   Surface RenderUTF8_Blended(const char *text, SDL_Color fg);
 
   int height();

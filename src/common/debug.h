@@ -1,5 +1,5 @@
-#ifndef GRAPH_DEBUG_H_
-#define GRAPH_DEBUG_H_
+#ifndef COMMON_DEBUG_H_
+#define COMMON_DEBUG_H_
 
 #ifndef DEBUG_LEVEL
 /** Enables various debugging code. It is a number between 0 and 4.
@@ -28,4 +28,4 @@
  */
 #define AssertMsg BOOST_ASSERT_MSG
 
-#endif // GRAPH_DEBUG_H_
+#endif // COMMON_DEBUG_H_

@@ -12,7 +12,13 @@ using namespace std;
 using namespace sdlobj;
 using namespace logging;
 
+const char * const CourseWork::kProgramName = "Course Work";
+const char * const CourseWork::kDefaultFontName = "DroidSans.ttf";
+const int CourseWork::kDefaultFontIndex = 0;
+const int CourseWork::kDefaultFontSize = 12;
 const SDL_Color CourseWork::kDefaultFontColor = { .r = 0xFF, .g = 0xFF, .b = 0xFF };
+
+CourseWork::CourseWork() : tick_(1000 / 60) { }
 
 int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().set_name(kProgramName);
@@ -53,7 +59,7 @@ int CourseWork::Run(int argc, const char **argv) {
     SDL::instance().surface().Fill(0x0);
     Surface log = window_log_->Render();
     SDL::instance().surface().Blit(log, 2, 0);
-    string str = (boost::format("Position: x: %1%, y: %2%, y: %3%, p: %4%")
+    string str = (boost::format("Position: x: %1%, y: %2%, z: , yaw: %3%, pitch: %4%")
                   % interface_->position().x % interface_->position().y
                   % interface_->position().yaw % interface_->position().pitch).str();
     Surface position = default_font_.RenderUTF8_Solid(str.data(), kDefaultFontColor);

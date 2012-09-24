@@ -7,20 +7,20 @@
 class CourseWork : public Runnable
 {
  public:
-  static constexpr const char *kProgramName = "Course Work";
-  static constexpr const char *kDefaultFontName = "DroidSans.ttf";
-  static constexpr int kDefaultFontIndex = 0;
-  static constexpr int kDefaultFontSize = 12;
+  static const char * const kProgramName;
+  static const char * const kDefaultFontName;
+  static const int kDefaultFontIndex;
+  static const int kDefaultFontSize;
   static const SDL_Color kDefaultFontColor;
 
-  CourseWork() = default;
+  CourseWork();
   CourseWork(const CourseWork &other) = delete;
   CourseWork(const CourseWork &&other) = delete;
 
  private:
   ~CourseWork() = default;
 
-  const int tick_ = 1000 / 60;
+  int tick_;
   FontManager font_manager_;
   sdlobj::Font default_font_;
 

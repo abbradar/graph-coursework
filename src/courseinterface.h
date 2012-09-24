@@ -33,10 +33,10 @@ class CourseInterface : public sdlobj::EventHandler {
   void set_grab_mouse(bool grab);
 
  private:
-  static constexpr float kStep = 2.0f;
-  static constexpr float kDiagStep = 1.2f;
+  static const float kStep;
+  static const float kDiagStep;
   /** Portion of the height of the screen which turns camera 90* */
-  static constexpr float kRotationStep = 1.0f / 3.0f;
+  static const float kRotationStep;
 
   float rotation_k_;
 

@@ -1,5 +1,5 @@
-#ifndef GRAPH_LOGGING_H_
-#define GRAPH_LOGGING_H_
+#ifndef COMMON_LOGGING_H_
+#define COMMON_LOGGING_H_
 
 #include <vector>
 #include <memory>
@@ -125,4 +125,4 @@ inline void LogCritical(const char *msg) {
   Log(logging::kCritical, msg);
 }
 
-#endif // GRAPH_LOGGING_H_
+#endif // COMMON_LOGGING_H_

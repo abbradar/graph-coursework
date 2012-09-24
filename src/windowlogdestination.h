@@ -59,7 +59,7 @@ class WindowLogDestination : public logging::LogDestination {
   SDL_Color color_;
   std::stringstream time_format_;
   std::deque<WindowMessage> deque_;
-  unsigned int max_items_ = 3;
+  unsigned int max_items_;
 
   void ClearRendered();
 };

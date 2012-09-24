@@ -1,7 +1,7 @@
 project(graph-coursework)
 cmake_minimum_required(VERSION 2.8)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -Wall")
+add_definitions(-std=c++11 -Wall)
 
 # Build type
 set(CMAKE_BUILD_TYPE Debug)

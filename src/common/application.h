@@ -1,5 +1,5 @@
-#ifndef GRAPH_APPLICATION_H_
-#define GRAPH_APPLICATION_H_
+#ifndef COMMON_APPLICATION_H_
+#define COMMON_APPLICATION_H_
 
 #include <memory>
 #include <type_traits>
@@ -67,10 +67,10 @@ class Application : public Singleton<Application> {
   std::atomic_bool running_;
 };
 
-template <typename Arg> inline int ApplicationRun(int argc, const char **argv) {
+template <typename Arg> int ApplicationRun(int argc, const char **argv) {
   static_assert(std::is_base_of<Runnable, Arg>::value, "Given template argument must be class derived from Runnable");
   Application::instance().set_runnable(new Arg());
   return Application::instance().Run(argc, argv);
 }
 
-#endif // GRAPH_APPLICATION_H_
+#endif // COMMON_APPLICATION_H_

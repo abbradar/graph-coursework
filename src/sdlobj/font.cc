@@ -22,6 +22,10 @@ Surface Font::RenderUTF8_Solid(const char *text, SDL_Color fg) {
   return Surface(TTF_RenderUTF8_Solid(font_->font, text, fg));
 }
 
+Surface Font::RenderUTF8_Shaded(const char *text, SDL_Color fg, SDL_Color bg) {
+  return Surface(TTF_RenderUTF8_Shaded(font_->font, text, fg, bg));
+}
+
 Surface Font::RenderUTF8_Blended(const char *text, SDL_Color fg) {
   return Surface(TTF_RenderUTF8_Blended(font_->font, text, fg));
 }

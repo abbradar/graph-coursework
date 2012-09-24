@@ -5,6 +5,10 @@
 
 using namespace sdlobj;
 
+const float CourseInterface::kStep = 2.0f;
+const float CourseInterface::kDiagStep = 1.2f;
+const float CourseInterface::kRotationStep = 1.0f / 3.0f;
+
 CourseInterface::CourseInterface() {
   rotation_k_ = kPi / 2 / (SDL::instance().surface().height() * kRotationStep);
   set_grab_mouse(true);

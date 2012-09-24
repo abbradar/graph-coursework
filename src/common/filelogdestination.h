@@ -1,5 +1,5 @@
-#ifndef GRAPH_FILELOGDESTINATION_H_
-#define GRAPH_FILELOGDESTINATION_H_
+#ifndef COMMON_FILELOGDESTINATION_H_
+#define COMMON_FILELOGDESTINATION_H_
 
 #include <fstream>
 #include <sstream>
@@ -27,4 +27,4 @@ class FileLogDestination : public logging::LogDestination {
   std::stringstream time_format_;
 };
 
-#endif // GRAPH_FILELOGDESTINATION_H_
+#endif // COMMON_FILELOGDESTINATION_H_
