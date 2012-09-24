@@ -4,6 +4,7 @@ using namespace sdlobj;
 
 Surface::Surface() : surface_() { }
 Surface::Surface(SDL_Surface *surface) : surface_(new SurfaceWrapper(surface)) { }
+Surface::Surface(const Surface &other) : surface_(other.surface_) {}
 
 Surface::Surface(int width, int height, Uint32 flags, int bpp, Uint32 Rmask, Uint32 Gmask,
                  Uint32 Bmask, Uint32 Amask) : surface_(new SurfaceWrapper()) {

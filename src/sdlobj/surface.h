@@ -18,7 +18,7 @@ public:
   /** Create surface with same parameters as screen surface */
   Surface(int width, int height);
   Surface(int width, int height, Uint32 flags, int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
-  Surface(const Surface &other) : surface_(other.surface_) {}
+  Surface(const Surface &other);
 
   ~Surface();
 
