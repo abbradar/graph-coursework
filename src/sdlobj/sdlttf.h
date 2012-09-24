@@ -20,7 +20,7 @@ class SDLTTF : public Singleton<SDLTTF> {
  private:
   friend class Singleton<SDLTTF>;
 
-  SDLTTF() = default;
+  SDLTTF();
 };
 
 }

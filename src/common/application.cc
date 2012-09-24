@@ -46,3 +46,6 @@ void Application::set_runnable(Runnable *runnable)
   }
   runnable_.reset(runnable);
 }
+
+Application::Application() = default;
+Application::~Application() = default;

@@ -11,9 +11,9 @@ class SDL;
 
 class Surface {
 public:
-  Surface() : surface_() { }
+  Surface();
 
-  Surface(SDL_Surface *surface) : surface_(new SurfaceWrapper(surface)) { }
+  Surface(SDL_Surface *surface);
 
   /** Create surface with same parameters as screen surface */
   Surface(int width, int height);

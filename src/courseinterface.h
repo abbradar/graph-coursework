@@ -8,6 +8,7 @@ class CourseInterface : public sdlobj::EventHandler {
   struct Position {
     float x = 0;
     float y = 0;
+    float z = 0;
     float pitch = 0;
     float yaw = 0;
   };

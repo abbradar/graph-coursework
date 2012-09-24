@@ -21,3 +21,5 @@ void SDLTTF::Free() {
 SDLTTF::~SDLTTF() {
   Free();
 }
+
+SDLTTF::SDLTTF() = default;

@@ -20,6 +20,8 @@ const SDL_Color CourseWork::kDefaultFontColor = { .r = 0xFF, .g = 0xFF, .b = 0xF
 
 CourseWork::CourseWork() : tick_(1000 / 60) { }
 
+CourseWork::~CourseWork() = default;
+
 int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().set_name(kProgramName);
 #if DEBUG_LEVEL == 4
@@ -59,9 +61,10 @@ int CourseWork::Run(int argc, const char **argv) {
     SDL::instance().surface().Fill(0x0);
     Surface log = window_log_->Render();
     SDL::instance().surface().Blit(log, 2, 0);
-    string str = (boost::format("Position: x: %1%, y: %2%, z: , yaw: %3%, pitch: %4%")
+    string str = (boost::format("Position: x: %1%, y: %2%, z: %3%, yaw: %4%, pitch: %5%")
                   % interface_->position().x % interface_->position().y
-                  % interface_->position().yaw % interface_->position().pitch).str();
+                  % interface_->position().z % interface_->position().yaw
+                  % interface_->position().pitch).str();
     Surface position = default_font_.RenderUTF8_Solid(str.data(), kDefaultFontColor);
     SDL::instance().surface().Blit(position, 2, SDL::instance().surface().height() - default_font_.line_skip());
     SDL::instance().Flip();

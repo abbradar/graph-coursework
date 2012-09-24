@@ -57,7 +57,7 @@ class SDL : public Singleton<SDL> {
  private:
   friend class Singleton<SDL>;
 
-  SDL() : surface_(nullptr) {}
+  SDL();
 
   bool initialized_ = false;
   Surface surface_;

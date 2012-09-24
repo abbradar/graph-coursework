@@ -60,8 +60,8 @@ class Application : public Singleton<Application> {
  private:
   friend class Singleton<Application>;
 
-  Application() = default;
-  ~Application() = default;
+  Application();
+  ~Application();
 
   std::unique_ptr<Runnable> runnable_;
   std::atomic_bool running_;

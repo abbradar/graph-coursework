@@ -37,6 +37,7 @@ void SDL::SetVideoMode(int width, int height, int bpp, Uint32 flags) {
   }
 }
 
+SDL::SDL() : surface_(nullptr) {}
 
 SDL::~SDL() {
   Free();

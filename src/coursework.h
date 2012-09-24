@@ -18,7 +18,7 @@ class CourseWork : public Runnable
   CourseWork(const CourseWork &&other) = delete;
 
  private:
-  ~CourseWork() = default;
+  ~CourseWork();
 
   int tick_;
   FontManager font_manager_;
