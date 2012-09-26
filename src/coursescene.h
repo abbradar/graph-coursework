@@ -1,10 +1,13 @@
-#ifndef COURSESCENE_H
-#define COURSESCENE_H
+#ifndef GRAPH_COURSESCENE_H_
+#define GRAPH_COURSESCENE_H_
 
-class CourseScene
-{
-public:
-  CourseScene();
+#include <list>
+#include "sceneobject.h"
+
+class CourseScene {
+ public:
+ private:
+  std::list<SceneObject> objects_;
 };
 
-#endif // COURSESCENE_H
+#endif // GRAPH_COURSESCENE_H_

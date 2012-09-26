@@ -17,10 +17,17 @@ const char * const CourseWork::kDefaultFontName = "DroidSans.ttf";
 const int CourseWork::kDefaultFontIndex = 0;
 const int CourseWork::kDefaultFontSize = 12;
 const SDL_Color CourseWork::kDefaultFontColor = { .r = 0xFF, .g = 0xFF, .b = 0xFF };
+const int CourseWork::kFps = 60;
+const int CourseWork::kWidth = 640;
+const int CourseWork::kHeight = 480;
+const int CourseWork::kBpp = 32;
 
-CourseWork::CourseWork() : tick_(1000 / 60) { }
+CourseWork::CourseWork() = default;
 
 CourseWork::~CourseWork() = default;
+
+int kmsecsInSec = 1000;
+float kmsecsInSecF = 1000.0f;
 
 int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().set_name(kProgramName);
@@ -39,7 +46,7 @@ int CourseWork::Run(int argc, const char **argv) {
   window_log_->set_font(default_font_);
   window_log_->set_color(kDefaultFontColor);
 
-  SDL::instance().SetVideoMode(640, 480, 32, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
+  SDL::instance().SetVideoMode(kWidth, kHeight, kBpp, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
 
   SDL::instance().set_caption(kProgramName);
   SDL::instance().set_icon_caption(kProgramName);
@@ -47,30 +54,54 @@ int CourseWork::Run(int argc, const char **argv) {
   CourseInterface *interface_ = new CourseInterface();
   SDL::instance().event_handler().reset(interface_);
 
-  int timer = 0;
+  int tick = kmsecsInSec / kFps;
+  float error = kmsecsInSecF / kFps - tick;
+  float curr_error = 0; // this is for more stable FPS
+
+  const int kFpsRate = 10; // rate of FPS measurement
+  int sum_time = kFpsRate * kmsecsInSec / kFps; // this should produce initial fps=kFps
+  int fps_step = 0;
+  string fps_str;
+  Surface fps_r;
 
   while (true) {
     Uint32 last_time = SDL_GetTicks();
-    ++timer;
-    if (timer == 60) {
-      LogDebug("60 frames passed");
-      timer = 0;
-    }
     while (SDL::instance().PollEvent());
     interface_->Step();
     SDL::instance().surface().Fill(0x0);
     Surface log = window_log_->Render();
     SDL::instance().surface().Blit(log, 2, 0);
-    string str = (boost::format("Position: x: %1%, y: %2%, z: %3%, yaw: %4%, pitch: %5%")
+    string position_str = (boost::format("Position: x: %1%, y: %2%, z: %3%, yaw: %4%, pitch: %5%")
                   % interface_->position().x % interface_->position().y
                   % interface_->position().z % interface_->position().yaw
                   % interface_->position().pitch).str();
-    Surface position = default_font_.RenderUTF8_Solid(str.data(), kDefaultFontColor);
-    SDL::instance().surface().Blit(position, 2, SDL::instance().surface().height() - default_font_.line_skip());
+    Surface position_r = default_font_.RenderUTF8_Solid(position_str.data(), kDefaultFontColor);
+    SDL::instance().surface().Blit(position_r, 2, SDL::instance().surface().height() - default_font_.line_skip());
+    if (fps_step == 0) {
+      float fps = kmsecsInSecF * kFpsRate / sum_time;
+      sum_time = 0;
+      fps_str = (boost::format("%.1f fps") % fps).str();
+      fps_r = default_font_.RenderUTF8_Solid(fps_str.data(), kDefaultFontColor);
+    }
+    ++fps_step;
+    if (fps_step == kFpsRate) fps_step = 0;
+    SDL::instance().surface().Blit(fps_r, SDL::instance().surface().width() - fps_r.width() - 2,
+                                   SDL::instance().surface().height() - default_font_.line_skip());
     SDL::instance().Flip();
-    int time = tick_ - (int)(SDL_GetTicks() - last_time);
-    if (time > 0) {
-      SDL_Delay(time);
+    int delay_time = 0;
+    curr_error += error;
+    if (curr_error >= 1.0f) {
+      delay_time = 1;
+      curr_error -= 1.0f;
+    }
+    Uint32 curr_time = SDL_GetTicks();
+    int frame_time = curr_time - last_time;
+    delay_time += tick - frame_time;
+    if (delay_time > 0) {
+      sum_time += frame_time + delay_time;
+      SDL_Delay(delay_time);
+    } else {
+      sum_time += frame_time;
     }
   }
 

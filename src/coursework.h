@@ -12,6 +12,10 @@ class CourseWork : public Runnable
   static const int kDefaultFontIndex;
   static const int kDefaultFontSize;
   static const SDL_Color kDefaultFontColor;
+  static const int kFps;
+  static const int kWidth;
+  static const int kHeight;
+  static const int kBpp;
 
   CourseWork();
   CourseWork(const CourseWork &other) = delete;
@@ -19,8 +23,6 @@ class CourseWork : public Runnable
 
  private:
   ~CourseWork();
-
-  int tick_;
   FontManager font_manager_;
   sdlobj::Font default_font_;
 

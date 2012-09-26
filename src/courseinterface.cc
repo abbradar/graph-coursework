@@ -11,7 +11,7 @@ const float CourseInterface::kRotationStep = 1.0f / 3.0f;
 
 CourseInterface::CourseInterface() {
   rotation_k_ = kPi / 2 / (SDL::instance().surface().height() * kRotationStep);
-  set_grab_mouse(true);
+  set_grab_mouse(false);
 }
 
 void CourseInterface::ProcessQuit(const SDL_QuitEvent &) {
