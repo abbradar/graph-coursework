@@ -4,9 +4,11 @@
 #include "common/debug.h"
 #include "sdlobj/sdl.h"
 #include "sdlobj/sdlttf.h"
-#include "courseinterface.h"
-#include "windowlogdestination.h"
+#include "interface.h"
 #include "coursework.h"
+#include "scene.h"
+#include "rasterizer.h"
+#include "windowlogdestination.h"
 
 using namespace std;
 using namespace sdlobj;
@@ -51,8 +53,19 @@ int CourseWork::Run(int argc, const char **argv) {
   SDL::instance().set_caption(kProgramName);
   SDL::instance().set_icon_caption(kProgramName);
 
-  CourseInterface *interface_ = new CourseInterface();
-  SDL::instance().event_handler().reset(interface_);
+  Position *position = new Position();
+  Interface *interface = new Interface();
+  interface->set_position(position);
+  SDL::instance().event_handler().reset(interface);
+
+  Scene *scene = new Scene();
+
+  Rasterizer *rasterizer = new Rasterizer();
+  rasterizer->set_camera(position);
+  rasterizer->set_scene(scene);
+  rasterizer->set_surface(&SDL::instance().surface());
+
+  LogDebug("Initialization complete");
 
   int tick = kmsecsInSec / kFps;
   float error = kmsecsInSecF / kFps - tick;
@@ -64,17 +77,20 @@ int CourseWork::Run(int argc, const char **argv) {
   string fps_str;
   Surface fps_r;
 
-  while (true) {
+  LogDebug("Starting event loop");
+
+  while (true) { // event loop
     Uint32 last_time = SDL_GetTicks();
-    while (SDL::instance().PollEvent());
-    interface_->Step();
+    while (SDL::instance().PollEvent()); // this is explicit exit point (we can receive quit event here)
+    interface->Step();
     SDL::instance().surface().Fill(0x0);
+    rasterizer->Render();
     Surface log = window_log_->Render();
     SDL::instance().surface().Blit(log, 2, 0);
     string position_str = (boost::format("Position: x: %1%, y: %2%, z: %3%, yaw: %4%, pitch: %5%")
-                  % interface_->position().x % interface_->position().y
-                  % interface_->position().z % interface_->position().yaw
-                  % interface_->position().pitch).str();
+                  % position->x % position->y
+                  % position->z % position->yaw
+                  % position->pitch).str();
     Surface position_r = default_font_.RenderUTF8_Solid(position_str.data(), kDefaultFontColor);
     SDL::instance().surface().Blit(position_r, 2, SDL::instance().surface().height() - default_font_.line_skip());
     if (fps_step == 0) {

@@ -13,7 +13,7 @@ void SDL::Init(Uint32 flags) {
     throw runtime_error(SDL_GetError());
   }
   initialized_ = true;
-  LogDebug("SDL initialized");
+  //LogDebug("SDL initialized");
 }
 
 void DummyDelete(SDL_Surface *) {}

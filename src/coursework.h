@@ -21,6 +21,14 @@ class CourseWork : public Runnable
   CourseWork(const CourseWork &other) = delete;
   CourseWork(const CourseWork &&other) = delete;
 
+  inline FontManager &font_manager() {
+    return font_manager_;
+  }
+
+  inline sdlobj::Font &default_font() {
+    return default_font_;
+  }
+
  private:
   ~CourseWork();
   FontManager font_manager_;

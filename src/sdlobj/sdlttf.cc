@@ -10,7 +10,7 @@ void SDLTTF::Init() {
   if (TTF_Init()) {
     throw runtime_error(TTF_GetError());
   }
-  LogDebug("SDL_ttf initialized");
+  //LogDebug("SDL_ttf initialized");
 }
 
 void SDLTTF::Free() {

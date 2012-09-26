@@ -1,19 +1,12 @@
-#ifndef GRAPH_COURSEINTERFACE_H_
-#define GRAPH_COURSEINTERFACE_H_
+#ifndef GRAPH_INTERFACE_H_
+#define GRAPH_INTERFACE_H_
 
 #include "sdlobj/sdl.h"
+#include "scene.h"
 
-class CourseInterface : public sdlobj::EventHandler {
+class Interface : public sdlobj::EventHandler {
  public:
-  struct Position {
-    float x = 0;
-    float y = 0;
-    float z = 0;
-    float pitch = 0;
-    float yaw = 0;
-  };
-
-  CourseInterface();
+  Interface();
 
   void ProcessQuit(const SDL_QuitEvent &);
   void ProcessKeyDown(const SDL_KeyboardEvent &);
@@ -23,9 +16,11 @@ class CourseInterface : public sdlobj::EventHandler {
 
   void Step();
 
-  inline Position &position() {
+  inline Position *position() {
     return position_;
   }
+
+  void set_position(Position *position);
 
   inline bool grab_mouse() {
     return grab_mouse_;
@@ -53,7 +48,7 @@ class CourseInterface : public sdlobj::EventHandler {
   bool grab_mouse_;
 
   MoveState move_state_;
-  Position position_;
+  Position *position_;
 };
 
-#endif // GRAPH_COURSEINTERFACE_H_
+#endif // GRAPH_INTERFACE_H_

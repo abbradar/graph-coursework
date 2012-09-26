@@ -6,8 +6,7 @@
 
 using namespace std;
 
-int Application::Run(int argc, const char **argv) noexcept
-{
+int Application::Run(int argc, const char **argv) noexcept {
   if (!runnable_) {
     throw runtime_error("Runnable is not assigned.");
   }
@@ -25,22 +24,19 @@ int Application::Run(int argc, const char **argv) noexcept
   return 1;
 }
 
-void Application::Terminate(int error_code) noexcept
-{
+void Application::Terminate(int error_code) noexcept {
   if (running_) {
     runnable_->Terminate(error_code);
   }
   exit(error_code);
 }
 
-void Application::Abort() noexcept
-{
+void Application::Abort() noexcept {
   // TODO(abbradar) maybe better handling there, and maybe not
   abort();
 }
 
-void Application::set_runnable(Runnable *runnable)
-{
+void Application::set_runnable(Runnable *runnable) {
   if (running_) {
     throw runtime_error("Application is already started.");
   }

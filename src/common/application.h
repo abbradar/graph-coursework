@@ -22,7 +22,7 @@ class Runnable {
   friend class Application;
 
   virtual int Run(int argc, const char **argv) = 0;
-  virtual void Terminate(int error_code) noexcept = 0;
+  virtual void Terminate(int error_code) noexcept {}
 };
 
 /** Handles running application.
