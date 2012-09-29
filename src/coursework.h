@@ -2,6 +2,7 @@
 #define GRAPH_COURSEWORK_H_
 
 #include "common/application.h"
+#include "sdlobj/color.h"
 #include "fontmanager.h"
 
 class CourseWork : public Runnable
@@ -11,7 +12,7 @@ class CourseWork : public Runnable
   static const char * const kDefaultFontName;
   static const int kDefaultFontIndex;
   static const int kDefaultFontSize;
-  static const SDL_Color kDefaultFontColor;
+  static const sdlobj::Color kDefaultFontColor;
   static const int kFps;
   static const int kWidth;
   static const int kHeight;

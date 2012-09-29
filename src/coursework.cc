@@ -18,7 +18,7 @@ const char * const CourseWork::kProgramName = "Course Work";
 const char * const CourseWork::kDefaultFontName = "DroidSans.ttf";
 const int CourseWork::kDefaultFontIndex = 0;
 const int CourseWork::kDefaultFontSize = 12;
-const SDL_Color CourseWork::kDefaultFontColor = { .r = 0xFF, .g = 0xFF, .b = 0xFF };
+const Color CourseWork::kDefaultFontColor = Color(0xFF, 0xFF, 0xFF);
 const int CourseWork::kFps = 60;
 const int CourseWork::kWidth = 640;
 const int CourseWork::kHeight = 480;
@@ -74,29 +74,31 @@ int CourseWork::Run(int argc, const char **argv) {
   const int kFpsRate = 10; // rate of FPS measurement
   int sum_time = kFpsRate * kmsecsInSec / kFps; // this should produce initial fps=kFps
   int fps_step = 0;
-  string fps_str;
   Surface fps_r;
 
   LogDebug("Starting event loop");
 
   while (true) { // event loop
     Uint32 last_time = SDL_GetTicks();
+    // This can produce situation when loop will work infinitely
+    // when events will add up faster than be produced,
+    // but this is bad anyway, so let's try to deal with them all.
     while (SDL::instance().PollEvent()); // this is explicit exit point (we can receive quit event here)
     interface->Step();
-    SDL::instance().surface().Fill(0x0);
+    SDL::instance().surface().Fill(0x000000);
     rasterizer->Render();
     Surface log = window_log_->Render();
     SDL::instance().surface().Blit(log, 2, 0);
-    string position_str = (boost::format("Position: x: %1%, y: %2%, z: %3%, yaw: %4%, pitch: %5%")
+    string position_str = (boost::format("Position: x: %1%, y: %2%, z: %3%, pitch: %4%, yaw: %5%")
                   % position->x % position->y
-                  % position->z % position->yaw
-                  % position->pitch).str();
+                  % position->z % position->pitch
+                  % position->yaw).str();
     Surface position_r = default_font_.RenderUTF8_Solid(position_str.data(), kDefaultFontColor);
     SDL::instance().surface().Blit(position_r, 2, SDL::instance().surface().height() - default_font_.line_skip());
     if (fps_step == 0) {
       float fps = kmsecsInSecF * kFpsRate / sum_time;
       sum_time = 0;
-      fps_str = (boost::format("%.1f fps") % fps).str();
+      string fps_str = (boost::format("%.1f fps") % fps).str();
       fps_r = default_font_.RenderUTF8_Solid(fps_str.data(), kDefaultFontColor);
     }
     ++fps_step;

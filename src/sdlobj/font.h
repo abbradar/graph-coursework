@@ -4,6 +4,7 @@
 #include <memory>
 #include <SDL_ttf.h>
 #include "surface.h"
+#include "color.h"
 
 namespace sdlobj {
 
@@ -22,9 +23,9 @@ public:
     return font_->font;
   }
 
-  Surface RenderUTF8_Solid(const char *text, SDL_Color fg);
-  Surface RenderUTF8_Shaded(const char *text, SDL_Color fg, SDL_Color bg);
-  Surface RenderUTF8_Blended(const char *text, SDL_Color fg);
+  Surface RenderUTF8_Solid(const char *text, sdlobj::Color fg);
+  Surface RenderUTF8_Shaded(const char *text, sdlobj::Color fg, sdlobj::Color bg);
+  Surface RenderUTF8_Blended(const char *text, sdlobj::Color fg);
 
   int height();
   int line_skip();

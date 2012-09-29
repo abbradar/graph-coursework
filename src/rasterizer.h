@@ -7,7 +7,9 @@
 
 class Rasterizer {
  public:
-  static const float kAOV;
+  static const float kAOVX;
+  static const float kAOVY;
+  static const float kRenderDistance;
 
   Rasterizer();
 

@@ -4,7 +4,10 @@
 using namespace std;
 using namespace sdlobj;
 
-const float Rasterizer::kAOV = 0.0f;
+// TODO: fix values
+const float Rasterizer::kAOVX = 2.0f;
+const float Rasterizer::kAOVY = 2.0f;
+const float Rasterizer::kRenderDistance = 1.0f;
 
 Rasterizer::Rasterizer() : scene_(nullptr), camera_(nullptr),
   surface_(nullptr), z_buffer_size_(0) {}

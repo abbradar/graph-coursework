@@ -3,6 +3,7 @@
 
 #include "sdlobj/sdl.h"
 #include "scene.h"
+#include "position.h"
 
 class Interface : public sdlobj::EventHandler {
  public:

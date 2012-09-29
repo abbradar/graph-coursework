@@ -85,8 +85,10 @@ void Interface::Step() {
     position_->y += up_down * kStep;
   }
   // TODO: change camera angles
-  position_->yaw += move_state_.xrel / rotation_k_;
-  position_->pitch += move_state_.yrel / rotation_k_;
+  position_->pitch += move_state_.yrel * rotation_k_;
+  position_->pitch = trim(position_->pitch, -kPi / 2, kPi / 2);
+  position_->yaw += move_state_.xrel * rotation_k_;
+  position_->yaw = circle(position_->yaw, -kPi, kPi);
   move_state_.xrel = 0;
   move_state_.yrel = 0;
 }

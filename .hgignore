@@ -5,7 +5,7 @@ syntax: regexp
 \.synctex\.gz$
 \.pdf$
 \.autosave$
--build$
+build$
 CMakeLists\.txt\.user$
 CMakeCache\.txt$
 Makefile$

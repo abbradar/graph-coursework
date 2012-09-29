@@ -8,9 +8,9 @@ using namespace sdlobj;
 using namespace boost::posix_time;
 
 WindowLogDestination::WindowLogDestination() :
-  WindowLogDestination(Font(), { .r = 0xFF, .g = 0xFF, .b = 0xFF }) {}
+  WindowLogDestination(Font(), Color(0xFF, 0xFF, 0xFF)) {}
 
-WindowLogDestination::WindowLogDestination(const Font &font, SDL_Color color) :
+WindowLogDestination::WindowLogDestination(const Font &font, Color color) :
   time_facet_(new TimeFacet("%x %X")), font_(font), color_(color), max_items_(3) {
   time_format_.imbue(locale(time_format_.getloc(), time_facet_));
 }
@@ -51,7 +51,7 @@ void WindowLogDestination::set_font(const Font &font) {
   ClearRendered();
 }
 
-void WindowLogDestination::set_color(const SDL_Color color) {
+void WindowLogDestination::set_color(const Color &color) {
   color_ = color;
   ClearRendered();
 }

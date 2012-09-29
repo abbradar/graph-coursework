@@ -25,8 +25,18 @@ include_directories(${Boost_INCLUDE_DIR})
 
 link_libraries(${SDL_LIBRARY} ${SDLIMAGE_LIBRARY} ${SDLTTF_LIBRARY} ${Boost_LIBRARIES})
 
-include_directories(.)
-aux_source_directory(. SRC_LIST)
-aux_source_directory(sdlobj SDLOBJ_LIST)
-aux_source_directory(common COMMON_LIST)
+include_directories(src)
+aux_source_directory(src SRC_LIST)
+aux_source_directory(src/sdlobj SDLOBJ_LIST)
+aux_source_directory(src/common COMMON_LIST)
+
+# add a target to generate API documentation with Doxygen
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+  configure_file(Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+  add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                    COMMENT "Generating API documentation with Doxygen" VERBATIM)
+endif(DOXYGEN_FOUND)
+
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${SDLOBJ_LIST} ${COMMON_LIST})

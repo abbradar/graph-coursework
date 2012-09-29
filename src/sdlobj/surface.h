@@ -4,6 +4,7 @@
 #include <memory>
 #include <SDL.h>
 #include <SDL_video.h>
+#include "color.h"
 
 namespace sdlobj {
 
@@ -63,9 +64,9 @@ public:
   void FillRect(SDL_Rect &dstrect, Uint32 pixel);
   void Fill(Uint32 pixel);
 
-  Uint32 ColorToPixel(const SDL_Color &color);
+  Uint32 ColorToPixel(const sdlobj::Color &color);
 
-  SDL_Color PixelToColor(const Uint32 &pixel);
+  sdlobj::Color PixelToColor(const Uint32 &pixel);
 
  private:
   struct SurfaceWrapper {
