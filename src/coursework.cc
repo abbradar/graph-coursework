@@ -50,8 +50,8 @@ int CourseWork::Run(int argc, const char **argv) {
 
   SDL::instance().SetVideoMode(kWidth, kHeight, kBpp, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
 
-  SDL::instance().set_caption(kProgramName);
   SDL::instance().set_icon_caption(kProgramName);
+  SDL::instance().set_caption(kProgramName);
 
   Position *position = new Position();
   Interface *interface = new Interface();
