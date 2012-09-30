@@ -74,31 +74,24 @@ void Interface::ProcessResize(const SDL_ResizeEvent &event) {
 }
 
 void Interface::Step() {
+  // sqrt(2)/2
+  static const float kDiagStep = kMoveStep * 0.7071067811865475f;
+
   if (!position_) throw runtime_error("Position pointer is not setted.");
   char up_down = move_state_.up + move_state_.down;
   char left_right = move_state_.left + move_state_.right;
-  if (up_down || left_right) {
-    float step_yaw;
-    float prj;
-    if (up_down) {
-      if (left_right) {
-        step_yaw = position_->yaw + left_right * kPi / 4;
-      } else {
-        step_yaw = position_->yaw;
-      }
-      if (up_down == -1) {
-        step_yaw += kPi;
-      }
-      position_->z += kMoveStep * sin(position_->pitch) * up_down;
-      prj = kMoveStep * cos(position_->pitch);
-    } else {
-      step_yaw = position_->yaw + left_right * kPi / 2;
-      prj = kMoveStep;
-    }
-    position_->x += prj * cos(step_yaw);
-    position_->y += prj * sin(step_yaw);
+  float len = up_down && left_right ? kDiagStep : kMoveStep;
+  if (up_down) {
+    position_->z += up_down * len * sin(position_->pitch);
+    float prj = up_down * len * cos(position_->pitch);
+    position_->x += prj * cos(position_->yaw);
+    position_->y += prj * sin(position_->yaw);
   }
-  // TODO: change camera angles
+  if (left_right) {
+    float r_yaw = position_->yaw + kPi / 2;
+    position_->x += left_right * len * cos(r_yaw);
+    position_->y += left_right * len * sin(r_yaw);
+  }
   position_->pitch += move_state_.yrel * rotation_k_;
   position_->pitch = trim(position_->pitch, -kPi / 2, kPi / 2);
   position_->yaw += move_state_.xrel * rotation_k_;
