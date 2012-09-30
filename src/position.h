@@ -4,15 +4,17 @@
 #include "matrix4.h"
 
 /** Object position in 3D space.
- * Pitch - [-Pi/2; Pi/2], yaw - [-Pi; Pi], roll - [-Pi/2; Pi/2]
+ * Our space is positioned so starting user camera direction is parallel with x,
+ * z goes up.
+ * Yaw - [-Pi/2; Pi/2], roll - [-Pi/2; Pi/2], pitch - [-Pi; Pi]
  */
 struct Position {
   float x = 0;
   float y = 0;
   float z = 0;
-  float pitch = 0;
   float yaw = 0;
   float roll = 0;
+  float pitch = 0;
 
   Matrix4 GetTransformMatrix();
 };

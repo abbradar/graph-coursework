@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <cmath>
 #include "common/logging.h"
 #include "common/application.h"
 #include "common/math.h"
@@ -7,8 +8,7 @@
 using namespace sdlobj;
 using namespace std;
 
-const float Interface::kStep = 2.0f;
-const float Interface::kDiagStep = 1.2f;
+const float Interface::kMoveStep = 2.0f;
 const float Interface::kRotationStep = 1.0f / 3.0f;
 
 Interface::Interface() {
@@ -30,10 +30,10 @@ void Interface::ProcessKeyDown(const SDL_KeyboardEvent &event) {
       move_state_.down = -1;
       break;
     case SDLK_d:
-      move_state_.right = 1;
+      move_state_.right = -1;
       break;
     case SDLK_a:
-      move_state_.left = -1;
+      move_state_.left = 1;
       break;
     default:
       break;
@@ -64,7 +64,7 @@ void Interface::ProcessKeyUp(const SDL_KeyboardEvent &event) {
 
 void Interface::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
   if (!grab_mouse_) return;
-  move_state_.xrel += event.xrel;
+  move_state_.xrel -= event.xrel;
   move_state_.yrel -= event.yrel;
 }
 
@@ -77,12 +77,26 @@ void Interface::Step() {
   if (!position_) throw runtime_error("Position pointer is not setted.");
   char up_down = move_state_.up + move_state_.down;
   char left_right = move_state_.left + move_state_.right;
-  if (up_down && left_right) {
-    position_->x += left_right * kDiagStep;
-    position_->y += up_down * kDiagStep;
-  } else {
-    position_->x += left_right * kStep;
-    position_->y += up_down * kStep;
+  if (up_down || left_right) {
+    float step_yaw;
+    float prj;
+    if (up_down) {
+      if (left_right) {
+        step_yaw = position_->yaw + left_right * kPi / 4;
+      } else {
+        step_yaw = position_->yaw;
+      }
+      if (up_down == -1) {
+        step_yaw += kPi;
+      }
+      position_->z += kMoveStep * sin(position_->pitch) * up_down;
+      prj = kMoveStep * cos(position_->pitch);
+    } else {
+      step_yaw = position_->yaw + left_right * kPi / 2;
+      prj = kMoveStep;
+    }
+    position_->x += prj * cos(step_yaw);
+    position_->y += prj * sin(step_yaw);
   }
   // TODO: change camera angles
   position_->pitch += move_state_.yrel * rotation_k_;

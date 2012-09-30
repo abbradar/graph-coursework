@@ -30,8 +30,7 @@ class Interface : public sdlobj::EventHandler {
   void set_grab_mouse(bool grab);
 
  private:
-  static const float kStep;
-  static const float kDiagStep;
+  static const float kMoveStep;
   /** Portion of the height of the screen which turns camera 90* */
   static const float kRotationStep;
 
