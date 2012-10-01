@@ -30,11 +30,11 @@ class Interface : public sdlobj::EventHandler {
   void set_grab_mouse(bool grab);
 
  private:
-  static const float kMoveStep;
+  static const my_float kMoveStep;
   /** Portion of the height of the screen which turns camera 90* */
-  static const float kRotationStep;
+  static const my_float kRotationStep;
 
-  float rotation_k_;
+  my_float rotation_k_;
 
   struct MoveState {
     char up = 0;

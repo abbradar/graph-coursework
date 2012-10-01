@@ -4,16 +4,17 @@
 struct Point3D;
 
 #include "matrix4.h"
+#include "my_float.h"
 
 struct Point3D {
  public:
-  float x;
-  float y;
-  float z;
-  float w;
+  my_float x;
+  my_float y;
+  my_float z;
+  my_float w;
 
   Point3D();
-  Point3D(float x, float y, float z);
+  Point3D(my_float x, my_float y, my_float z, my_float w = 1.0f);
 
   Point3D &operator +=(const Point3D &other);
   Point3D &operator -=(const Point3D &other);

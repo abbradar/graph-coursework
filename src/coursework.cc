@@ -28,8 +28,7 @@ CourseWork::CourseWork() = default;
 
 CourseWork::~CourseWork() = default;
 
-int kmsecsInSec = 1000;
-float kmsecsInSecF = 1000.0f;
+#define MSECS_IN_SEC 1000
 
 int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().set_name(kProgramName);
@@ -48,7 +47,8 @@ int CourseWork::Run(int argc, const char **argv) {
   window_log_->set_font(default_font_);
   window_log_->set_color(kDefaultFontColor);
 
-  SDL::instance().SetVideoMode(kWidth, kHeight, kBpp, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
+  SDL::instance().SetVideoMode(kWidth, kHeight, kBpp, SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFACE
+                               | SDL_RESIZABLE | SDL_DOUBLEBUF);
 
   SDL::instance().set_icon_caption(kProgramName);
   SDL::instance().set_caption(kProgramName);
@@ -63,16 +63,31 @@ int CourseWork::Run(int argc, const char **argv) {
   Rasterizer *rasterizer = new Rasterizer();
   rasterizer->set_camera(position);
   rasterizer->set_scene(scene);
-  rasterizer->set_surface(&SDL::instance().surface());
+
+  // test object
+  Point3D test_points[] = { Point3D(0, 0, 0), Point3D(100, 0, 0), Point3D(0, 0, 100),
+                            Point3D(0, 100, 0), Point3D(100, 100, 0), Point3D(0, 100, 100),
+                            Point3D(100, 0, 100), Point3D(100, 100, 100) };
+  IndexedPolygon test_indexes[] = { IndexedPolygon(0, 1, 2), IndexedPolygon(1, 2, 6),
+                                    IndexedPolygon(0, 1, 3), IndexedPolygon(1, 3, 4),
+                                    IndexedPolygon(0, 2, 3), IndexedPolygon(2, 3, 5),
+                                    IndexedPolygon(7, 6, 5), IndexedPolygon(6, 5, 2),
+                                    IndexedPolygon(7, 6, 4), IndexedPolygon(6, 4, 1),
+                                    IndexedPolygon(7, 5, 4), IndexedPolygon(0, 1, 3) };
+  SceneObject::PointVector points(test_points, test_points + 8);
+  SceneObject::PolygonVector polygons(test_indexes, test_indexes + 12);
+  SceneObject object(points, polygons, Position(0, 0, 0));
+  object.color() = Color(0xFF, 0xFF, 0xFF);
+  scene->objects().push_back(std::move(object));
 
   LogDebug("Initialization complete");
 
-  int tick = kmsecsInSec / kFps;
-  float error = kmsecsInSecF / kFps - tick;
+  int tick = MSECS_IN_SEC / kFps;
+  float error = (float)MSECS_IN_SEC / kFps - tick;
   float curr_error = 0; // this is for more stable FPS
 
   const int kFpsRate = 10; // rate of FPS measurement
-  int sum_time = kFpsRate * kmsecsInSec / kFps; // this should produce initial fps=kFps
+  int sum_time = kFpsRate * MSECS_IN_SEC / kFps; // this should produce initial fps=kFps
   int fps_step = 0;
   Surface fps_r;
 
@@ -86,6 +101,7 @@ int CourseWork::Run(int argc, const char **argv) {
     while (SDL::instance().PollEvent()); // this is explicit exit point (we can receive quit event here)
     interface->Step();
     SDL::instance().surface().Fill(0x000000);
+    rasterizer->set_surface(&SDL::instance().surface());
     rasterizer->Render();
     Surface log = window_log_->Render();
     SDL::instance().surface().Blit(log, 2, 0);
@@ -96,7 +112,7 @@ int CourseWork::Run(int argc, const char **argv) {
     Surface position_r = default_font_.RenderUTF8_Solid(position_str.data(), kDefaultFontColor);
     SDL::instance().surface().Blit(position_r, 2, SDL::instance().surface().height() - default_font_.line_skip());
     if (fps_step == 0) {
-      float fps = kmsecsInSecF * kFpsRate / sum_time;
+      float fps = (float)MSECS_IN_SEC * kFpsRate / sum_time;
       sum_time = 0;
       string fps_str = (boost::format("%.1f fps") % fps).str();
       fps_r = default_font_.RenderUTF8_Solid(fps_str.data(), kDefaultFontColor);
@@ -108,9 +124,9 @@ int CourseWork::Run(int argc, const char **argv) {
     SDL::instance().Flip();
     int delay_time = 0;
     curr_error += error;
-    if (curr_error >= 1.0f) {
+    if (curr_error >= 1.0) {
       delay_time = 1;
-      curr_error -= 1.0f;
+      curr_error -= 1.0;
     }
     Uint32 curr_time = SDL_GetTicks();
     int frame_time = curr_time - last_time;

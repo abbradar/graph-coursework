@@ -3,12 +3,12 @@
 
 SceneObject::SceneObject() = default;
 
-SceneObject::SceneObject(const SceneObject::PointVector &points, const Position &position)
- : points_(points), position_(position) {
+SceneObject::SceneObject(const PointVector &points, const PolygonVector &polygons, const Position &position)
+ : points_(points), polygons_(polygons), position_(position) {
   UpdatePositioned();
 }
 
-void SceneObject::set_model(const SceneObject::PointVector &points, const SceneObject::PolygonVector &polygons) {
+void SceneObject::set_model(const PointVector &points, const PolygonVector &polygons) {
   points_ = points;
   polygons_ = polygons;
   UpdatePositioned();
@@ -19,8 +19,9 @@ void SceneObject::ApplyTransform(const Matrix4 &transform) {
   if (transformed_points_.empty()) {
     transformed_points_ = positioned_points_;
   }
-  for (auto &i : transformed_points_) {
+  for (Point3D &i : transformed_points_) {
     i = transform * i;
+    i.Normalize();
   }
 }
 
@@ -41,7 +42,7 @@ void SceneObject::set_position(const Position &position) {
 void SceneObject::UpdatePositioned() {
   positioned_points_.clear();
   positioned_points_.reserve(points_.size());
-  Matrix4 transform = position_.GetTransformMatrix();
+  Matrix4 transform = position_.GetMatrixFrom();
   for (const auto &i : points_) {
     positioned_points_.push_back(transform * i);
   }

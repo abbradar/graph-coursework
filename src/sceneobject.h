@@ -6,12 +6,7 @@
 #include "matrix4.h"
 #include "point3d.h"
 #include "position.h"
-
-struct IndexedPolygon {
-  int v1;
-  int v2;
-  int v3;
-};
+#include "indexedpolygon.h"
 
 /** Scene object */
 class SceneObject {
@@ -20,7 +15,7 @@ class SceneObject {
   typedef std::vector<IndexedPolygon> PolygonVector;
 
   SceneObject();
-  SceneObject(const PointVector &points, const Position &position);
+  SceneObject(const PointVector &points, const PolygonVector &polygons, const Position &position);
 
   /** Points vector */
   inline const PointVector &points() const {

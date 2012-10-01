@@ -8,9 +8,9 @@ set(CMAKE_BUILD_TYPE Debug)
 
 # Debug levels
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  add_definitions(-DDEBUG_LEVEL=4)
+  add_definitions(-DDEBUG_LEVEL=4 -O0)
 elseif(CMAKE_BUILD_TYPE STREQUAL Release)
-  add_definitions(-DDEBUG_LEVEL=1)
+  add_definitions(-DDEBUG_LEVEL=1 -O2)
 endif()
 
 # Various packages

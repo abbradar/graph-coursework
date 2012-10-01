@@ -3,13 +3,13 @@
 
 #include <memory>
 #include "sdlobj/surface.h"
+#include "sdlobj/surfacepainter.h"
 #include "scene.h"
+#include "my_float.h"
 
 class Rasterizer {
  public:
-  static const float kAOVX;
-  static const float kAOVY;
-  static const float kRenderDistance;
+  static const Point3D kFocalPoint;
 
   Rasterizer();
 
@@ -34,10 +34,14 @@ class Rasterizer {
   void set_surface(sdlobj::Surface *surface);
 
  private:
+  void DrawTriangle(const IndexedPolygon &index, const SceneObject::PointVector &points, const sdlobj::Color &color);
+  void ResetZBuffer();
+
   Scene *scene_;
   Position *camera_;
   sdlobj::Surface *surface_;
-  std::unique_ptr<float> z_buffer_;
+  sdlobj::SurfacePainter surface_painter_;
+  std::unique_ptr<my_float> z_buffer_;
   int z_buffer_size_;
 };
 

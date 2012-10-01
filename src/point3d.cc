@@ -1,9 +1,9 @@
 #include "point3d.h"
 
-Point3D::Point3D() = default;
+Point3D::Point3D() : Point3D(0, 0, 0, 1) {}
 
-Point3D::Point3D(float x_, float y_, float z_) :
-  x(x_), y(y_), z(z_) {}
+Point3D::Point3D(my_float x_, my_float y_, my_float z_, my_float w_) :
+  x(x_), y(y_), z(z_), w(w_) {}
 
 Point3D &Point3D::operator +=(const Point3D &other) {
   x += other.x;
@@ -25,11 +25,10 @@ Point3D &Point3D::operator *=(const Matrix4 &matrix) {
 }
 
 void Point3D::Normalize() {
-  if (w == 1.0f) return;
   x /= w;
   y /= w;
   z /= w;
-  w = 1.0f;
+  w = 1;
 }
 
 Point3D operator +(const Point3D &a, const Point3D &b) {
@@ -46,7 +45,7 @@ Point3D operator -(const Point3D &a, const Point3D &b) {
 
 Point3D operator *(const Matrix4 &matrix, const Point3D &point) {
   Point3D r;
-  float *c = matrix.matrix_;
+  my_float *c = matrix.matrix_;
   r.x = c[0] * point.x + c[1] * point.y + c[2] * point.z + c[3] * point.w;
   r.y = c[4] * point.x + c[5] * point.y + c[6] * point.z + c[7] * point.w;
   r.z = c[8] * point.x + c[9] * point.y + c[10] * point.z + c[11] * point.w;
