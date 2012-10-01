@@ -7,17 +7,17 @@ const int Matrix4::kMatrixHeight = 4;
 
 Matrix4::Matrix4() : Matrix4(0.0) {}
 
-Matrix4::Matrix4(my_float fill) : matrix_(new my_float[kMatrixWidth * kMatrixHeight]) {
+Matrix4::Matrix4(myfloat fill) : matrix_(new myfloat[kMatrixWidth * kMatrixHeight]) {
   for (int i = 0; i < kMatrixWidth * kMatrixHeight; ++i) {
     matrix_[i] = fill;
   }
 }
 
-Matrix4::Matrix4(const my_float *array): matrix_(new my_float[kMatrixWidth * kMatrixHeight]) {
-  memcpy(matrix_, array, kMatrixWidth * kMatrixHeight * sizeof(my_float));
+Matrix4::Matrix4(const myfloat *array): matrix_(new myfloat[kMatrixWidth * kMatrixHeight]) {
+  memcpy(matrix_, array, kMatrixWidth * kMatrixHeight * sizeof(myfloat));
 }
 
-Matrix4::Matrix4(const Matrix4 &other) : matrix_(new my_float[kMatrixWidth * kMatrixHeight]) {
+Matrix4::Matrix4(const Matrix4 &other) : matrix_(new myfloat[kMatrixWidth * kMatrixHeight]) {
   operator =(other);
 }
 
@@ -26,11 +26,11 @@ Matrix4::~Matrix4() {
 }
 
 Matrix4 &Matrix4::operator =(const Matrix4 &other) {
-  memcpy(matrix_, other.matrix_, kMatrixWidth * kMatrixHeight * sizeof(my_float));
+  memcpy(matrix_, other.matrix_, kMatrixWidth * kMatrixHeight * sizeof(myfloat));
   return *this;
 }
 
-Matrix4 Matrix4::Translate(my_float x, my_float y, my_float z) {
+Matrix4 Matrix4::Translate(myfloat x, myfloat y, myfloat z) {
   Matrix4 matrix;
   matrix.at(0, 0) = 1;
   matrix.at(1, 1) = 1;
@@ -42,10 +42,10 @@ Matrix4 Matrix4::Translate(my_float x, my_float y, my_float z) {
   return matrix;
 }
 
-Matrix4 Matrix4::RotateX(my_float a) {
+Matrix4 Matrix4::RotateX(myfloat a) {
   Matrix4 matrix;
-  my_float sina = sin(a);
-  my_float cosa = cos(a);
+  myfloat sina = sin(a);
+  myfloat cosa = cos(a);
   matrix.at(0, 0) = 1;
   matrix.at(3, 3) = 1;
   matrix.at(1, 1) = cosa;
@@ -55,10 +55,10 @@ Matrix4 Matrix4::RotateX(my_float a) {
   return matrix;
 }
 
-Matrix4 Matrix4::RotateY(my_float a) {
+Matrix4 Matrix4::RotateY(myfloat a) {
   Matrix4 matrix;
-  my_float sina = sin(a);
-  my_float cosa = cos(a);
+  myfloat sina = sin(a);
+  myfloat cosa = cos(a);
   matrix.at(1, 1) = 1;
   matrix.at(3, 3) = 1;
   matrix.at(0, 0) = cosa;
@@ -68,10 +68,10 @@ Matrix4 Matrix4::RotateY(my_float a) {
   return matrix;
 }
 
-Matrix4 Matrix4::RotateZ(my_float a) {
+Matrix4 Matrix4::RotateZ(myfloat a) {
   Matrix4 matrix;
-  my_float sina = sin(a);
-  my_float cosa = cos(a);
+  myfloat sina = sin(a);
+  myfloat cosa = cos(a);
   matrix.at(2, 2) = 1;
   matrix.at(3, 3) = 1;
   matrix.at(0, 0) = cosa;
@@ -81,7 +81,7 @@ Matrix4 Matrix4::RotateZ(my_float a) {
   return matrix;
 }
 
-Matrix4 Matrix4::Scale(my_float x, my_float y, my_float z) {
+Matrix4 Matrix4::Scale(myfloat x, myfloat y, myfloat z) {
   Matrix4 matrix;
   matrix.at(3, 3) = 1;
   matrix.at(0, 0) = x;
@@ -90,26 +90,26 @@ Matrix4 Matrix4::Scale(my_float x, my_float y, my_float z) {
   return matrix;
 }
 
-Matrix4 Matrix4::Perspective(my_float ex, my_float ey, my_float ez) {
+Matrix4 Matrix4::Perspective(myfloat fovx, myfloat fovy, myfloat ex, myfloat ey) {
   Matrix4 matrix;
-  matrix.at(0, 0) = 1;
-  matrix.at(1, 1) = 1;
   matrix.at(2, 2) = 1;
-  matrix.at(3, 0) = -ex;
-  matrix.at(3, 1) = -ey;
-  matrix.at(2, 3) = 1.0 / ez;
+  matrix.at(2, 3) = 1;
+  matrix.at(0, 0) = fovx;
+  matrix.at(1, 1) = fovy;
+  matrix.at(2, 0) = ex;
+  matrix.at(2, 1) = ey;
   return matrix;
 }
 
 Matrix4 &Matrix4::operator +=(const Matrix4 &other) {
-  my_float *ti = matrix_, *oi = other.matrix_;
+  myfloat *ti = matrix_, *oi = other.matrix_;
   for (int i = 0; i < Matrix4::kMatrixHeight * Matrix4::kMatrixWidth; ++ti, ++oi, ++i)
     *ti += *oi;
   return *this;
 }
 
 Matrix4 &Matrix4::operator -=(const Matrix4 &other) {
-  my_float *ti = matrix_, *oi = other.matrix_;
+  myfloat *ti = matrix_, *oi = other.matrix_;
   for (int i = 0; i < Matrix4::kMatrixHeight * Matrix4::kMatrixWidth; ++ti, ++oi, ++i)
     *ti -= *oi;
   return *this;
@@ -134,12 +134,12 @@ Matrix4 operator -(const Matrix4 &a, const Matrix4 &b) {
 
 Matrix4 operator *(const Matrix4 &a, const Matrix4 &b) {
   Matrix4 r;
-  my_float *ri = r.matrix_;
-  my_float *astart = a.matrix_;
+  myfloat *ri = r.matrix_;
+  myfloat *astart = a.matrix_;
   for (int i = 0; i < Matrix4::kMatrixHeight; ++i) {
     for (int j = 0; j < Matrix4::kMatrixWidth; ++j, ++ri) {
-      my_float cr = 0;
-      my_float *ai = astart, *bi = b.matrix_ + j;
+      myfloat cr = 0;
+      myfloat *ai = astart, *bi = b.matrix_ + j;
       for (int k = 0; k < Matrix4::kMatrixHeight; ++k) {
         cr += *ai * *bi;
         ++ai;

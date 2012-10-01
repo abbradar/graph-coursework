@@ -6,7 +6,8 @@ using namespace std;
 using namespace sdlobj;
 
 // TODO: fix values
-const Point3D Rasterizer::kFocalPoint = Point3D(0, 0, 100);
+const myfloat Rasterizer::kFOVX = 90.0 / 180.0 * M_PI;
+const myfloat Rasterizer::kFOVY = 90.0 / 180.0 * M_PI;
 
 Rasterizer::Rasterizer() : scene_(nullptr), camera_(nullptr),
   surface_(nullptr), z_buffer_size_(0) {}
@@ -16,8 +17,7 @@ void Rasterizer::Render() {
 
   ResetZBuffer();
   surface_painter_.StartDrawing();
-  Matrix4 transform = Matrix4::Perspective(kFocalPoint.x, kFocalPoint.y, kFocalPoint.z);
-  transform *= Matrix4::Translate(surface_->width() / 2.0, surface_->height() / 2.0, 0);
+  Matrix4 transform = Matrix4::Perspective(kFOVX, kFOVY, surface_->width() / 2.0, surface_->height() / 2.0);
   transform *= camera_->GetMatrixTo();
   for (SceneObject &object : scene_->objects()) {
     object.ClearTransformed();
@@ -83,7 +83,7 @@ void Rasterizer::ResetZBuffer() {
   // fairly fast for ~60 ops and adds safety
   int img_size = surface_->width() * surface_->height();
   if (z_buffer_size_ != img_size) {
-    z_buffer_.reset(new my_float[img_size]);
+    z_buffer_.reset(new myfloat[img_size]);
     z_buffer_size_ = img_size;
   }
   float *z_buf = z_buffer_.get();

@@ -2,7 +2,7 @@
 
 Position::Position() : Position(0, 0, 0, 0, 0, 0) {}
 
-Position::Position(my_float x_, my_float y_, my_float z_, my_float pitch_, my_float yaw_, my_float roll_)
+Position::Position(myfloat x_, myfloat y_, myfloat z_, myfloat pitch_, myfloat yaw_, myfloat roll_)
   : x(x_), y(y_), z(z_), pitch(pitch_), yaw(yaw_), roll(roll_) {}
 
 Matrix4 Position::GetMatrixFrom() {

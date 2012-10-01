@@ -4,7 +4,7 @@
 class Matrix4;
 
 #include "point3d.h"
-#include "my_float.h"
+#include "myfloat.h"
 
 class Matrix4 {
  public:
@@ -12,30 +12,30 @@ class Matrix4 {
   static const int kMatrixHeight;
 
   Matrix4();
-  Matrix4(my_float fill);
-  Matrix4(const my_float *array);
+  Matrix4(myfloat fill);
+  Matrix4(const myfloat *array);
   Matrix4(const Matrix4 &other);
   ~Matrix4();
 
   Matrix4 &operator =(const Matrix4 &other);
 
-  inline my_float &at(int x, int y) {
+  inline myfloat &at(int x, int y) {
     return matrix_[y * kMatrixWidth + x];
   }
 
-  static Matrix4 Translate(my_float x, my_float y, my_float z);
-  static Matrix4 RotateX(my_float a);
-  static Matrix4 RotateY(my_float a);
-  static Matrix4 RotateZ(my_float a);
-  static Matrix4 Scale(my_float x, my_float y, my_float z);
-  static Matrix4 Perspective(my_float ex, my_float ey, my_float ez);
+  static Matrix4 Translate(myfloat x, myfloat y, myfloat z);
+  static Matrix4 RotateX(myfloat a);
+  static Matrix4 RotateY(myfloat a);
+  static Matrix4 RotateZ(myfloat a);
+  static Matrix4 Scale(myfloat x, myfloat y, myfloat z);
+  static Matrix4 Perspective(myfloat fovx, myfloat fovy, myfloat ex, myfloat ey);
 
   Matrix4 &operator +=(const Matrix4 &other);
   Matrix4 &operator -=(const Matrix4 &other);
   Matrix4 &operator *=(const Matrix4 &other);
 
  private:
-  my_float* matrix_;
+  myfloat* matrix_;
 
   friend Matrix4 operator +(const Matrix4 &a, const Matrix4 &b);
   friend Matrix4 operator -(const Matrix4 &a, const Matrix4 &b);

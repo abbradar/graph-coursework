@@ -8,12 +8,29 @@
 using namespace sdlobj;
 using namespace std;
 
-const my_float Interface::kMoveStep = 2.0;
-const my_float Interface::kRotationStep = 1.0 / 3.0;
-
-Interface::Interface() {
-  rotation_k_ = M_PI_2 / (SDL::instance().surface().height() * kRotationStep);
+Interface::Interface(float fps) : move_speed_(1), rotation_speed_(1), fps_(fps),
+ position_(nullptr) {
   set_grab_mouse(false);
+}
+
+void Interface::set_move_speed(myfloat move_speed) {
+  move_speed_ = move_speed;
+  move_step_ = move_speed_ / fps_;
+  // sqrt(2)/2
+  diag_step_ = move_step_ * M_SQRT2 / 2;
+}
+
+void Interface::set_rotation_speed(myfloat rotation_speed) {
+  rotation_speed_ = rotation_speed;
+  rotation_k_ = M_PI_2 / (SDL::instance().surface().height() * rotation_speed_);
+}
+
+void Interface::set_fps(float fps) {
+  if (fps <= 0) {
+    throw runtime_error("FPS should be > 0");
+  }
+  fps_ = fps;
+  set_move_speed(move_speed_);
 }
 
 void Interface::ProcessQuit(const SDL_QuitEvent &) {
@@ -70,25 +87,22 @@ void Interface::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
 
 void Interface::ProcessResize(const SDL_ResizeEvent &event) {
   SDL::instance().SetVideoMode(event.w, event.h);
-  rotation_k_ = M_PI_2 / (SDL::instance().surface().height() * kRotationStep);
+  set_rotation_speed(rotation_speed_);
 }
 
 void Interface::Step() {
-  // sqrt(2)/2
-  static const my_float kDiagStep = kMoveStep * M_SQRT2 / 2;
-
   if (!position_) throw runtime_error("Position pointer is not setted.");
   char up_down = move_state_.up + move_state_.down;
   char left_right = move_state_.left + move_state_.right;
-  my_float len = up_down && left_right ? kDiagStep : kMoveStep;
+  myfloat len = up_down && left_right ? diag_step_ : move_step_;
   if (up_down) {
     position_->y += -up_down * len * sin(position_->pitch);
-    my_float prj = up_down * len * cos(position_->pitch);
+    myfloat prj = up_down * len * cos(position_->pitch);
     position_->z += prj * cos(position_->yaw);
     position_->x += prj * sin(position_->yaw);
   }
   if (left_right) {
-    my_float r_yaw = position_->yaw + M_PI_2;
+    myfloat r_yaw = position_->yaw + M_PI_2;
     position_->z += left_right * len * cos(r_yaw);
     position_->x += left_right * len * sin(r_yaw);
   }
@@ -107,13 +121,11 @@ void Interface::set_position(Position *position) {
 void Interface::set_grab_mouse(bool grab) {
   if (grab_mouse_ == grab) return;
   grab_mouse_ = grab;
-  if (grab) {
+  if (grab_mouse_) {
     LogDebug("Started mouse grabbing");
-    SDL::instance().set_grab_input(true);
-    SDL::instance().set_show_cursor(false);
   } else {
     LogDebug("Stopped mouse grabbing");
-    SDL::instance().set_grab_input(false);
-    SDL::instance().set_show_cursor(true);
   }
+  SDL::instance().set_grab_input(grab_mouse_);
+  SDL::instance().set_show_cursor(!grab_mouse_);
 }

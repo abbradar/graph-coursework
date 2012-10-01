@@ -16,8 +16,6 @@ void SDL::Init(Uint32 flags) {
   //LogDebug("SDL initialized");
 }
 
-void DummyDelete(SDL_Surface *) {}
-
 void SDL::Free() {
   if (!initialized()) return;
   initialized_ = false;

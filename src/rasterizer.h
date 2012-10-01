@@ -5,11 +5,12 @@
 #include "sdlobj/surface.h"
 #include "sdlobj/surfacepainter.h"
 #include "scene.h"
-#include "my_float.h"
+#include "myfloat.h"
 
 class Rasterizer {
  public:
-  static const Point3D kFocalPoint;
+  static const myfloat kFOVX;
+  static const myfloat kFOVY;
 
   Rasterizer();
 
@@ -41,7 +42,7 @@ class Rasterizer {
   Position *camera_;
   sdlobj::Surface *surface_;
   sdlobj::SurfacePainter surface_painter_;
-  std::unique_ptr<my_float> z_buffer_;
+  std::unique_ptr<myfloat> z_buffer_;
   int z_buffer_size_;
 };
 

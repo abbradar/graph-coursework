@@ -4,10 +4,11 @@
 #include "sdlobj/sdl.h"
 #include "scene.h"
 #include "position.h"
+#include "myfloat.h"
 
 class Interface : public sdlobj::EventHandler {
  public:
-  Interface();
+  Interface(float fps);
 
   void ProcessQuit(const SDL_QuitEvent &);
   void ProcessKeyDown(const SDL_KeyboardEvent &);
@@ -29,12 +30,33 @@ class Interface : public sdlobj::EventHandler {
 
   void set_grab_mouse(bool grab);
 
- private:
-  static const my_float kMoveStep;
-  /** Portion of the height of the screen which turns camera 90* */
-  static const my_float kRotationStep;
+  /** Speed of movement */
+  inline myfloat move_speed() {
+    return move_step_;
+  }
 
-  my_float rotation_k_;
+  void set_move_speed(myfloat move_speed);
+
+  /** Portion of the height of the screen which turns camera 90* */
+  inline myfloat rotation_speed() {
+    return rotation_speed_;
+  }
+
+  void set_rotation_speed(myfloat rotation_speed);
+
+  inline float fps() {
+    return fps_;
+  }
+
+  void set_fps(float fps);
+
+ private:
+  myfloat move_speed_;
+  myfloat rotation_speed_;
+  myfloat move_step_;
+  myfloat diag_step_;
+  myfloat rotation_k_;
+  float fps_;
 
   struct MoveState {
     char up = 0;
