@@ -31,8 +31,8 @@ void WindowLogDestination::WriteLog(logging::LogMessageLevel level, const char *
 
   WindowMessage message(ss.str());
 
-  while (deque_.size() > max_items_ - 1) deque_.pop_front();
-  deque_.push_back(std::move(message));
+  while (buffer_.size() > max_items_ - 1) buffer_.pop_front();
+  buffer_.push_back(std::move(message));
 }
 
 void WindowLogDestination::set_time_facet(TimeFacet *time_facet) noexcept {
@@ -43,7 +43,7 @@ void WindowLogDestination::set_time_facet(TimeFacet *time_facet) noexcept {
 
 void WindowLogDestination::set_max_items(const unsigned int max_items) {
   max_items_ = max_items;
-  while (deque_.size() > max_items_) deque_.pop_front();
+  while (buffer_.size() > max_items_) buffer_.pop_front();
 }
 
 void WindowLogDestination::set_font(const Font &font) {
@@ -58,7 +58,7 @@ void WindowLogDestination::set_color(const Color &color) {
 
 Surface WindowLogDestination::Render() {
   unsigned int max_width = 0;
-  for (auto &i : deque_) {
+  for (auto &i : buffer_) {
     if (!i.surface)
       i.surface.reset(new Surface(font_.RenderUTF8_Blended(i.message.data(), color_)));
     max_width = max_width > i.surface->width() ? max_width : i.surface->width();
@@ -67,7 +67,7 @@ Surface WindowLogDestination::Render() {
   Surface surface(max_width, line_skip * max_items_);
   surface.SetColorKey(SDL_SRCCOLORKEY | SDL_RLEACCEL, 0x0);
   int y = 0;
-  for (auto &i : deque_) {
+  for (auto &i : buffer_) {
     surface.Blit(*i.surface, 0, y);
     y += line_skip;
   }
@@ -75,7 +75,7 @@ Surface WindowLogDestination::Render() {
 }
 
 void WindowLogDestination::ClearRendered() {
-  for (auto &i : deque_) {
+  for (auto &i : buffer_) {
     i.surface.reset(nullptr);
   }
 }

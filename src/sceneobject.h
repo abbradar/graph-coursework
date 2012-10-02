@@ -2,43 +2,36 @@
 #define GRAPH_SCENEOBJECT_H_
 
 #include <vector>
+#include <memory>
 #include "sdlobj/color.h"
 #include "matrix4.h"
 #include "point3d.h"
 #include "position.h"
-#include "indexedpolygon.h"
+#include "indexedtriangle.h"
+
+typedef std::vector<Point3D> PointVector;
+typedef std::vector<IndexedTriangle> TriangleVector;
 
 /** Scene object */
 class SceneObject {
  public:
-  typedef std::vector<Point3D> PointVector;
-  typedef std::vector<IndexedPolygon> PolygonVector;
-
   SceneObject();
-  SceneObject(const PointVector &points, const PolygonVector &polygons, const Position &position);
+  SceneObject(const PointVector &points, const TriangleVector &polygons, const Position &position);
 
   /** Points vector */
   inline const PointVector &points() const {
     return points_;
   }
 
-  inline const PolygonVector &polygons() const {
+  inline const TriangleVector &polygons() const {
     return polygons_;
   }
 
-  void set_model(const PointVector &points, const PolygonVector &polygons);
+  void set_model(const PointVector &points, const TriangleVector &polygons);
 
   inline const PointVector &positioned_points() const {
     return positioned_points_;
   }
-
-  inline const PointVector &transformed_points() const {
-    return transformed_points_;
-  }
-
-  void ApplyTransform(const Matrix4 &transform);
-  void ClearTransformed();
-  bool ClearedTransformed();
 
   inline const Position &position() const {
     return position_;
@@ -53,8 +46,7 @@ class SceneObject {
  private:
   PointVector points_;
   PointVector positioned_points_;
-  PointVector transformed_points_;
-  PolygonVector polygons_;
+  TriangleVector polygons_;
   Position position_;
   sdlobj::Color color_;
 

@@ -22,7 +22,7 @@ Matrix4::Matrix4(const Matrix4 &other) : matrix_(new myfloat[kMatrixWidth * kMat
 }
 
 Matrix4::~Matrix4() {
-  delete matrix_;
+  delete[] matrix_;
 }
 
 Matrix4 &Matrix4::operator =(const Matrix4 &other) {
@@ -87,17 +87,6 @@ Matrix4 Matrix4::Scale(myfloat x, myfloat y, myfloat z) {
   matrix.at(0, 0) = x;
   matrix.at(1, 1) = y;
   matrix.at(2, 2) = z;
-  return matrix;
-}
-
-Matrix4 Matrix4::Perspective(myfloat fovx, myfloat fovy, myfloat ex, myfloat ey) {
-  Matrix4 matrix;
-  matrix.at(2, 2) = 1;
-  matrix.at(2, 3) = 1;
-  matrix.at(0, 0) = fovx;
-  matrix.at(1, 1) = fovy;
-  matrix.at(2, 0) = ex;
-  matrix.at(2, 1) = ey;
   return matrix;
 }
 

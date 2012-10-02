@@ -96,20 +96,20 @@ void Interface::Step() {
   char left_right = move_state_.left + move_state_.right;
   myfloat len = up_down && left_right ? diag_step_ : move_step_;
   if (up_down) {
-    position_->y += -up_down * len * sin(position_->pitch);
+    position_->z += up_down * len * sin(position_->pitch);
     myfloat prj = up_down * len * cos(position_->pitch);
-    position_->z += prj * cos(position_->yaw);
-    position_->x += prj * sin(position_->yaw);
+    position_->x += prj * cos(position_->yaw);
+    position_->y += prj * sin(position_->yaw);
   }
   if (left_right) {
     myfloat r_yaw = position_->yaw + M_PI_2;
-    position_->z += left_right * len * cos(r_yaw);
-    position_->x += left_right * len * sin(r_yaw);
+    position_->x += left_right * len * cos(r_yaw);
+    position_->y += left_right * len * sin(r_yaw);
   }
   position_->pitch += move_state_.yrel * rotation_k_;
-  position_->pitch = trim<float>(position_->pitch, -M_PI_2, M_PI_2);
+  position_->pitch = trim<myfloat>(position_->pitch, -M_PI_2, M_PI_2);
   position_->yaw += move_state_.xrel * rotation_k_;
-  position_->yaw = circle<float>(position_->yaw, -M_PI, M_PI);
+  position_->yaw = circle<myfloat>(position_->yaw, -M_PI, M_PI);
   move_state_.xrel = 0;
   move_state_.yrel = 0;
 }

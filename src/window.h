@@ -32,35 +32,18 @@ class Window {
   void set_font(const sdlobj::Font &font);
   void set_font_color(const sdlobj::Color &font_color);
 
-  inline float fps() {
-    return frame_timer_.fps();
-  }
-
+  float fps();
   void set_fps(float fps);
 
-  inline bool show_fps() {
-    return frame_timer_.measure_fps();
-  }
-
+  bool show_fps();
   void set_show_fps(bool show_fps);
 
-  inline int show_fps_rate() {
-    return frame_timer_.measure_ticks();
-  }
-
+  int show_fps_rate();
   void set_show_fps_rate(int show_fps_rate);
 
-  inline int width() {
-    return sdlobj::SDL::instance().surface().width();
-  }
-
-  inline int height() {
-    return sdlobj::SDL::instance().surface().height();
-  }
-
-  inline int bpp() {
-    return sdlobj::SDL::instance().surface().bpp();
-  }
+  int width();
+  int height();
+  int bpp();
 
   inline Interface *interface() {
     return interface_;
@@ -72,6 +55,11 @@ class Window {
 
   inline Scene *scene() {
     return scene_;
+  }
+
+  // TODO: ugly, fix this
+  inline Rasterizer &rasterizer() {
+    return rasterizer_;
   }
 
   void SetVideoMode(int width, int height, int bpp);

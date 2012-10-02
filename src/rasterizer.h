@@ -6,12 +6,10 @@
 #include "sdlobj/surfacepainter.h"
 #include "scene.h"
 #include "myfloat.h"
+#include "zbuffer.h"
 
 class Rasterizer {
  public:
-  static const myfloat kFOVX;
-  static const myfloat kFOVY;
-
   Rasterizer();
 
   void Render();
@@ -28,6 +26,12 @@ class Rasterizer {
 
   void set_camera(Position *camera);
 
+  inline myfloat viewer_distance() {
+    return viewer_distance_;
+  }
+
+  void set_viewer_distance(myfloat viewer_distance);
+
   inline sdlobj::Surface *surface() {
     return surface_;
   }
@@ -35,15 +39,16 @@ class Rasterizer {
   void set_surface(sdlobj::Surface *surface);
 
  private:
-  void DrawTriangle(const IndexedPolygon &index, const SceneObject::PointVector &points, const sdlobj::Color &color);
-  void ResetZBuffer();
+  void DrawTriangle(const IndexedTriangle &source, const sdlobj::Color &color);
+  void FillTriangle(const IndexedTriangle &source, const Point3D *points, const sdlobj::Color &color);
 
   Scene *scene_;
   Position *camera_;
   sdlobj::Surface *surface_;
   sdlobj::SurfacePainter surface_painter_;
-  std::unique_ptr<myfloat> z_buffer_;
-  int z_buffer_size_;
+  PointVector point_buffer_;
+  ZBuffer z_buffer_;
+  myfloat viewer_distance_;
 };
 
 #endif // GRAPH_RASTERIZER_H_

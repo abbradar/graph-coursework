@@ -28,6 +28,8 @@ const char *logging::LevelName(const LogMessageLevel level) {
   return nullptr;
 }
 
+Logger::LogDestination::~LogDestination() = default;
+
 Logger::Logger() noexcept : time_facet_(new TimeFacet("%x %X")) {
   time_format_.imbue(locale(time_format_.getloc(), time_facet_));
 }

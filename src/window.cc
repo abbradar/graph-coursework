@@ -58,9 +58,17 @@ void Window::set_font_color(const Color &font_color) {
   window_log_->set_color(font_color_);
 }
 
+float Window::fps() {
+  return frame_timer_.fps();
+}
+
 void Window::set_fps(float fps) {
   frame_timer_.set_fps(fps);
   interface_->set_fps(fps);
+}
+
+bool Window::show_fps() {
+  return frame_timer_.measure_fps();
 }
 
 void Window::set_show_fps(bool show_fps) {
@@ -68,8 +76,24 @@ void Window::set_show_fps(bool show_fps) {
   if (!show_fps) fps_step_ = 0;
 }
 
+int Window::show_fps_rate() {
+  return frame_timer_.measure_ticks();
+}
+
 void Window::set_show_fps_rate(int show_fps_rate) {
   frame_timer_.set_measure_ticks(show_fps_rate);
+}
+
+int Window::width() {
+  return SDL::instance().surface().width();
+}
+
+int Window::height() {
+  return SDL::instance().surface().height();
+}
+
+int Window::bpp() {
+  return SDL::instance().surface().bpp();
 }
 
 void Window::SetVideoMode(int width, int height, int bpp) {

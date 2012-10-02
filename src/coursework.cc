@@ -22,8 +22,9 @@ const int kDefaultBpp = 32;
 const float kDefaultFps = 60;
 const bool kDefaultShowFps = true;
 const int kDefaultFpsMeasureRate = 10;
-const myfloat kDefaultMoveSpeed = 120.0;
+const myfloat kDefaultMoveSpeed = 120;
 const myfloat kDefaultRotationSpeed = 1.0 / 3.0;
+const myfloat kDefaultViewerDistance = 100;
 
 CourseWork::CourseWork() = default;
 
@@ -48,19 +49,20 @@ int CourseWork::Run(int argc, const char **argv) {
   window->interface()->set_rotation_speed(kDefaultRotationSpeed);
   window->set_show_fps(kDefaultShowFps);
   window->set_show_fps_rate(kDefaultFpsMeasureRate);
+  window->rasterizer().set_viewer_distance(kDefaultViewerDistance);
 
   // test object
   Point3D test_points[] = { Point3D(0, 0, 0), Point3D(100, 0, 0), Point3D(0, 0, 100),
                             Point3D(0, 100, 0), Point3D(100, 100, 0), Point3D(0, 100, 100),
                             Point3D(100, 0, 100), Point3D(100, 100, 100) };
-  IndexedPolygon test_indexes[] = { IndexedPolygon(0, 1, 2), IndexedPolygon(1, 2, 6),
-                                    IndexedPolygon(0, 1, 3), IndexedPolygon(1, 3, 4),
-                                    IndexedPolygon(0, 2, 3), IndexedPolygon(2, 3, 5),
-                                    IndexedPolygon(7, 6, 5), IndexedPolygon(6, 5, 2),
-                                    IndexedPolygon(7, 6, 4), IndexedPolygon(6, 4, 1),
-                                    IndexedPolygon(7, 5, 4), IndexedPolygon(0, 1, 3) };
-  SceneObject::PointVector points(test_points, test_points + 8);
-  SceneObject::PolygonVector polygons(test_indexes, test_indexes + 12);
+  IndexedTriangle test_indexes[] = { IndexedTriangle(0, 1, 2), IndexedTriangle(1, 2, 6),
+                                    IndexedTriangle(0, 1, 3), IndexedTriangle(1, 3, 4),
+                                    IndexedTriangle(0, 2, 3), IndexedTriangle(2, 3, 5),
+                                    IndexedTriangle(7, 6, 5), IndexedTriangle(6, 5, 2),
+                                    IndexedTriangle(7, 6, 4), IndexedTriangle(6, 4, 1),
+                                    IndexedTriangle(7, 5, 4), IndexedTriangle(0, 1, 3) };
+  PointVector points(test_points, test_points + 8);
+  TriangleVector polygons(test_indexes, test_indexes + 12);
   SceneObject object(points, polygons, Position(0, 0, 0));
   object.color() = Color(0xFF, 0xFF, 0xFF);
   window->scene()->objects().push_back(std::move(object));

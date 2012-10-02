@@ -13,12 +13,12 @@ struct Position {
   myfloat x = 0;
   myfloat y = 0;
   myfloat z = 0;
+  myfloat roll = 0;
   myfloat pitch = 0;
   myfloat yaw = 0;
-  myfloat roll = 0;
 
   Position();
-  Position(myfloat x, myfloat y, myfloat z, myfloat pitch = 0, myfloat yaw = 0, myfloat roll = 0);
+  Position(myfloat x, myfloat y, myfloat z, myfloat roll = 0, myfloat pitch = 0, myfloat yaw = 0);
 
   Matrix4 GetMatrixFrom();
   Matrix4 GetMatrixTo();

@@ -28,7 +28,6 @@ class Matrix4 {
   static Matrix4 RotateY(myfloat a);
   static Matrix4 RotateZ(myfloat a);
   static Matrix4 Scale(myfloat x, myfloat y, myfloat z);
-  static Matrix4 Perspective(myfloat fovx, myfloat fovy, myfloat ex, myfloat ey);
 
   Matrix4 &operator +=(const Matrix4 &other);
   Matrix4 &operator -=(const Matrix4 &other);

@@ -10,7 +10,7 @@
 #include "sdlobj/color.h"
 #include "common/logging.h"
 
-class WindowLogDestination : public logging::LogDestination {
+class WindowLogDestination : public logging::Logger::LogDestination {
  public:
   typedef boost::posix_time::time_facet TimeFacet;
 
@@ -59,7 +59,7 @@ class WindowLogDestination : public logging::LogDestination {
   sdlobj::Font font_;
   sdlobj::Color color_;
   std::stringstream time_format_;
-  std::deque<WindowMessage> deque_;
+  std::deque<WindowMessage> buffer_;
   unsigned int max_items_;
 
   void ClearRendered();
