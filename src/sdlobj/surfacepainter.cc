@@ -77,10 +77,10 @@ void SurfacePainter::set_surface(Surface *surface) {
   }
 }
 
-void SurfacePainter::DrawLine(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2, Uint32 pixel) {
+void SurfacePainter::DrawLine(const unsigned int x1, const unsigned int y1, const unsigned int x2, const unsigned int y2, const Uint32 pixel) {
   int dx = x2 - x1, dy = y2 - y1;
   unsigned int x = x1, y = y1;
-  int sx = sign(dx), sy = sign(dy);
+  int sx = Sign(dx), sy = Sign(dy);
   dx = abs(dx), dy = abs(dy);
   bool swapped = dx < dy;
   if (swapped) swap(dx, dy);

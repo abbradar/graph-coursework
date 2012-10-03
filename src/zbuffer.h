@@ -5,7 +5,7 @@
 
 class ZBuffer {
  public:
-  ZBuffer(int width, int height);
+  ZBuffer(const int width, const int height);
   ~ZBuffer();
 
   inline int width() {
@@ -16,13 +16,13 @@ class ZBuffer {
     return height_;
   }
 
-  void set_size(int width, int height);
+  void set_size(const int width, const int height);
 
   void clear();
 
-  inline bool visible(int x, int y, myfloat z) {
+  inline bool Check(const int x, const int y, myfloat z) {
     myfloat *p = z_buffer_ + y * width_ + x;
-    if (*p <= z) {
+    if (*p < z) {
       return false;
     } else {
       *p = z;
@@ -30,7 +30,7 @@ class ZBuffer {
     }
   }
 
-  inline myfloat &at(int x, int y) {
+  inline myfloat &at(const int x, const int y) {
     return z_buffer_[y * width_ + x];
   }
 

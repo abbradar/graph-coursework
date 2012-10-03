@@ -19,7 +19,7 @@ public:
 
   ~Font();
 
-  inline const TTF_Font *font() {
+  inline const TTF_Font *const font() {
     return font_->font;
   }
 

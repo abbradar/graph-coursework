@@ -6,6 +6,8 @@
 
 using namespace std;
 
+Application::Application() = default;
+
 int Application::Run(int argc, const char **argv) noexcept {
   if (!runnable_) {
     throw runtime_error("Runnable is not assigned.");
@@ -43,5 +45,4 @@ void Application::set_runnable(Runnable *runnable) {
   runnable_.reset(runnable);
 }
 
-Application::Application() = default;
 Application::~Application() = default;

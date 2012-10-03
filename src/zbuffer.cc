@@ -10,7 +10,7 @@ ZBuffer::~ZBuffer() {
   delete[] z_buffer_;
 }
 
-void ZBuffer::set_size(int width, int height) {
+void ZBuffer::set_size(const int width, const int height) {
   int new_size = width * height;
   if (size_ != new_size) {
     delete[] z_buffer_;

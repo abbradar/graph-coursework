@@ -19,7 +19,7 @@ WindowLogDestination::~WindowLogDestination() {
   //delete time_facet_;
 }
 
-void WindowLogDestination::WriteLog(logging::LogMessageLevel level, const char *line) {
+void WindowLogDestination::WriteLog(const logging::LogMessageLevel level, const char *line) {
   if (max_items_ == 0) return; // more like sanity check
 
   boost::format a;
@@ -35,7 +35,7 @@ void WindowLogDestination::WriteLog(logging::LogMessageLevel level, const char *
   buffer_.push_back(std::move(message));
 }
 
-void WindowLogDestination::set_time_facet(TimeFacet *time_facet) noexcept {
+void WindowLogDestination::set_time_facet(TimeFacet *const time_facet) noexcept {
   delete time_facet_;
   time_facet_ = time_facet;
   time_format_.imbue(locale(time_format_.getloc(), time_facet_));

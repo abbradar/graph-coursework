@@ -19,7 +19,7 @@ class Window {
   static const Uint32 kSDLSubsystems;
 
   const char *caption();
-  void set_caption(const char *name);
+  void set_caption(const char * name);
 
   inline const sdlobj::Font &font() {
     return font_;
@@ -33,36 +33,43 @@ class Window {
   void set_font_color(const sdlobj::Color &font_color);
 
   float fps();
-  void set_fps(float fps);
+  void set_fps(const float fps);
 
   bool show_fps();
-  void set_show_fps(bool show_fps);
+  void set_show_fps(const bool show_fps);
 
   int show_fps_rate();
-  void set_show_fps_rate(int show_fps_rate);
+  void set_show_fps_rate(const int show_fps_rate);
 
   int width();
   int height();
   int bpp();
 
-  inline Interface *interface() {
-    return interface_;
-  }
-
-  inline Position *position() {
+  inline Position *const position() {
     return position_;
   }
 
-  inline Scene *scene() {
+  inline Scene *const scene() {
     return scene_;
   }
 
-  // TODO: ugly, fix this
-  inline Rasterizer &rasterizer() {
-    return rasterizer_;
+  myfloat viewer_distance();
+  void set_viewer_distance(const myfloat viewer_distance);
+
+  myfloat move_speed();
+  void set_move_speed(const myfloat move_speed);
+
+  myfloat rotation_speed();
+  void set_rotation_speed(const myfloat rotation_speed);
+
+  /** Coordinate range which is projected on screen height */
+  inline myfloat projected_height() {
+    return projected_height_;
   }
 
-  void SetVideoMode(int width, int height, int bpp);
+  void set_projected_height(const myfloat projected_height);
+
+  void SetVideoMode(const int width, const int height, const int bpp);
 
   void Run();
 
@@ -77,7 +84,8 @@ class Window {
   Interface *interface_;
   Rasterizer rasterizer_;
   Scene *scene_;
-  int fps_step_;
+  unsigned int fps_step_;
+  myfloat projected_height_;
 };
 
 #endif // GRAPH_COURSEWINDOW_H_

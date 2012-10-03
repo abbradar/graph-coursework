@@ -19,13 +19,13 @@ class WindowLogDestination : public logging::Logger::LogDestination {
                        sdlobj::Color color = sdlobj::Color(0xFF, 0xFF,0xFF));
   ~WindowLogDestination();
 
-  void WriteLog(logging::LogMessageLevel level, const char *line);
+  void WriteLog(const logging::LogMessageLevel level, const char *line);
 
   inline const TimeFacet &time_facet() const noexcept {
     return *time_facet_;
   }
 
-  void set_time_facet(TimeFacet *time_facet) noexcept;
+  void set_time_facet(TimeFacet *const time_facet) noexcept;
 
   inline int max_items() {
     return max_items_;

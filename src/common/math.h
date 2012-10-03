@@ -1,6 +1,8 @@
 #ifndef COMMON_MATH_H_
 #define COMMON_MATH_H_
 
+#include <cmath>
+
 # define M_E		2.7182818284590452354	/* e */
 # define M_LOG2E	1.4426950408889634074	/* log_2 e */
 # define M_LOG10E	0.43429448190325182765	/* log_10 e */
@@ -15,20 +17,28 @@
 # define M_SQRT2	1.41421356237309504880	/* sqrt(2) */
 # define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
 
-template <class T> char sign(const T val) {
+template <class T> char Sign(const T val) {
     return (char)((T(0) < val) - (val < T(0)));
 }
 
-template <class T> T trim(const T val, const T min, const T max) {
+template <class T> T Trim(const T val, const T min, const T max) {
   if (val < min) return min;
   else if (val > max) return max;
   else return val;
 }
 
-template <class T> T circle(T val, const T min, const T max) {
+template <class T> T Circle(T val, const T min, const T max) {
   while (val > max) val -= (max - min);
   while (val < min) val += (max - min);
   return val;
+}
+
+template <class T> T PositiveRound(const T val) {
+  return floor(val + T(0.5));
+}
+
+template <class T> T Round(const T val) {
+  return (val > T(0.0)) ? floor(val + T(0.5)) : ceil(val - T(0.5));
 }
 
 #endif // COMMON_MATH_H_

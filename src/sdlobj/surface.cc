@@ -6,12 +6,13 @@ Surface::Surface() : surface_() { }
 Surface::Surface(SDL_Surface *surface) : surface_(new SurfaceWrapper(surface)) { }
 Surface::Surface(const Surface &other) : surface_(other.surface_) {}
 
-Surface::Surface(int width, int height, Uint32 flags, int bpp, Uint32 Rmask, Uint32 Gmask,
-                 Uint32 Bmask, Uint32 Amask) : surface_(new SurfaceWrapper()) {
+Surface::Surface(const int width, const int height, const Uint32 flags, const int bpp,
+                 const Uint32 Rmask, const Uint32 Gmask, const Uint32 Bmask, const Uint32 Amask)
+ : surface_(new SurfaceWrapper()) {
   surface_->surface = SDL_CreateRGBSurface(flags, width, height, bpp, Rmask, Gmask, Bmask, Amask);
 }
 
-Surface::Surface(int width, int height) : surface_(new SurfaceWrapper()) {
+Surface::Surface(const int width, const int height) : surface_(new SurfaceWrapper()) {
   const SDL_Surface *screen = SDL::instance().surface().surface();
   Uint32 flags = screen->flags & (SDL_SWSURFACE | SDL_HWSURFACE | SDL_SRCCOLORKEY | SDL_SRCALPHA);
 

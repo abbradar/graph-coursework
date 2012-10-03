@@ -39,7 +39,7 @@ Logger::~Logger() {
   //delete time_facet_;
 }
 
-void Logger::Log(LogMessageLevel level, const char *msg) noexcept {
+void Logger::Log(LogMessageLevel level, const char * msg) noexcept {
   if (level > level_) return;
 
   if (write_to_stderr_) {

@@ -1,7 +1,13 @@
 #ifndef SDLOBJ_SURFACEPAINTER_H_
 #define SDLOBJ_SURFACEPAINTER_H_
 
+#include "common/debug.h"
 #include "surface.h"
+
+#if DEBUG_LEVEL == 4
+#include <stdexcept>
+#include <boost/format.hpp>
+#endif
 
 namespace sdlobj {
 
@@ -25,7 +31,7 @@ class SurfacePainter {
   }
 
   /** Get the pixel at (x, y) */
-  inline Uint32 GetPixel(unsigned int x, unsigned int y) {
+  inline Uint32 GetPixel(const unsigned int x, const unsigned int y) {
     int bpp = surface_->surface()->format->BytesPerPixel;
 
     Uint8 *p = surface_->pixels() + y * surface_->surface()->pitch + x * bpp;
@@ -34,7 +40,12 @@ class SurfacePainter {
   }
 
   /** Set the pixel at (x, y) to the given value */
-  inline void SetPixel(unsigned int x, unsigned int y, Uint32 pixel) {
+  inline void SetPixel(const unsigned int x, const unsigned int y, const Uint32 pixel) {
+#if DEBUG_LEVEL == 4
+    if (x < 0 || y < 0 || x >= surface_->width() || y >= surface_->height()) {
+      throw std::runtime_error((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str().data());
+    }
+#endif
     int bpp = surface_->surface()->format->BytesPerPixel;
 
     Uint8 *p = surface_->pixels() + y * surface_->surface()->pitch + x * bpp;
@@ -43,8 +54,8 @@ class SurfacePainter {
   }
 
   /** Draws line (integer Bresenham's algorithm) */
-  void DrawLine(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2,
-                Uint32 pixel);
+  void DrawLine(const unsigned int x1, const unsigned int y1, const unsigned int x2, const unsigned int y2,
+                const Uint32 pixel);
 
  private:
   Surface *surface_ = nullptr;

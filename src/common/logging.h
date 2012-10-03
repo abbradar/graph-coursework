@@ -33,7 +33,7 @@ class Logger : public Singleton<Logger> {
    public:
     virtual ~LogDestination();
 
-    virtual void WriteLog(LogMessageLevel, const char *) = 0;
+    virtual void WriteLog(const LogMessageLevel, const char *) = 0;
   };
 
   typedef std::unique_ptr<LogDestination> DestinationPointer;
@@ -63,7 +63,7 @@ class Logger : public Singleton<Logger> {
     return write_to_stderr_;
   }
 
-  void set_write_to_stderr(bool write_to_stderr) noexcept;
+  void set_write_to_stderr(const bool write_to_stderr) noexcept;
 
   inline const char *name() const noexcept {
     return name_;
@@ -75,7 +75,7 @@ class Logger : public Singleton<Logger> {
     return *time_facet_;
   }
 
-  void set_time_facet(TimeFacet *time_facet) noexcept;
+  void set_time_facet(TimeFacet *const time_facet) noexcept;
 
  private:
   friend class Singleton<Logger>;

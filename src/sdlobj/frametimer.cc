@@ -31,7 +31,7 @@ void FrameTimer::set_measure_fps(bool measure_fps) {
   }
 }
 
-void FrameTimer::set_measure_ticks(int measure_ticks) {
+void FrameTimer::set_measure_ticks(const unsigned int measure_ticks) {
   if (measure_ticks <= 0) {
     throw runtime_error("Measure ticks value should be > 0");
   }

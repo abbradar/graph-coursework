@@ -7,7 +7,7 @@
 class CourseWork : public Runnable
 {
  public:
-  static const char * const kProgramName;
+  static const char *const kProgramName;
 
   CourseWork();
   CourseWork(const CourseWork &other) = delete;

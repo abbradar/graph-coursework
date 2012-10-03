@@ -17,13 +17,14 @@ public:
   Surface(SDL_Surface *surface);
 
   /** Create surface with same parameters as screen surface */
-  Surface(int width, int height);
-  Surface(int width, int height, Uint32 flags, int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
+  Surface(const int width, const int height);
+  Surface(const int width, const int height, const Uint32 flags, const int bpp,
+          const Uint32 Rmask, const Uint32 Gmask, const Uint32 Bmask, const Uint32 Amask);
   Surface(const Surface &other);
 
   ~Surface();
 
-  inline const SDL_Surface *surface() {
+  inline const SDL_Surface *const surface() {
     return surface_->surface;
   }
 
@@ -39,7 +40,7 @@ public:
     return surface_->surface->format->BitsPerPixel;
   }
 
-  inline Uint8 *pixels() {
+  inline Uint8 * const pixels() {
     return (Uint8 *)surface_->surface->pixels;
   }
 

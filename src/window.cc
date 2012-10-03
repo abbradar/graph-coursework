@@ -16,7 +16,8 @@ const Uint32 Window::kSDLSubsystems = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 
 Window::Window(int width, int height, int bpp, int fps) :
  frame_timer_(fps), window_log_(new WindowLogDestination()),
- position_(new Position()), interface_(new Interface(fps)), scene_(new Scene()) {
+ position_(new Position()), interface_(new Interface(fps)), scene_(new Scene()),
+ projected_height_(1) {
   Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
   SetVideoMode(width, height, bpp);
   interface_->set_position(position_);
@@ -43,7 +44,7 @@ const char *Window::caption() {
   return SDL::instance().caption();
 }
 
-void Window::set_caption(const char *name) {
+void Window::set_caption(const char * name) {
   SDL::instance().set_icon_caption(name);
   SDL::instance().set_caption(name);
 }
@@ -96,7 +97,37 @@ int Window::bpp() {
   return SDL::instance().surface().bpp();
 }
 
-void Window::SetVideoMode(int width, int height, int bpp) {
+myfloat Window::viewer_distance() {
+  return rasterizer_.viewer_distance();
+}
+
+void Window::set_viewer_distance(const myfloat viewer_distance) {
+  rasterizer_.set_viewer_distance(viewer_distance);
+}
+
+myfloat Window::move_speed() {
+  return interface_->move_speed();
+}
+
+void Window::set_move_speed(const myfloat move_speed) {
+  interface_->set_move_speed(move_speed);
+}
+
+myfloat Window::rotation_speed() {
+  return interface_->rotation_speed();
+}
+
+void Window::set_rotation_speed(const myfloat rotation_speed) {
+  interface_->set_rotation_speed(rotation_speed);
+}
+
+void Window::set_projected_height(const myfloat projected_height) {
+  if (projected_height <= 0)
+    throw runtime_error("Projected height should be > 0");
+  projected_height_ = projected_height;
+}
+
+void Window::SetVideoMode(const int width, const int height, const int bpp) {
   SDL::instance().SetVideoMode(width, height, bpp, kVideoModeFlags);
 }
 
@@ -114,6 +145,7 @@ void Window::Run() {
     interface_->Step();
     SDL::instance().surface().Fill(0x000000);
     rasterizer_.set_surface(&SDL::instance().surface());
+    rasterizer_.set_scale(SDL::instance().surface().height() / projected_height_);
     rasterizer_.Render();
     Surface log = window_log_->Render();
     SDL::instance().surface().Blit(log, 2, 0);

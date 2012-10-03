@@ -7,7 +7,9 @@ using namespace std;
 using namespace sdlobj;
 
 Rasterizer::Rasterizer() : scene_(nullptr), camera_(nullptr),
-  surface_(nullptr), z_buffer_(0, 0), viewer_distance_(1) {}
+ surface_(nullptr), z_buffer_(0, 0), viewer_distance_(1), scale_(1) {
+  set_scale(scale_);
+}
 
 /* These functions are safe to call with result = a | b */
 
@@ -28,7 +30,7 @@ template<class T> class MyGreaterOrEqual {
 template<class Comparer> class XClipper {
  public:
   static void Intersect(const Point3D &a, const Point3D &b, Point3D &result, const myfloat &value) {
-    myfloat line_k = value - a.x / (b.x - a.x);
+    myfloat line_k = (value - a.x) / (b.x - a.x);
     result.y = line_k * (b.y - a.y) + a.y;
     result.z = line_k * (b.z - a.z) + a.z;
     result.x = value;
@@ -42,7 +44,7 @@ template<class Comparer> class XClipper {
 template<class Comparer> class YClipper {
  public:
   static void Intersect(const Point3D &a, const Point3D &b, Point3D &result, const myfloat &value) {
-    myfloat line_k = value - a.y / (b.y - a.y);
+    myfloat line_k = (value - a.y) / (b.y - a.y);
     result.x = line_k * (b.x - a.x) + a.x;
     result.z = line_k * (b.z - a.z) + a.z;
     result.y = value;
@@ -56,7 +58,7 @@ template<class Comparer> class YClipper {
 template<class Comparer> class ZClipper {
  public:
   static void Intersect(const Point3D &a, const Point3D &b, Point3D &result, const myfloat &value) {
-    myfloat line_k = value - a.z / (b.z - a.z);
+    myfloat line_k = (value - a.z) / (b.z - a.z);
     result.x = line_k * (b.x - a.x) + a.x;
     result.y = line_k * (b.y - a.y) + a.y;
     result.z = value;
@@ -67,8 +69,8 @@ template<class Comparer> class ZClipper {
   }
 };
 
-template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *triangles, int &triangles_num,
-           Point3D *points, int &points_num, const myfloat &value) {
+template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *triangles, size_t &triangles_num,
+           Point3D *points, size_t &points_num, const myfloat &value) {
   int good_indexes[IndexedTriangle::kPointsSize] = { -1, -1, -1 };
   int bad_indexes[IndexedTriangle::kPointsSize] = { -1, -1, -1 };
   int good_i = 0, bad_i = 0;
@@ -85,8 +87,8 @@ template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *tr
       break;
     case 1:
       // split into two polygons
-      Clipper::Intersect(points[good_indexes[1]], points[bad_indexes[0]], points[points_num], 0);
-      Clipper::Intersect(points[good_indexes[0]], points[bad_indexes[0]], points[bad_indexes[0]], 0);
+      Clipper::Intersect(points[good_indexes[1]], points[bad_indexes[0]], points[points_num], value);
+      Clipper::Intersect(points[good_indexes[0]], points[bad_indexes[0]], points[bad_indexes[0]], value);
       triangle.Set(good_indexes[0], bad_indexes[0], good_indexes[1]);
       triangles[triangles_num].Set(bad_indexes[0], points_num, good_indexes[1]);
       ++triangles_num;
@@ -94,8 +96,8 @@ template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *tr
       break;
     case 2:
       // trim part
-      Clipper::Intersect(points[good_indexes[0]], points[bad_indexes[0]], points[bad_indexes[0]], 0);
-      Clipper::Intersect(points[good_indexes[0]], points[bad_indexes[1]], points[bad_indexes[1]], 0);
+      Clipper::Intersect(points[good_indexes[0]], points[bad_indexes[0]], points[bad_indexes[0]], value);
+      Clipper::Intersect(points[good_indexes[0]], points[bad_indexes[1]], points[bad_indexes[1]], value);
       break;
     case 3:
       // we flag triangle as "not in use" by setting it's first index to -1
@@ -108,92 +110,126 @@ template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *tr
   }
 }
 
+// Maximum number of splitted triangles after clipping
+const int kClippedSize = 8;
+// Number of clips
+const int kClipNumber = 5;
+const size_t kPolygonsSize = kClippedSize;
+// One point for each clip can become unusable
+const size_t kPointsSize = kClippedSize * IndexedTriangle::kPointsSize + kClipNumber;
+
+template<class T> bool ClipAll(IndexedTriangle *triangles, size_t &triangles_num,
+                               Point3D *points, size_t &points_num, const myfloat &value) {
+  size_t curr_triangles = triangles_num;
+  for (size_t i = 0; i < curr_triangles; ++i)
+    if (triangles[i].points[0] != -1)
+      Clip<T>(triangles[i], triangles, triangles_num, points, points_num, value);
+#if DEBUG_LEVEL == 4
+  if (triangles_num > kPolygonsSize)
+    throw runtime_error("There are more polygons than expected from clipping.");
+  if (points_num > kPointsSize)
+    throw runtime_error("There are more points than expected from clipping.");
+#endif
+  return triangles_num == 1 && triangles[0].points[0] == -1;
+}
+
 void Rasterizer::DrawTriangle(const IndexedTriangle &source, const Color &color) {
-  // Maximum number of splitted triangles after clipping
-  const int kClippedSize = 8;
-  // Number of clips
-  const int kClipNumber = 5;
-  // Let's copy triangle to our local buffer for fast clipping
-  IndexedTriangle polygons[kClippedSize];
-  // One point for each clip can become unusable
-  Point3D points[kClippedSize * IndexedTriangle::kPointsSize + kClipNumber];
+  IndexedTriangle polygons[kPolygonsSize];
+  Point3D points[kPointsSize];
   polygons[0] = IndexedTriangle(0, 1, 2);
   for (int i = 0; i < IndexedTriangle::kPointsSize; ++i)
     points[i] = point_buffer_[source.points[i]];
-  int polygons_size = 1;
-  int points_size = IndexedTriangle::kPointsSize;
-  int curr_polygons = polygons_size;
+  size_t polygons_size = 1;
+  size_t points_size = IndexedTriangle::kPointsSize;
 
   // clipping
-  for (int i = 0; i < curr_polygons; ++i)
-    Clip<ZClipper<MyLessOrEqual<myfloat>>>(polygons[i], polygons, polygons_size, points, points_size, 0);
-  if (polygons_size == 1 && polygons[0].points[0] == -1) return;
-  curr_polygons = polygons_size;
-  for (int i = 0; i < curr_polygons; ++i)
-    Clip<XClipper<MyLessOrEqual<myfloat>>>(polygons[i], polygons, polygons_size, points, points_size, 0);
-  if (polygons_size == 1 && polygons[0].points[0] == -1) return;
-  curr_polygons = polygons_size;
-  for (int i = 0; i < curr_polygons; ++i)
-    Clip<XClipper<MyGreaterOrEqual<myfloat>>>(polygons[i], polygons, polygons_size, points, points_size, surface_->width());
-  if (polygons_size == 1 && polygons[0].points[0] == -1) return;
-  curr_polygons = polygons_size;
-  for (int i = 0; i < curr_polygons; ++i)
-    Clip<YClipper<MyLessOrEqual<myfloat>>>(polygons[i], polygons, polygons_size, points, points_size, 0);
-  if (polygons_size == 1 && polygons[0].points[0] == -1) return;
-  curr_polygons = polygons_size;
-  for (int i = 0; i < curr_polygons; ++i)
-    Clip<YClipper<MyGreaterOrEqual<myfloat>>>(polygons[i], polygons, polygons_size, points, points_size, surface_->height());
-  if (polygons_size == 1 && polygons[0].points[0] == -1) return;
+  if (ClipAll<ZClipper<MyLessOrEqual<myfloat>>>(polygons, polygons_size, points,
+                                               points_size, 0)) return;
+  if (ClipAll<XClipper<MyLessOrEqual<myfloat>>>(polygons, polygons_size, points,
+                                            points_size, 0)) return;
+  if (ClipAll<XClipper<MyGreaterOrEqual<myfloat>>>(polygons, polygons_size, points,
+                                                   points_size, surface_->width() - 1)) return;
+  if (ClipAll<YClipper<MyLessOrEqual<myfloat>>>(polygons, polygons_size, points,
+                                                points_size, 0)) return;
+  if (ClipAll<YClipper<MyGreaterOrEqual<myfloat>>>(polygons,polygons_size, points,
+                                                   points_size, surface_->height() - 1)) return;
 
   // filling
-  for (int i = 0; i < polygons_size; ++i) {
-    FillTriangle(polygons[i], points, color);
-  }
-}
-
-// TODO: this is ugly thing to avoid clipping for now, remove later
-void DrawLine(SurfacePainter &painter, int x1, int y1, int x2, int y2, Uint32 pixel) {
-  int dx = x2 - x1, dy = y2 - y1;
-  unsigned int x = x1, y = y1;
-  int sx = sign(dx), sy = sign(dy);
-  dx = abs(dx), dy = abs(dy);
-  bool swapped = dx < dy;
-  if (swapped) swap(dx, dy);
-  int e = 2 * dy - dx;
-  int width = painter.surface()->width(), height = painter.surface()->height();
-  for (int i = 0; i <= dx; ++i) {
-    if (x >= 0 && y >= 0 && x < width && y < height)
-      painter.SetPixel(x, y, pixel);
-    if (e >= 0) {
-      if (swapped)
-        x = x + sx;
-      else
-        y = y + sy;
-      e -= 2 * dx;
-    }
-    if (swapped)
-      y = y + sy;
-    else
-      x = x + sx;
-    e += 2 * dy;
+  for (size_t i = 0; i < polygons_size; ++i) {
+    if (polygons[i].points[0] != -1)
+      FillTriangle(polygons[i], points, color);
   }
 }
 
 void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *points, const Color &color) {
   // we'll just draw wire-frame model for now, without hidden line removal
   Uint32 pixel = surface_->ColorToPixel(color);
-  /*surface_painter_.DrawLine(points[source.points[0]].x, points[source.points[0]].y,
+#if 1
+  surface_painter_.DrawLine(points[source.points[0]].x, points[source.points[0]].y,
       points[source.points[1]].x, points[source.points[1]].y, pixel);
   surface_painter_.DrawLine(points[source.points[1]].x, points[source.points[1]].y,
       points[source.points[2]].x, points[source.points[2]].y, pixel);
   surface_painter_.DrawLine(points[source.points[2]].x, points[source.points[2]].y,
-      points[source.points[0]].x, points[source.points[0]].y, pixel);*/
-  DrawLine(surface_painter_, points[source.points[0]].x, points[source.points[0]].y,
-        points[source.points[1]].x, points[source.points[1]].y, pixel);
-  DrawLine(surface_painter_, points[source.points[1]].x, points[source.points[1]].y,
-        points[source.points[2]].x, points[source.points[2]].y, pixel);
-  DrawLine(surface_painter_, points[source.points[2]].x, points[source.points[2]].y,
-        points[source.points[0]].x, points[source.points[0]].y, pixel);
+      points[source.points[0]].x, points[source.points[0]].y, pixel);
+#endif
+#if 0
+  ScreenLine3D lines[IndexedTriangle::kPointsSize];
+  lines[0] = ScreenLine3D(&points[source.points[0]], &points[source.points[1]]);
+  lines[1] = ScreenLine3D(&points[source.points[1]], &points[source.points[2]]);
+  lines[2] = ScreenLine3D(&points[source.points[2]], &points[source.points[0]]);
+  // sort them
+  for (int my = IndexedTriangle::kPointsSize - 1; my >= 0; --my) {
+    for (int i = 0; i < my; ++i) {
+      if (lines[i].y > lines[i + 1].y || lines[i].y == lines[i].fy) swap(lines[i], lines[i + 1]);
+    }
+  }
+  FillLines(&lines[0], &lines[1], pixel);
+  if (lines[2].y != lines[2].fy)
+    FillLines(&lines[0], &lines[2], pixel);
+#if DEBUG_LEVEL == 4
+  else {
+    ScreenLine3D *a = &lines[0], *b = &lines[1];
+    if (a->x < b->x) swap(a, b);
+    int ax = PositiveRound(a->x), bx = PositiveRound(b->x);
+    int y = a->y;
+    myfloat z = a->x, dz = (b->z - a->z) / (b->x - a->x);
+    for (int x = ax + 1; x < bx; ++x) {
+      SetPixel(x, y, z, pixel);
+      z += dz;
+    }
+  }
+#endif
+#endif
+}
+
+void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color) {
+  int fy = max(a->fy, b->fy);
+  if (a->x < b->x) swap(a, b);
+  for (int y = a->y; y <= fy; ++y) {
+    int ax = PositiveRound(a->x), bx = PositiveRound(b->x);
+    myfloat z = a->x, dz = (b->z - a->z) / (b->x - a->x);
+#if DEBUG_LEVEL == 4
+    SetPixel(ax, y, z, 0xFFFFFF);
+    for (int x = ax + 1; x < bx; ++x)
+#else
+    for (int x = ax; x <= bx; ++x)
+#endif
+    {
+      SetPixel(x, y, z, color);
+      z += dz;
+    }
+#if DEBUG_LEVEL == 4
+    SetPixel(bx, y, z, 0xFFFFFF);
+#endif
+
+    // move line points
+    a->x += a->dx;
+    a->z += a->dz;
+    b->x += b->dx;
+    b->z += b->dz;
+  }
+  a->y = fy;
+  b->y = fy;
 }
 
 void Rasterizer::Render() {
@@ -205,7 +241,7 @@ void Rasterizer::Render() {
   Matrix4 transform = system_transform * camera_->GetMatrixTo();
 
   z_buffer_.set_size(surface_->width(), surface_->height());
-  //z_buffer_.clear();
+  z_buffer_.clear();
   surface_painter_.StartDrawing();
   for (SceneObject &object : scene_->objects()) {
     point_buffer_.clear();
@@ -213,8 +249,8 @@ void Rasterizer::Render() {
     for (const Point3D &p : object.positioned_points()) {
       Point3D dest = transform * p;
       myfloat k = viewer_distance_ / (viewer_distance_ + dest.z);
-      dest.x = dest.x * k + surface_->width() / 2.0;
-      dest.y = dest.y * k + surface_->height() / 2.0;
+      dest.x = dest.x * k * scale_ + surface_->width() / 2.0;
+      dest.y = dest.y * k * scale_ + surface_->height() / 2.0;
       point_buffer_.push_back(dest);
     }
 
@@ -241,4 +277,24 @@ void Rasterizer::set_viewer_distance(myfloat viewer_distance) {
 void Rasterizer::set_surface(Surface *surface) {
   surface_ = surface;
   surface_painter_.set_surface(surface_);
+}
+
+void Rasterizer::set_scale(const myfloat scale) {
+  scale_ = scale;
+}
+
+Rasterizer::ScreenLine3D::ScreenLine3D() = default;
+
+Rasterizer::ScreenLine3D::ScreenLine3D(const Point3D *a, const Point3D *b) : dx(0), dz(0) {
+  if (a->y > b->y) {
+    swap(a, b);
+  }
+  x = a->x;
+  y = PositiveRound(a->y);
+  z = a->z;
+  fy = PositiveRound(b->y);
+  if (y != fy) {
+    dx = (b->x - a->x) / (b->y - a->y);
+    dz = (b->z - a->z) / (b->y - a->y);
+  }
 }
