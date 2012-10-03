@@ -59,10 +59,12 @@ class Interface : public sdlobj::EventHandler {
   float fps_;
 
   struct MoveState {
-    char up = 0;
-    char down = 0;
+    char forward = 0;
+    char back = 0;
     char left = 0;
     char right = 0;
+    char up = 0;
+    char down = 0;
     int xrel = 0;
     int yrel = 0;
   };

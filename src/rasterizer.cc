@@ -28,7 +28,7 @@ template<class T> class MyGreaterOrEqual {
 template<class Comparer> class XClipper {
  public:
   static void Intersect(const Point3D &a, const Point3D &b, Point3D &result, const myfloat &value) {
-    myfloat line_k = value - a.x / (b.z - a.x);
+    myfloat line_k = value - a.x / (b.x - a.x);
     result.y = line_k * (b.y - a.y) + a.y;
     result.z = line_k * (b.z - a.z) + a.z;
     result.x = value;
@@ -83,17 +83,15 @@ template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *tr
     case 0:
       // let it be
       break;
-    case 1: {
+    case 1:
       // split into two polygons
-      Point3D good_points[2] = { points[good_indexes[0]], points[good_indexes[1]] };
-      Clipper::Intersect(good_points[0], points[bad_indexes[0]], points[bad_indexes[0]], 0);
-      Clipper::Intersect(good_points[1], points[bad_indexes[0]], points[points_num], 0);
+      Clipper::Intersect(points[good_indexes[1]], points[bad_indexes[0]], points[points_num], 0);
+      Clipper::Intersect(points[good_indexes[0]], points[bad_indexes[0]], points[bad_indexes[0]], 0);
       triangle.Set(good_indexes[0], bad_indexes[0], good_indexes[1]);
       triangles[triangles_num].Set(bad_indexes[0], points_num, good_indexes[1]);
       ++triangles_num;
       ++points_num;
       break;
-    }
     case 2:
       // trim part
       Clipper::Intersect(points[good_indexes[0]], points[bad_indexes[0]], points[bad_indexes[0]], 0);
@@ -131,7 +129,7 @@ void Rasterizer::DrawTriangle(const IndexedTriangle &source, const Color &color)
     Clip<ZClipper<MyLessOrEqual<myfloat>>>(polygons[i], polygons, polygons_size, points, points_size, 0);
   if (polygons_size == 1 && polygons[0].points[0] == -1) return;
   curr_polygons = polygons_size;
-  /*for (int i = 0; i < curr_polygons; ++i)
+  for (int i = 0; i < curr_polygons; ++i)
     Clip<XClipper<MyLessOrEqual<myfloat>>>(polygons[i], polygons, polygons_size, points, points_size, 0);
   if (polygons_size == 1 && polygons[0].points[0] == -1) return;
   curr_polygons = polygons_size;
@@ -145,7 +143,7 @@ void Rasterizer::DrawTriangle(const IndexedTriangle &source, const Color &color)
   curr_polygons = polygons_size;
   for (int i = 0; i < curr_polygons; ++i)
     Clip<YClipper<MyGreaterOrEqual<myfloat>>>(polygons[i], polygons, polygons_size, points, points_size, surface_->height());
-  if (polygons_size == 1 && polygons[0].points[0] == -1) return;*/
+  if (polygons_size == 1 && polygons[0].points[0] == -1) return;
 
   // filling
   for (int i = 0; i < polygons_size; ++i) {
@@ -207,7 +205,7 @@ void Rasterizer::Render() {
   Matrix4 transform = system_transform * camera_->GetMatrixTo();
 
   z_buffer_.set_size(surface_->width(), surface_->height());
-  z_buffer_.clear();
+  //z_buffer_.clear();
   surface_painter_.StartDrawing();
   for (SceneObject &object : scene_->objects()) {
     point_buffer_.clear();

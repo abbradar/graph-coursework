@@ -41,10 +41,10 @@ void Interface::ProcessQuit(const SDL_QuitEvent &) {
 void Interface::ProcessKeyDown(const SDL_KeyboardEvent &event) {
   switch (event.keysym.sym) {
     case SDLK_w:
-      move_state_.up = 1;
+      move_state_.forward = 1;
       break;
     case SDLK_s:
-      move_state_.down = -1;
+      move_state_.back = -1;
       break;
     case SDLK_d:
       move_state_.right = -1;
@@ -60,16 +60,22 @@ void Interface::ProcessKeyDown(const SDL_KeyboardEvent &event) {
 void Interface::ProcessKeyUp(const SDL_KeyboardEvent &event) {
   switch (event.keysym.sym) {
     case SDLK_w:
-      move_state_.up = 0;
+      move_state_.forward = 0;
       break;
     case SDLK_s:
-      move_state_.down = 0;
+      move_state_.back = 0;
       break;
     case SDLK_d:
       move_state_.right = 0;
       break;
     case SDLK_a:
       move_state_.left = 0;
+      break;
+    case SDLK_SPACE:
+      move_state_.up = 1;
+      break;
+    case SDLK_LCTRL:
+      move_state_.down = -1;
       break;
     case SDLK_ESCAPE:
       set_grab_mouse(!grab_mouse());
@@ -92,11 +98,11 @@ void Interface::ProcessResize(const SDL_ResizeEvent &event) {
 
 void Interface::Step() {
   if (!position_) throw runtime_error("Position pointer is not setted.");
-  char up_down = move_state_.up + move_state_.down;
+  char up_down = move_state_.forward + move_state_.back;
   char left_right = move_state_.left + move_state_.right;
   myfloat len = up_down && left_right ? diag_step_ : move_step_;
   if (up_down) {
-    position_->z += up_down * len * sin(position_->pitch);
+    position_->z -= up_down * len * sin(position_->pitch);
     myfloat prj = up_down * len * cos(position_->pitch);
     position_->x += prj * cos(position_->yaw);
     position_->y += prj * sin(position_->yaw);
@@ -106,7 +112,7 @@ void Interface::Step() {
     position_->x += left_right * len * cos(r_yaw);
     position_->y += left_right * len * sin(r_yaw);
   }
-  position_->pitch += move_state_.yrel * rotation_k_;
+  position_->pitch -= move_state_.yrel * rotation_k_;
   position_->pitch = trim<myfloat>(position_->pitch, -M_PI_2, M_PI_2);
   position_->yaw += move_state_.xrel * rotation_k_;
   position_->yaw = circle<myfloat>(position_->yaw, -M_PI, M_PI);

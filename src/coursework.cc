@@ -24,7 +24,7 @@ const bool kDefaultShowFps = true;
 const int kDefaultFpsMeasureRate = 10;
 const myfloat kDefaultMoveSpeed = 120;
 const myfloat kDefaultRotationSpeed = 1.0 / 3.0;
-const myfloat kDefaultViewerDistance = 100;
+const myfloat kDefaultViewerDistance = 1000;
 
 CourseWork::CourseWork() = default;
 
@@ -63,7 +63,7 @@ int CourseWork::Run(int argc, const char **argv) {
                                     IndexedTriangle(7, 5, 4), IndexedTriangle(0, 1, 3) };
   PointVector points(test_points, test_points + 8);
   TriangleVector polygons(test_indexes, test_indexes + 12);
-  SceneObject object(points, polygons, Position(0, 0, 0));
+  SceneObject object(points, polygons, Position(0, 0, 0, 0, M_PI_4 / 2));
   object.color() = Color(0xFF, 0xFF, 0xFF);
   window->scene()->objects().push_back(std::move(object));
 
