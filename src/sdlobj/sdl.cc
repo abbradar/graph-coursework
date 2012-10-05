@@ -75,7 +75,7 @@ bool SDL::show_cursor() {
   return SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE;
 }
 
-void SDL::set_show_cursor(bool show) {
+void SDL::set_show_cursor(const bool show) {
   SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
 }
 
@@ -83,7 +83,7 @@ bool SDL::grab_input() {
   return SDL_WM_GrabInput(SDL_GRAB_QUERY) == SDL_GRAB_ON;
 }
 
-void SDL::set_grab_input(bool grab) {
+void SDL::set_grab_input(const bool grab) {
   SDL_WM_GrabInput(grab ? SDL_GRAB_ON : SDL_GRAB_OFF);
 }
 

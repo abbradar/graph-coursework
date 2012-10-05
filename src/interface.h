@@ -28,7 +28,7 @@ class Interface : public sdlobj::EventHandler {
     return grab_mouse_;
   }
 
-  void set_grab_mouse(bool grab);
+  void set_grab_mouse(const bool grab);
 
   /** Speed of movement */
   inline myfloat move_speed() {

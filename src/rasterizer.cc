@@ -3,7 +3,7 @@
 #include "common/debug.h"
 #include "rasterizer.h"
 
-#define WIREFRAME_MODEL
+//#define WIREFRAME_MODEL
 
 using namespace std;
 using namespace sdlobj;
@@ -189,9 +189,11 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
       break;
     }
   }
-  if (lines[0].fy < lines[1].fy) swap(lines[0], lines[1]);
 
   // fill lines
+  ScreenLine3D *a = &lines[0], *b = &lines[1];
+  if (a->dx > b->dx) {
+  }
   if (lines[2].y != lines[2].fy) {
     FillLines(&lines[0], &lines[1], pixel);
     FillLines(&lines[0], &lines[2], pixel);
@@ -215,19 +217,17 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
 
 
 
-void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color) {
-  for (; a->y <= a->fy; ++a->y, ++b->y) {
-    if (a->x < b->x)
-      FillLine(*b, *a, color);
-    else
-      FillLine(*a, *b, color);
+void Rasterizer::FillLines(ScreenLine3D &a, ScreenLine3D &b, const Uint32 color) {
+  for (; a.y <= a.fy; ++a.y) {
+    FillLine(a, b, color);
 
     // move line points
-    a->x += a->dx;
-    a->z += a->dz;
-    b->x += b->dx;
-    b->z += b->dz;
+    a.x += a.dx;
+    a.z += a.dz;
+    b.x += b.dx;
+    b.z += b.dz;
   }
+  b.y = a.y;
 }
 
 void Rasterizer::FillLine(const ScreenLine3D &a, const ScreenLine3D &b, const Uint32 color) {

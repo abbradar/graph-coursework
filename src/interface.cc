@@ -9,7 +9,7 @@ using namespace sdlobj;
 using namespace std;
 
 Interface::Interface(float fps) : move_speed_(1), rotation_speed_(1), fps_(fps),
- position_(nullptr) {
+  position_(nullptr), grab_mouse_(false) {
   set_grab_mouse(false);
 }
 
@@ -135,7 +135,7 @@ void Interface::set_position(Position *position) {
   position_ = position;
 }
 
-void Interface::set_grab_mouse(bool grab) {
+void Interface::set_grab_mouse(const bool grab) {
   if (grab_mouse_ == grab) return;
   grab_mouse_ = grab;
   if (grab_mouse_) {

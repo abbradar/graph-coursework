@@ -31,7 +31,7 @@ class SDL : public Singleton<SDL> {
   void UpdateRect(int x, int y, int width, int height);
 
   bool show_cursor();
-  void set_show_cursor(bool show);
+  void set_show_cursor(const bool show);
 
   bool grab_input();
   void set_grab_input(bool grab);

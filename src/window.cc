@@ -17,7 +17,7 @@ const Uint32 Window::kSDLSubsystems = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 Window::Window(int width, int height, int bpp, int fps) :
  frame_timer_(fps), window_log_(new WindowLogDestination()),
  position_(new Position()), interface_(new Interface(fps)), scene_(new Scene()),
- projected_height_(1) {
+ fps_step_(1), projected_height_(1) {
   Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
   SetVideoMode(width, height, bpp);
   interface_->set_position(position_);

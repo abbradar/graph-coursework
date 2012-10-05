@@ -59,7 +59,7 @@ class Rasterizer {
 
   void DrawTriangle(const IndexedTriangle &source, const sdlobj::Color &color);
   void FillTriangle(const IndexedTriangle &source, const Point3D *points, const sdlobj::Color &color);
-  void FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color);
+  void FillLines(ScreenLine3D &a, ScreenLine3D &b, const Uint32 color);
   void FillLine(const ScreenLine3D &a, const ScreenLine3D &b, const Uint32 color);
 
   inline void SetPixel(const int x, const int y, const myfloat z, const Uint32 color) {
