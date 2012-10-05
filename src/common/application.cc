@@ -35,7 +35,7 @@ void Application::Terminate(int error_code) noexcept {
 
 void Application::Abort() noexcept {
   // TODO(abbradar) maybe better handling there, and maybe not
-  abort();
+ abort();
 }
 
 void Application::set_runnable(Runnable *runnable) {

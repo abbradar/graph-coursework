@@ -3,6 +3,8 @@
 #include "common/debug.h"
 #include "rasterizer.h"
 
+#define WIREFRAME_MODEL
+
 using namespace std;
 using namespace sdlobj;
 
@@ -164,63 +166,61 @@ void Rasterizer::DrawTriangle(const IndexedTriangle &source, const Color &color)
 void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *points, const Color &color) {
   // we'll just draw wire-frame model for now, without hidden line removal
   Uint32 pixel = surface_->ColorToPixel(color);
-#if 1
+#ifdef WIREFRAME_MODEL
   surface_painter_.DrawLine(points[source.points[0]].x, points[source.points[0]].y,
       points[source.points[1]].x, points[source.points[1]].y, pixel);
   surface_painter_.DrawLine(points[source.points[1]].x, points[source.points[1]].y,
       points[source.points[2]].x, points[source.points[2]].y, pixel);
   surface_painter_.DrawLine(points[source.points[2]].x, points[source.points[2]].y,
       points[source.points[0]].x, points[source.points[0]].y, pixel);
-#endif
-#if 0
+#else
   ScreenLine3D lines[IndexedTriangle::kPointsSize];
   lines[0] = ScreenLine3D(&points[source.points[0]], &points[source.points[1]]);
   lines[1] = ScreenLine3D(&points[source.points[1]], &points[source.points[2]]);
   lines[2] = ScreenLine3D(&points[source.points[2]], &points[source.points[0]]);
   // sort them
-  for (int my = IndexedTriangle::kPointsSize - 1; my >= 0; --my) {
-    for (int i = 0; i < my; ++i) {
-      if (lines[i].y > lines[i + 1].y || lines[i].y == lines[i].fy) swap(lines[i], lines[i + 1]);
+  // this is bubble sort with cheating for kPointsSize = 3
+  for (int i = 0; i < IndexedTriangle::kPointsSize - 1; ++i) {
+    if (lines[i].y > lines[i + 1].y) swap(lines[i], lines[i + 1]);
+  }
+  for (int i = 0; i < IndexedTriangle::kPointsSize - 2; ++i) {
+    if (lines[i].y == lines[i].fy) {
+      swap(lines[i], lines[IndexedTriangle::kPointsSize - 1]);
+      break;
     }
   }
-  FillLines(&lines[0], &lines[1], pixel);
-  if (lines[2].y != lines[2].fy)
+  if (lines[0].fy < lines[1].fy) swap(lines[0], lines[1]);
+
+  // fill lines
+  if (lines[2].y != lines[2].fy) {
+    FillLines(&lines[0], &lines[1], pixel);
     FillLines(&lines[0], &lines[2], pixel);
+  } else {
 #if DEBUG_LEVEL == 4
-  else {
     ScreenLine3D *a = &lines[0], *b = &lines[1];
     if (a->x < b->x) swap(a, b);
-    int ax = PositiveRound(a->x), bx = PositiveRound(b->x);
-    int y = a->y;
-    myfloat z = a->x, dz = (b->z - a->z) / (b->x - a->x);
-    for (int x = ax + 1; x < bx; ++x) {
-      SetPixel(x, y, z, pixel);
-      z += dz;
+    if (lines[2].y > lines[0].y) {
+      FillLines(a, b, pixel);
+      FillLine(*a, *b, 0xFFFFFF);
+    } else {
+      FillLine(*a, *b, 0xFFFFFF);
+      FillLines(a, b, pixel);
     }
-  }
+#else
+    FillLines(&lines[0], &lines[1], pixel);
 #endif
+  }
 #endif
 }
 
+
+
 void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color) {
-  int fy = max(a->fy, b->fy);
-  if (a->x < b->x) swap(a, b);
-  for (int y = a->y; y <= fy; ++y) {
-    int ax = PositiveRound(a->x), bx = PositiveRound(b->x);
-    myfloat z = a->x, dz = (b->z - a->z) / (b->x - a->x);
-#if DEBUG_LEVEL == 4
-    SetPixel(ax, y, z, 0xFFFFFF);
-    for (int x = ax + 1; x < bx; ++x)
-#else
-    for (int x = ax; x <= bx; ++x)
-#endif
-    {
-      SetPixel(x, y, z, color);
-      z += dz;
-    }
-#if DEBUG_LEVEL == 4
-    SetPixel(bx, y, z, 0xFFFFFF);
-#endif
+  for (; a->y <= a->fy; ++a->y, ++b->y) {
+    if (a->x < b->x)
+      FillLine(*b, *a, color);
+    else
+      FillLine(*a, *b, color);
 
     // move line points
     a->x += a->dx;
@@ -228,8 +228,30 @@ void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color)
     b->x += b->dx;
     b->z += b->dz;
   }
-  a->y = fy;
-  b->y = fy;
+}
+
+void Rasterizer::FillLine(const ScreenLine3D &a, const ScreenLine3D &b, const Uint32 color) {
+  int ax = PositiveRound(a.x), bx = PositiveRound(b.x);
+  myfloat z = a.z;
+#if DEBUG_LEVEL == 4
+  SetPixel(ax, a.y, z, 0xFFFFFF);
+#endif
+  if (ax < bx) {
+    myfloat dz = (b.z - a.z) / (b.x - a.x);
+#if DEBUG_LEVEL == 4
+    z += dz;
+    for (int x = ax + 1; x < bx; ++x)
+#else
+    for (int x = ax; x <= bx; ++x)
+#endif
+    {
+      SetPixel(x, a.y, z, color);
+      z += dz;
+    }
+#if DEBUG_LEVEL == 4
+  SetPixel(bx, a.y, z, 0xFFFFFF);
+#endif
+  }
 }
 
 void Rasterizer::Render() {
@@ -286,15 +308,14 @@ void Rasterizer::set_scale(const myfloat scale) {
 Rasterizer::ScreenLine3D::ScreenLine3D() = default;
 
 Rasterizer::ScreenLine3D::ScreenLine3D(const Point3D *a, const Point3D *b) : dx(0), dz(0) {
-  if (a->y > b->y) {
-    swap(a, b);
-  }
+  if (a->y > b->y) swap(a, b);
   x = a->x;
   y = PositiveRound(a->y);
   z = a->z;
   fy = PositiveRound(b->y);
+  myfloat dy = b->y - a->y;
   if (y != fy) {
-    dx = (b->x - a->x) / (b->y - a->y);
-    dz = (b->z - a->z) / (b->y - a->y);
+    dx = (b->x - a->x) / dy;
+    dz = (b->z - a->z) / dy;
   }
 }

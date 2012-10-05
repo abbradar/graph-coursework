@@ -16,8 +16,6 @@ Interface::Interface(float fps) : move_speed_(1), rotation_speed_(1), fps_(fps),
 void Interface::set_move_speed(myfloat move_speed) {
   move_speed_ = move_speed;
   move_step_ = move_speed_ / fps_;
-  // sqrt(2)/2
-  diag_step_ = move_step_ * M_SQRT2 / 2;
 }
 
 void Interface::set_rotation_speed(myfloat rotation_speed) {
@@ -52,6 +50,12 @@ void Interface::ProcessKeyDown(const SDL_KeyboardEvent &event) {
     case SDLK_a:
       move_state_.left = 1;
       break;
+    case SDLK_SPACE:
+      move_state_.up = 1;
+      break;
+    case SDLK_LCTRL:
+      move_state_.down = -1;
+      break;
     default:
       break;
   }
@@ -72,10 +76,10 @@ void Interface::ProcessKeyUp(const SDL_KeyboardEvent &event) {
       move_state_.left = 0;
       break;
     case SDLK_SPACE:
-      move_state_.up = 1;
+      move_state_.up = 0;
       break;
     case SDLK_LCTRL:
-      move_state_.down = -1;
+      move_state_.down = 0;
       break;
     case SDLK_ESCAPE:
       set_grab_mouse(!grab_mouse());
@@ -98,19 +102,26 @@ void Interface::ProcessResize(const SDL_ResizeEvent &event) {
 
 void Interface::Step() {
   if (!position_) throw runtime_error("Position pointer is not setted.");
-  char up_down = move_state_.forward + move_state_.back;
+  char forward_back = move_state_.forward + move_state_.back;
   char left_right = move_state_.left + move_state_.right;
-  myfloat len = up_down && left_right ? diag_step_ : move_step_;
-  if (up_down) {
-    position_->z -= up_down * len * sin(position_->pitch);
-    myfloat prj = up_down * len * cos(position_->pitch);
-    position_->x += prj * cos(position_->yaw);
-    position_->y += prj * sin(position_->yaw);
-  }
-  if (left_right) {
-    myfloat r_yaw = position_->yaw + M_PI_2;
-    position_->x += left_right * len * cos(r_yaw);
-    position_->y += left_right * len * sin(r_yaw);
+  char up_down = move_state_.up + move_state_.down;
+  char mul = (abs(forward_back) + abs(left_right) + abs(up_down));
+  if (mul > 0) {
+    myfloat len = move_step_ / mul;
+    if (forward_back) {
+      position_->z -= forward_back * len * sin(position_->pitch);
+      myfloat prj = forward_back * len * cos(position_->pitch);
+      position_->x += prj * cos(position_->yaw);
+      position_->y += prj * sin(position_->yaw);
+    }
+    if (left_right) {
+      myfloat r_yaw = position_->yaw + M_PI_2;
+      position_->x += left_right * len * cos(r_yaw);
+      position_->y += left_right * len * sin(r_yaw);
+    }
+    if (up_down) {
+      position_->z += up_down * len;
+    }
   }
   position_->pitch -= move_state_.yrel * rotation_k_;
   position_->pitch = Trim<myfloat>(position_->pitch, -M_PI_2, M_PI_2);

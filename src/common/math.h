@@ -41,4 +41,12 @@ template <class T> T Round(const T val) {
   return (val > T(0.0)) ? floor(val + T(0.5)) : ceil(val - T(0.5));
 }
 
+inline bool FuzzyNull(const float x) {
+  return fabs(x) < 0.000001;
+}
+
+inline bool FuzzyNull(const double x) {
+  return fabs(x) < 0.000000000001;
+}
+
 #endif // COMMON_MATH_H_

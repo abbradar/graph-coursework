@@ -54,7 +54,6 @@ class Interface : public sdlobj::EventHandler {
   myfloat move_speed_;
   myfloat rotation_speed_;
   myfloat move_step_;
-  myfloat diag_step_;
   myfloat rotation_k_;
   float fps_;
 

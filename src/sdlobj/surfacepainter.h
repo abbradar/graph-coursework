@@ -32,9 +32,13 @@ class SurfacePainter {
 
   /** Get the pixel at (x, y) */
   inline Uint32 GetPixel(const unsigned int x, const unsigned int y) {
-    int bpp = surface_->surface()->format->BytesPerPixel;
-
-    Uint8 *p = surface_->pixels() + y * surface_->surface()->pitch + x * bpp;
+#if DEBUG_LEVEL == 4
+    if (x < 0 || y < 0 || x >= surface_->width() || y >= surface_->height()) {
+      throw std::runtime_error((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str().data());
+    }
+#endif
+    Uint8 *p = (Uint8 *)surface_->surface()->pixels + y * surface_->surface()->pitch
+        + x * surface_->surface()->format->BytesPerPixel;
 
     return get_pixel_(p);
   }
@@ -46,9 +50,8 @@ class SurfacePainter {
       throw std::runtime_error((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str().data());
     }
 #endif
-    int bpp = surface_->surface()->format->BytesPerPixel;
-
-    Uint8 *p = surface_->pixels() + y * surface_->surface()->pitch + x * bpp;
+    Uint8 *p = (Uint8 *)surface_->surface()->pixels + y * surface_->surface()->pitch
+        + x * surface_->surface()->format->BytesPerPixel;
 
     set_pixel_(p, pixel);
   }

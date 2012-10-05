@@ -20,7 +20,7 @@ class ZBuffer {
 
   void clear();
 
-  inline bool Check(const int x, const int y, myfloat z) {
+  inline bool Check(const int x, const int y, const myfloat z) {
     myfloat *p = z_buffer_ + y * width_ + x;
     if (*p < z) {
       return false;

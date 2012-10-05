@@ -40,10 +40,6 @@ public:
     return surface_->surface->format->BitsPerPixel;
   }
 
-  inline Uint8 * const pixels() {
-    return (Uint8 *)surface_->surface->pixels;
-  }
-
   inline void Lock() {
     SDL_LockSurface(surface_->surface);
   }
