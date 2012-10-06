@@ -53,21 +53,8 @@ int CourseWork::Run(int argc, const char **argv) {
   window->set_viewer_distance(kDefaultViewerDistance);
   window->set_projected_height(kDefaultProjectedHeight);
 
-  // test object
-  Point3D test_points[] = { Point3D(0, 0, 0), Point3D(100, 0, 0), Point3D(0, 0, 100),
-                            Point3D(0, 100, 0), Point3D(100, 100, 0), Point3D(0, 100, 100),
-                            Point3D(100, 0, 100), Point3D(100, 100, 100) };
-  IndexedTriangle test_indexes[] = { IndexedTriangle(0, 1, 2), IndexedTriangle(1, 2, 6),
-                                    IndexedTriangle(0, 1, 3), IndexedTriangle(1, 3, 4),
-                                    IndexedTriangle(0, 2, 3), IndexedTriangle(2, 3, 5),
-                                    IndexedTriangle(7, 6, 5), IndexedTriangle(6, 5, 2),
-                                    IndexedTriangle(7, 6, 4), IndexedTriangle(6, 4, 1),
-                                    IndexedTriangle(7, 5, 4), IndexedTriangle(0, 1, 3) };
-  PointVector points(test_points, test_points + 8);
-  TriangleVector polygons(test_indexes, test_indexes + 12);
-  SceneObject object(points, polygons, Position(0, 0, 0, 0, M_PI_4 / 2));
-  object.color() = Color(0xFF, 0xFF, 0xFF);
-  window->scene()->objects().push_back(std::move(object));
+  // placeholder
+  window->scene()->Load();
 
   LogDebug("Initialization complete");
 

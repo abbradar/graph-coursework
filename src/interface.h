@@ -68,10 +68,9 @@ class Interface : public sdlobj::EventHandler {
     int yrel = 0;
   };
 
-  bool grab_mouse_;
-
   MoveState move_state_;
   Position *position_;
+  bool grab_mouse_;
 };
 
 #endif // GRAPH_INTERFACE_H_

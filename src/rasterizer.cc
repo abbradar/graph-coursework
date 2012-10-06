@@ -3,7 +3,7 @@
 #include "common/debug.h"
 #include "rasterizer.h"
 
-//#define WIREFRAME_MODEL
+#define WIREFRAME_MODEL
 
 using namespace std;
 using namespace sdlobj;
@@ -192,8 +192,19 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
 
   // fill lines
   ScreenLine3D *a = &lines[0], *b = &lines[1];
-  if (a->dx > b->dx) {
+  if (a->x != b->x) {
+    if (a->x < b->x) swap(a, b);
+#if DEBUG_LEVEL == 4
+    FillLine(a, b, 0xFFFFFF);
+#endif
+  } else {
+    if (a->dx < b->dx) swap(a, b);
+
+#if DEBUG_LEVEL == 4
+    FillLine(a, b, 0xFFFFFF);
+#endif
   }
+
   if (lines[2].y != lines[2].fy) {
     FillLines(&lines[0], &lines[1], pixel);
     FillLines(&lines[0], &lines[2], pixel);

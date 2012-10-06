@@ -19,6 +19,8 @@ class Scene {
 
   void set_plane_color(const sdlobj::Color &plane_color);
 
+  void Load();
+
  private:
   std::list<SceneObject> objects_;
   sdlobj::Color plane_color_;
