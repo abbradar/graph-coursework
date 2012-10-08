@@ -4,6 +4,10 @@
 #include "logging.h"
 #include "application.h"
 
+#ifdef __GCC__
+#include <execinfo.h>
+#endif
+
 using namespace std;
 
 Application::Application() = default;

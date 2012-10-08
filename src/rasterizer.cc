@@ -118,7 +118,7 @@ const int kClippedSize = 8;
 const int kClipNumber = 5;
 const size_t kPolygonsSize = kClippedSize;
 // One point for each clip can become unusable
-const size_t kPointsSize = kClippedSize * IndexedTriangle::kPointsSize + kClipNumber;
+const size_t POINTS_SIZE = kClippedSize * IndexedTriangle::kPointsSize + kClipNumber;
 
 template<class T> bool ClipAll(IndexedTriangle *triangles, size_t &triangles_num,
                                Point3D *points, size_t &points_num, const myfloat &value) {
@@ -129,7 +129,7 @@ template<class T> bool ClipAll(IndexedTriangle *triangles, size_t &triangles_num
 #if DEBUG_LEVEL == 4
   if (triangles_num > kPolygonsSize)
     throw runtime_error("There are more polygons than expected from clipping.");
-  if (points_num > kPointsSize)
+  if (points_num > POINTS_SIZE)
     throw runtime_error("There are more points than expected from clipping.");
 #endif
   return triangles_num == 1 && triangles[0].points[0] == -1;
@@ -137,7 +137,7 @@ template<class T> bool ClipAll(IndexedTriangle *triangles, size_t &triangles_num
 
 void Rasterizer::DrawTriangle(const IndexedTriangle &source, const Color &color) {
   IndexedTriangle polygons[kPolygonsSize];
-  Point3D points[kPointsSize];
+  Point3D points[POINTS_SIZE];
   polygons[0] = IndexedTriangle(0, 1, 2);
   for (int i = 0; i < IndexedTriangle::kPointsSize; ++i)
     points[i] = point_buffer_[source.points[i]];
