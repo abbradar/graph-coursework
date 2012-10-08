@@ -4,6 +4,7 @@ syntax: regexp
 \.log$
 \.synctex\.gz$
 \.pdf$
+\.out$
 \.maf$
 \.mtc\d*$
 \.autosave$
