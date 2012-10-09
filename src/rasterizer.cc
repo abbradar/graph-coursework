@@ -1,6 +1,6 @@
-#include <stdexcept>
 #include "common/math.h"
 #include "common/debug.h"
+#include "common/exception.h"
 #include "rasterizer.h"
 
 #define WIREFRAME_MODEL
@@ -128,9 +128,9 @@ template<class T> bool ClipAll(IndexedTriangle *triangles, size_t &triangles_num
       Clip<T>(triangles[i], triangles, triangles_num, points, points_num, value);
 #if DEBUG_LEVEL == 4
   if (triangles_num > kPolygonsSize)
-    throw runtime_error("There are more polygons than expected from clipping.");
+    throw Exception("There are more polygons than expected from clipping.");
   if (points_num > POINTS_SIZE)
-    throw runtime_error("There are more points than expected from clipping.");
+    throw Exception("There are more points than expected from clipping.");
 #endif
   return triangles_num == 1 && triangles[0].points[0] == -1;
 }
@@ -269,7 +269,7 @@ void Rasterizer::Render() {
   const myfloat system_transform_m[] = { 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1};
   const Matrix4 system_transform = Matrix4(system_transform_m);
 
-  if (!(scene_ && camera_ && surface_)) throw runtime_error("Set scene, camera and surface");
+  if (!(scene_ && camera_ && surface_)) throw Exception("Set scene, camera and surface");
 
   Matrix4 transform = system_transform * camera_->GetMatrixTo();
 
@@ -303,7 +303,7 @@ void Rasterizer::set_camera(Position *camera) {
 }
 
 void Rasterizer::set_viewer_distance(myfloat viewer_distance) {
-  if (viewer_distance <= 0) throw runtime_error("Viewer distance should be > 0");
+  if (viewer_distance <= 0) throw Exception("Viewer distance should be > 0");
   viewer_distance_ = viewer_distance;
 }
 

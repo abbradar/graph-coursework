@@ -1,8 +1,8 @@
-#include <stdexcept>
 #include <cmath>
 #include "common/logging.h"
 #include "common/application.h"
 #include "common/math.h"
+#include "common/exception.h"
 #include "interface.h"
 
 using namespace sdlobj;
@@ -25,7 +25,7 @@ void Interface::set_rotation_speed(myfloat rotation_speed) {
 
 void Interface::set_fps(float fps) {
   if (fps <= 0) {
-    throw runtime_error("FPS should be > 0");
+    throw Exception("FPS should be > 0");
   }
   fps_ = fps;
   set_move_speed(move_speed_);
@@ -101,7 +101,7 @@ void Interface::ProcessResize(const SDL_ResizeEvent &event) {
 }
 
 void Interface::Step() {
-  if (!position_) throw runtime_error("Position pointer is not setted.");
+  if (!position_) throw Exception("Position pointer is not setted.");
   char forward_back = move_state_.forward + move_state_.back;
   char left_right = move_state_.left + move_state_.right;
   char up_down = move_state_.up + move_state_.down;

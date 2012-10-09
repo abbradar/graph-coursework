@@ -1,7 +1,7 @@
-#include <stdexcept>
 #include <SDL.h>
 #include <boost/format.hpp>
 #include "common/logging.h"
+#include "common/exception.h"
 #include "sdl.h"
 
 using namespace std;
@@ -10,7 +10,7 @@ using namespace sdlobj;
 void SDL::Init(Uint32 flags) {
   if (initialized()) return;
   if (SDL_Init(flags)) {
-    throw runtime_error(SDL_GetError());
+    throw Exception(SDL_GetError());
   }
   initialized_ = true;
   //LogDebug("SDL initialized");
@@ -31,7 +31,7 @@ void SDL::SetVideoMode(int width, int height, int bpp, Uint32 flags) {
   LogDebug((boost::format("Video mode setted: %1%x%2%@%3%") % width % height % bpp).str().data());
 
   if (!surface_.surface_) {
-    throw runtime_error(SDL_GetError());
+    throw Exception(SDL_GetError());
   }
 }
 
@@ -63,7 +63,7 @@ bool SDL::PollEvent()
 
 void SDL::Flip() {
   if (SDL_Flip(surface_.surface_->surface)) {
-    throw runtime_error(SDL_GetError());
+    throw Exception(SDL_GetError());
   }
 }
 

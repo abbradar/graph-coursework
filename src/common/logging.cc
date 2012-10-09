@@ -30,13 +30,16 @@ const char *logging::LevelName(const LogMessageLevel level) {
 
 Logger::LogDestination::~LogDestination() = default;
 
-Logger::Logger() noexcept : time_facet_(new TimeFacet("%x %X")) {
+Logger::Logger() noexcept : write_to_stderr_(true), level_(kNotice),
+ name_(NULL), time_facet_(new TimeFacet("%x %X")) {
+  name_ = strdup("");
   time_format_.imbue(locale(time_format_.getloc(), time_facet_));
 }
 
 Logger::~Logger() {
   // boost bug; should not destroy this
   //delete time_facet_;
+  delete[] name_;
 }
 
 void Logger::Log(LogMessageLevel level, const char * msg) noexcept {
@@ -49,14 +52,14 @@ void Logger::Log(LogMessageLevel level, const char * msg) noexcept {
     time_format_.str("");
   }
 
-  try {
-    for (auto &dest : destinations_) {
-      dest->WriteLog(level, msg);
+  for (auto i = destinations_.begin(); i != destinations_.end(); ++i) {
+    try {
+      (*i)->WriteLog(level, msg);
+    } catch (exception& e) {
+      destinations_.erase(i);
+      if (destinations_.empty()) set_write_to_stderr(true);
+      throw e;
     }
-  } catch (exception& e) {
-    set_write_to_stderr(true);
-    LogCritical((string("Logger destination throwed an exception: ") + e.what()).c_str());
-
   }
 }
 
@@ -69,7 +72,8 @@ void Logger::set_write_to_stderr(const bool write_to_stderr) noexcept {
 }
 
 void Logger::set_name(const char *name) noexcept {
-  name_ = name;
+  delete[] name_;
+  name_ = strdup(name);
 }
 
 void Logger::set_time_facet(TimeFacet *time_facet) noexcept {

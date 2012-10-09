@@ -6,9 +6,16 @@ add_definitions(-std=c++11 -Wall)
 # Build type
 set(CMAKE_BUILD_TYPE Debug)
 
+# Platform specific
+include(CheckIncludeFiles)
+check_include_files(unistd.h HAS_UNISTD_H)
+if(HAS_UNISTD_H)
+  add_definitions(-D__POSIX__)
+endif()
+
 # Debug levels
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  add_definitions(-DDEBUG_LEVEL=4 -O0)
+  add_definitions(-DDEBUG_LEVEL=4 -O0 -rdynamic)
 elseif(CMAKE_BUILD_TYPE STREQUAL Release)
   add_definitions(-DDEBUG_LEVEL=1 -O2)
 endif()

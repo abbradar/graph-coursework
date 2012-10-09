@@ -2,6 +2,7 @@
 #define SDLOBJ_SURFACEPAINTER_H_
 
 #include "common/debug.h"
+#include "common/exception.h"
 #include "surface.h"
 
 #if DEBUG_LEVEL == 4
@@ -34,7 +35,7 @@ class SurfacePainter {
   inline Uint32 GetPixel(const unsigned int x, const unsigned int y) {
 #if DEBUG_LEVEL == 4
     if (x < 0 || y < 0 || x >= surface_->width() || y >= surface_->height()) {
-      throw std::runtime_error((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str().data());
+      throw Exception((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str());
     }
 #endif
     Uint8 *p = (Uint8 *)surface_->surface()->pixels + y * surface_->surface()->pitch
@@ -47,7 +48,7 @@ class SurfacePainter {
   inline void SetPixel(const unsigned int x, const unsigned int y, const Uint32 pixel) {
 #if DEBUG_LEVEL == 4
     if (x < 0 || y < 0 || x >= surface_->width() || y >= surface_->height()) {
-      throw std::runtime_error((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str().data());
+      throw Exception((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str());
     }
 #endif
     Uint8 *p = (Uint8 *)surface_->surface()->pixels + y * surface_->surface()->pitch

@@ -1,5 +1,5 @@
-#include <stdexcept>
 #include "common/logging.h"
+#include "common/exception.h"
 #include "sdlttf.h"
 
 using namespace std;
@@ -8,7 +8,7 @@ using namespace sdlobj;
 void SDLTTF::Init() {
   if (initialized()) return;
   if (TTF_Init()) {
-    throw runtime_error(TTF_GetError());
+    throw Exception(TTF_GetError());
   }
   //LogDebug("SDL_ttf initialized");
 }

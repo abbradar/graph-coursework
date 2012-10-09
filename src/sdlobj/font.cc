@@ -1,5 +1,5 @@
-#include <stdexcept>
-#include "sdlobj/sdlttf.h"
+#include "common/exception.h"
+#include "sdlttf.h"
 #include "font.h"
 
 using namespace std;
@@ -12,7 +12,7 @@ Font::Font(const Font &other) : font_(other.font_) {}
 Font::Font(const char *file, int ptsize, long index) : font_(new FontWrapper()) {
   font_->font = TTF_OpenFontIndex(file, ptsize, index);
   if (!font_->font) {
-    throw runtime_error(TTF_GetError());
+    throw Exception(TTF_GetError());
   }
 }
 

@@ -84,9 +84,9 @@ class Logger : public Singleton<Logger> {
   ~Logger();
 
   DestinationVector destinations_;
-  bool write_to_stderr_ = true;
-  LogMessageLevel level_ = kNotice;
-  const char *name_ = "";
+  bool write_to_stderr_;
+  LogMessageLevel level_;
+  char *name_;
   TimeFacet *time_facet_;
   std::stringstream time_format_;
 };

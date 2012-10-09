@@ -1,4 +1,4 @@
-#include <stdexcept>
+#include "common/exception.h"
 #include "frametimer.h"
 
 using namespace std;
@@ -14,7 +14,7 @@ FrameTimer::FrameTimer(float fps) :
 
 void FrameTimer::set_fps(float fps) {
   if (fps <= 0) {
-    throw runtime_error("FPS should be > 0");
+    throw Exception("FPS should be > 0");
   }
   fps_ = fps;
   tick_ = MSECS_IN_SEC / fps_;
@@ -33,7 +33,7 @@ void FrameTimer::set_measure_fps(bool measure_fps) {
 
 void FrameTimer::set_measure_ticks(const unsigned int measure_ticks) {
   if (measure_ticks <= 0) {
-    throw runtime_error("Measure ticks value should be > 0");
+    throw Exception("Measure ticks value should be > 0");
   }
   measure_ticks_ = measure_ticks;
 }

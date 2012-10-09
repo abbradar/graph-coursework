@@ -1,7 +1,7 @@
-#include <stdexcept>
 #include <boost/format.hpp>
 #include "common/logging.h"
 #include "common/debug.h"
+#include "common/exception.h"
 #include "window.h"
 
 using namespace std;
@@ -123,7 +123,7 @@ void Window::set_rotation_speed(const myfloat rotation_speed) {
 
 void Window::set_projected_height(const myfloat projected_height) {
   if (projected_height <= 0)
-    throw runtime_error("Projected height should be > 0");
+    throw Exception("Projected height should be > 0");
   projected_height_ = projected_height;
 }
 
