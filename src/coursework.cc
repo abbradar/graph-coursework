@@ -60,10 +60,11 @@ int CourseWork::Run(int argc, const char **argv) {
 
   // we'll never return from this one
   window->Run();
+  Assert(false);
 
   delete window;
 
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 void CourseWork::Terminate(int exit_code) noexcept {

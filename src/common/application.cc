@@ -38,7 +38,7 @@ void HandleTerminate() {
   }
   is_terminating = true;
   LogCritical(StackTrace().data());
-  exit(1);
+  exit(EXIT_FAILURE);
 }
 
 #ifdef __POSIX__
@@ -47,7 +47,7 @@ void HandleTerminate() {
 void HandleSegfault(int sig) {
   LogCritical("Segfault caught");
   PrintStackTrace();
-  exit(1);
+  exit(EXIT_FAILURE);
 }
 
 #undef InitSignalHandlers
@@ -79,7 +79,7 @@ int Application::Run(int argc, const char **argv) noexcept {
     LogCritical(e.stack_trace());
     Abort();
   }
-  return 1;
+  return EXIT_FAILURE;
 }
 
 void Application::Terminate(int error_code) noexcept {

@@ -3,7 +3,7 @@
 #include "common/exception.h"
 #include "rasterizer.h"
 
-#define WIREFRAME_MODEL
+//#define WIREFRAME_MODEL
 
 using namespace std;
 using namespace sdlobj;
@@ -189,66 +189,54 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
       break;
     }
   }
-
   // fill lines
-  ScreenLine3D *a = &lines[0], *b = &lines[1];
+  ScreenLine3D *a = &lines[0], *b = &lines[1], *c = &lines[2];
   if (a->x != b->x) {
     if (a->x < b->x) swap(a, b);
 #if DEBUG_LEVEL == 4
     FillLine(a, b, 0xFFFFFF);
 #endif
+    FillLines(a, b, pixel);
   } else {
     if (a->dx < b->dx) swap(a, b);
-
-#if DEBUG_LEVEL == 4
-    FillLine(a, b, 0xFFFFFF);
-#endif
+    FillLines(a, b, pixel);
   }
-
-  if (lines[2].y != lines[2].fy) {
-    FillLines(&lines[0], &lines[1], pixel);
-    FillLines(&lines[0], &lines[2], pixel);
-  } else {
-#if DEBUG_LEVEL == 4
-    ScreenLine3D *a = &lines[0], *b = &lines[1];
-    if (a->x < b->x) swap(a, b);
-    if (lines[2].y > lines[0].y) {
-      FillLines(a, b, pixel);
-      FillLine(*a, *b, 0xFFFFFF);
-    } else {
-      FillLine(*a, *b, 0xFFFFFF);
-      FillLines(a, b, pixel);
-    }
-#else
-    FillLines(&lines[0], &lines[1], pixel);
-#endif
+  if (a->fy < b->fy) swap(a, b);
+  if (a->x > c->x) swap(a, c);
+  if (c->y != c->fy) {
+    FillLines(a, c, pixel);
   }
+#if DEBUG_LEVEL == 4
+  else {
+    FillLine(a, c, 0xFFFFFF);
+  }
+#endif
 #endif
 }
 
 
 
-void Rasterizer::FillLines(ScreenLine3D &a, ScreenLine3D &b, const Uint32 color) {
-  for (; a.y <= a.fy; ++a.y) {
+void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color) {
+  for (; a->y <= a->fy; ++a->y) {
     FillLine(a, b, color);
 
     // move line points
-    a.x += a.dx;
-    a.z += a.dz;
-    b.x += b.dx;
-    b.z += b.dz;
+    a->x += a->dx;
+    a->z += a->dz;
+    b->x += b->dx;
+    b->z += b->dz;
   }
-  b.y = a.y;
+  b->y = a->y;
 }
 
-void Rasterizer::FillLine(const ScreenLine3D &a, const ScreenLine3D &b, const Uint32 color) {
-  int ax = PositiveRound(a.x), bx = PositiveRound(b.x);
-  myfloat z = a.z;
+void Rasterizer::FillLine(const ScreenLine3D *a, const ScreenLine3D *b, const Uint32 color) {
+  int ax = PositiveRound(a->x), bx = PositiveRound(b->x);
+  myfloat z = a->z;
 #if DEBUG_LEVEL == 4
-  SetPixel(ax, a.y, z, 0xFFFFFF);
+  SetPixel(ax, a->y, z, 0xFFFFFF);
 #endif
   if (ax < bx) {
-    myfloat dz = (b.z - a.z) / (b.x - a.x);
+    myfloat dz = (b->z - a->z) / (b->x - a->x);
 #if DEBUG_LEVEL == 4
     z += dz;
     for (int x = ax + 1; x < bx; ++x)
@@ -256,11 +244,11 @@ void Rasterizer::FillLine(const ScreenLine3D &a, const ScreenLine3D &b, const Ui
     for (int x = ax; x <= bx; ++x)
 #endif
     {
-      SetPixel(x, a.y, z, color);
+      SetPixel(x, a->y, z, color);
       z += dz;
     }
 #if DEBUG_LEVEL == 4
-  SetPixel(bx, a.y, z, 0xFFFFFF);
+  SetPixel(bx, a->y, z, 0xFFFFFF);
 #endif
   }
 }

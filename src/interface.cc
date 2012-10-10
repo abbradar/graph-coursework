@@ -33,7 +33,7 @@ void Interface::set_fps(float fps) {
 
 void Interface::ProcessQuit(const SDL_QuitEvent &) {
   LogDebug("Quit event received; exiting");
-  Application::instance().Terminate(0);
+  Application::instance().Terminate(EXIT_SUCCESS);
 }
 
 void Interface::ProcessKeyDown(const SDL_KeyboardEvent &event) {
