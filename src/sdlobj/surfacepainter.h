@@ -34,12 +34,12 @@ class SurfacePainter {
   /** Get the pixel at (x, y) */
   inline Uint32 GetPixel(const unsigned int x, const unsigned int y) {
 #if DEBUG_LEVEL == 4
-    if (x >= surface_->width() || y >= surface_->height()) {
+    if (x >= (unsigned int)surface_struct_->w || y >= (unsigned int)surface_struct_->h) {
       throw Exception((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str());
     }
 #endif
-    Uint8 *p = (Uint8 *)surface_->surface()->pixels + y * surface_->surface()->pitch
-        + x * surface_->surface()->format->BytesPerPixel;
+    Uint8 *p = (Uint8 *)surface_struct_->pixels + y * surface_struct_->pitch
+        + x * surface_struct_->format->BytesPerPixel;
 
     return get_pixel_(p);
   }
@@ -47,12 +47,12 @@ class SurfacePainter {
   /** Set the pixel at (x, y) to the given value */
   inline void SetPixel(const unsigned int x, const unsigned int y, const Uint32 pixel) {
 #if DEBUG_LEVEL == 4
-    if (x >= surface_->width() || y >= surface_->height()) {
+    if (x >= (unsigned int)surface_struct_->w || y >= (unsigned int)surface_struct_->h) {
       throw Exception((boost::format("Coordinates out of bounds: %1%, %2%") % x % y).str());
     }
 #endif
-    Uint8 *p = (Uint8 *)surface_->surface()->pixels + y * surface_->surface()->pitch
-        + x * surface_->surface()->format->BytesPerPixel;
+    Uint8 *p = (Uint8 *)surface_struct_->pixels + y * surface_struct_->pitch
+        + x * surface_struct_->format->BytesPerPixel;
 
     set_pixel_(p, pixel);
   }
@@ -63,6 +63,7 @@ class SurfacePainter {
 
  private:
   Surface *surface_;
+  SDL_Surface *surface_struct_;
 
   Uint32 (*get_pixel_)(const Uint8 *);
   void (*set_pixel_)(Uint8 *, const Uint32);

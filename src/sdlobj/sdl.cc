@@ -22,12 +22,12 @@ void SDL::Free() {
   SDL_Quit();
 }
 
-void SDL::SetVideoMode(int width, int height) {
+void SDL::SetVideoMode(unsigned int width, unsigned int height) {
   SetVideoMode(width, height, surface().bpp(), surface().surface()->flags);
 }
 
-void SDL::SetVideoMode(int width, int height, int bpp, Uint32 flags) {
-  surface_.surface_->surface = SDL_SetVideoMode(width, height, bpp, flags);
+void SDL::SetVideoMode(unsigned int width, unsigned int height, unsigned int bpp, Uint32 flags) {
+  surface_.set_surface(SDL_SetVideoMode(width, height, bpp, flags));
   LogNotice((boost::format("Video mode setted: %1%x%2%@%3%") % width % height % bpp).str().data());
 
   if (!surface_.surface_) {

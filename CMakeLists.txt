@@ -14,10 +14,10 @@ if(HAS_UNISTD_H)
 endif()
 
 # Debug levels
-if(CMAKE_BUILD_TYPE STREQUAL Release)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
   add_definitions(-DDEBUG_LEVEL=4 -O0 -rdynamic)
 elseif(CMAKE_BUILD_TYPE STREQUAL Release)
-  add_definitions(-DDEBUG_LEVEL=1 -O2)
+  add_definitions(-DDEBUG_LEVEL=1 -O3)
 endif()
 
 # Various packages

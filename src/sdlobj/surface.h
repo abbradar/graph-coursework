@@ -17,35 +17,35 @@ public:
   Surface(SDL_Surface *surface);
 
   /** Create surface with same parameters as screen surface */
-  Surface(const int width, const int height);
-  Surface(const int width, const int height, const Uint32 flags, const int bpp,
+  Surface(const unsigned int width, const unsigned int height);
+  Surface(const unsigned int width, const unsigned int height, const Uint32 flags, const unsigned int bpp,
           const Uint32 Rmask, const Uint32 Gmask, const Uint32 Bmask, const Uint32 Amask);
   Surface(const Surface &other);
 
   ~Surface();
 
   inline const SDL_Surface *const surface() {
-    return surface_->surface;
+    return surface_struct_;
   }
 
   inline unsigned int width() {
-    return surface_->surface->w;
+    return surface_struct_->w;
   }
 
   inline unsigned int height() {
-    return surface_->surface->h;
+    return surface_struct_->h;
   }
 
   inline unsigned int bpp() {
-    return surface_->surface->format->BitsPerPixel;
+    return surface_struct_->format->BitsPerPixel;
   }
 
   inline void Lock() {
-    SDL_LockSurface(surface_->surface);
+    SDL_LockSurface(surface_struct_);
   }
 
   inline void Unlock() {
-    SDL_UnlockSurface(surface_->surface);
+    SDL_UnlockSurface(surface_struct_);
   }
 
   void SetAlpha(Uint32 flags, Uint8 alpha);
@@ -67,16 +67,19 @@ public:
 
  private:
   struct SurfaceWrapper {
-    SurfaceWrapper() {}
-    SurfaceWrapper(SDL_Surface * const &surface_) : surface(surface_) {}
+    SurfaceWrapper();
+    SurfaceWrapper(SDL_Surface *surface_);
     ~SurfaceWrapper();
 
-    SDL_Surface *surface = nullptr;
+    SDL_Surface *surface;
   };
 
   friend class SDL;
 
+  void set_surface(SDL_Surface *surface);
+
   std::shared_ptr<SurfaceWrapper> surface_;
+  SDL_Surface *surface_struct_;
 };
 
 }

@@ -20,26 +20,27 @@ public:
   ~Font();
 
   inline const TTF_Font *const font() {
-    return font_->font;
+    return font_struct_;
   }
 
   Surface RenderUTF8_Solid(const char *text, sdlobj::Color fg);
   Surface RenderUTF8_Shaded(const char *text, sdlobj::Color fg, sdlobj::Color bg);
   Surface RenderUTF8_Blended(const char *text, sdlobj::Color fg);
 
-  int height();
-  int line_skip();
+  unsigned int height();
+  unsigned int line_skip();
 
  private:
   struct FontWrapper {
-    FontWrapper() {}
-    FontWrapper(TTF_Font *font_) : font(font_) {}
+    FontWrapper();
+    FontWrapper(TTF_Font *font_);
     ~FontWrapper();
 
-    TTF_Font *font = nullptr;
+    TTF_Font *font;
   };
 
   std::shared_ptr<FontWrapper> font_;
+  TTF_Font *font_struct_;
 };
 
 }

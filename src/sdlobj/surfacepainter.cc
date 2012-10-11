@@ -6,7 +6,8 @@
 using namespace std;
 using namespace sdlobj;
 
-SurfacePainter::SurfacePainter() : surface_(nullptr), get_pixel_(nullptr), set_pixel_(nullptr) {}
+SurfacePainter::SurfacePainter() : surface_(nullptr), surface_struct_(nullptr),
+ get_pixel_(nullptr), set_pixel_(nullptr) {}
 
 void SetPixel1(Uint8 *p, const Uint32 pixel) {
   *p = pixel;
@@ -57,7 +58,8 @@ SurfacePainter::SurfacePainter(Surface *surface) : SurfacePainter() {
 
 void SurfacePainter::set_surface(Surface *surface) {
   surface_ = surface;
-  switch (surface_->surface()->format->BytesPerPixel) {
+  surface_struct_ = (SDL_Surface *)surface->surface();
+  switch (surface_struct_->format->BytesPerPixel) {
    case 1:
     get_pixel_ = &GetPixel1;
     set_pixel_ = &SetPixel1;

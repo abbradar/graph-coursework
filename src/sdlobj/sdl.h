@@ -14,8 +14,8 @@ class SDL : public Singleton<SDL> {
   void Init(Uint32 flags);
   void Free();
 
-  void SetVideoMode(int width, int height);
-  void SetVideoMode(int width, int height, int bpp, Uint32 flags);
+  void SetVideoMode(unsigned int width, unsigned int height);
+  void SetVideoMode(unsigned int width, unsigned int height, unsigned int bpp, Uint32 flags);
 
   inline Surface &surface() {
     return surface_;
