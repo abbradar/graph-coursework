@@ -311,11 +311,11 @@ Rasterizer::ScreenLine3D::ScreenLine3D() = default;
 
 Rasterizer::ScreenLine3D::ScreenLine3D(const Point3D *a, const Point3D *b) : dx(0), dz(0) {
   if (a->y > b->y) swap(a, b);
-  y = PositiveRound(a->y);
-  fy = PositiveRound(b->y);
+  y = (int)a->y;
+  fy = (int)b->y;
   x = a->x;
   if (y != fy) {
-    myfloat dy = fy - y;
+    myfloat dy = fy - y; /*b->y - a->y*/
     dx = (b->x - a->x) / dy;
     dz = (b->z - a->z) / dy;
     z = a->z;

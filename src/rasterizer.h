@@ -47,9 +47,9 @@ class Rasterizer {
  private:
   struct ScreenLine3D {
     myfloat x;
-    int y;
+    unsigned int y;
     myfloat z;
-    int fy;
+    unsigned int fy;
     myfloat dx;
     myfloat dz;
 
