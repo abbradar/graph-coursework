@@ -1,26 +1,28 @@
 #ifndef GRAPH_ZBUFFER_H_
 #define GRAPH_ZBUFFER_H_
 
+#include <cstring>
 #include "myfloat.h"
 
 class ZBuffer {
  public:
-  ZBuffer(const int width, const int height);
+  typedef myfloat ZBufferType;
+  ZBuffer(const unsigned int width, const unsigned int height);
   ~ZBuffer();
 
-  inline int width() {
+  inline unsigned int width() {
     return width_;
   }
 
-  inline int height() {
+  inline unsigned int height() {
     return height_;
   }
 
-  void set_size(const int width, const int height);
+  void set_size(const unsigned int width, const unsigned int height);
 
   void clear();
 
-  inline bool Check(const int x, const int y, const myfloat z) {
+  inline bool Check(const unsigned int x, const unsigned int y, const myfloat z) {
     myfloat *p = z_buffer_ + y * width_ + x;
     if (*p < z) {
       return false;
@@ -30,14 +32,14 @@ class ZBuffer {
     }
   }
 
-  inline myfloat &at(const int x, const int y) {
+  inline myfloat &at(const unsigned int x, const unsigned int y) {
     return z_buffer_[y * width_ + x];
   }
 
  private:
-  int width_;
-  int height_;
-  int size_;
+  unsigned int width_;
+  unsigned int height_;
+  size_t size_;
   myfloat *z_buffer_;
 };
 

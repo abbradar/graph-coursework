@@ -14,7 +14,7 @@ namespace sdlobj {
 
 class SurfacePainter {
  public:
-  SurfacePainter() = default;
+  SurfacePainter();
   explicit SurfacePainter(Surface *surface);
 
   inline Surface *surface() {
@@ -47,8 +47,8 @@ class SurfacePainter {
   /** Set the pixel at (x, y) to the given value */
   inline void SetPixel(const unsigned int x, const unsigned int y, const Uint32 pixel) {
 #if DEBUG_LEVEL == 4
-    if (x < 0 || y < 0 || x >= surface_->width() || y >= surface_->height()) {
-      throw Exception((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str());
+    if (x >= surface_->width() || y >= surface_->height()) {
+      throw Exception((boost::format("Coordinates out of bounds: %1%, %2%") % x % y).str());
     }
 #endif
     Uint8 *p = (Uint8 *)surface_->surface()->pixels + y * surface_->surface()->pitch
@@ -62,10 +62,10 @@ class SurfacePainter {
                 const Uint32 pixel);
 
  private:
-  Surface *surface_ = nullptr;
+  Surface *surface_;
 
-  Uint32 (*get_pixel_)(Uint8 *) = nullptr;
-  void (*set_pixel_)(Uint8 *, Uint32) = nullptr;
+  Uint32 (*get_pixel_)(const Uint8 *);
+  void (*set_pixel_)(Uint8 *, const Uint32);
 };
 
 }

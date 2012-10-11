@@ -17,10 +17,12 @@ const Uint32 Window::kSDLSubsystems = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 Window::Window(int width, int height, int bpp, int fps) :
  frame_timer_(fps), window_log_(new WindowLogDestination()),
  position_(new Position()), interface_(new Interface(fps)), scene_(new Scene()),
- fps_step_(1), projected_height_(1) {
+ fps_step_(1), show_fps_(true), projected_height_(1) {
   Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
   SetVideoMode(width, height, bpp);
   interface_->set_position(position_);
+  frame_timer_.set_measure_fps(true);
+
   SDL::instance().event_handler().reset(interface_);
   rasterizer_.set_camera(position_);
   rasterizer_.set_scene(scene_);
@@ -65,16 +67,14 @@ float Window::fps() {
 
 void Window::set_fps(float fps) {
   frame_timer_.set_fps(fps);
-  interface_->set_fps(fps);
 }
 
 bool Window::show_fps() {
-  return frame_timer_.measure_fps();
+  return show_fps_;
 }
 
 void Window::set_show_fps(bool show_fps) {
-  frame_timer_.set_measure_fps(show_fps);
-  if (!show_fps) fps_step_ = 0;
+  show_fps_ = show_fps;
 }
 
 int Window::show_fps_rate() {
@@ -155,16 +155,21 @@ void Window::Run() {
                   % position_->z % position_->pitch
                   % position_->yaw).str();
     Surface position_r = font_.RenderUTF8_Solid(position_str.data(), font_color_);
+    position_r.SetColorKey(0, 0);
     SDL::instance().surface().Blit(position_r, 2, SDL::instance().surface().height() - font_.line_skip());
-    if (frame_timer_.measure_fps()) {
-      if (fps_step_ == 0) {
-        string fps_str = (boost::format("%.1f fps") % frame_timer_.measured_fps()).str();
+    if (fps_step_ == 0) {
+      myfloat measured_fps = frame_timer_.measured_fps();
+      interface_->set_fps(measured_fps);
+      if (show_fps_) {
+        string fps_str = (boost::format("%.1f fps") % measured_fps).str();
         fps_r = font_.RenderUTF8_Solid(fps_str.data(), font_color_);
       }
-      ++fps_step_;
-      if (fps_step_ == frame_timer_.measure_ticks()) fps_step_ = 0;
+    }
+    ++fps_step_;
+    if (fps_step_ == frame_timer_.measure_ticks()) fps_step_ = 0;
+    if (show_fps_) {
       SDL::instance().surface().Blit(fps_r, SDL::instance().surface().width() - fps_r.width() - 2,
-                                     SDL::instance().surface().height() - font_.line_skip());
+                                    SDL::instance().surface().height() - font_.line_skip());
     }
     if (!interface_->grab_mouse()) {
       string mouse_str = (boost::format("x: %1%, y: %2%") % interface_->x() % interface_->y()).str();

@@ -219,7 +219,8 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
 }
 
 void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color) {
-  for (; a->y < a->fy && a->y < b->fy; ++a->y) {
+  ScreenLine3D *fa = a->fy < b->fy ? a : b;
+  for (; a->y < fa->fy; ++a->y) {
     FillLine(a, b, color);
 
     // move line points
@@ -233,7 +234,7 @@ void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color)
 }
 
 void Rasterizer::FillLine(const ScreenLine3D *a, const ScreenLine3D *b, const Uint32 color) {
-  int ax = PositiveRound(a->x), bx = PositiveRound(b->x);
+  int ax = (int)a->x, bx = (int)b->x;
   myfloat z = a->z;
 #if DEBUG_LEVEL == 4
   SetPixel(ax, a->y, z, 0xFFFFFF);

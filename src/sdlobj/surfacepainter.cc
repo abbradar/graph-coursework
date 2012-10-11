@@ -6,15 +6,17 @@
 using namespace std;
 using namespace sdlobj;
 
-void SetPixel1(Uint8 *p, Uint32 pixel) {
+SurfacePainter::SurfacePainter() : surface_(nullptr), get_pixel_(nullptr), set_pixel_(nullptr) {}
+
+void SetPixel1(Uint8 *p, const Uint32 pixel) {
   *p = pixel;
 }
 
-void SetPixel2(Uint8 *p, Uint32 pixel) {
+void SetPixel2(Uint8 *p, const Uint32 pixel) {
   *(Uint16 *)p = pixel;
 }
 
-void SetPixel3(Uint8 *p, Uint32 pixel) {
+void SetPixel3(Uint8 *p, const Uint32 pixel) {
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
     p[0] = (pixel >> 16) & 0xFF;
     p[1] = (pixel >> 8) & 0xFF;
@@ -26,30 +28,30 @@ void SetPixel3(Uint8 *p, Uint32 pixel) {
 #endif
 }
 
-void SetPixel4(Uint8 *p, Uint32 pixel) {
+void SetPixel4(Uint8 *p, const Uint32 pixel) {
   *(Uint32 *)p = pixel;
 }
 
-Uint32 GetPixel1(Uint8 *p) {
+Uint32 GetPixel1(const Uint8 *p) {
   return *p;
 }
 
-Uint32 GetPixel2(Uint8 *p) {
+Uint32 GetPixel2(const Uint8 *p) {
   return *(Uint16 *)p;
 }
 
-Uint32 GetPixel3(Uint8 *p) {
+Uint32 GetPixel3(const Uint8 *p) {
   if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
     return p[0] << 16 | p[1] << 8 | p[2];
   else
     return p[0] | p[1] << 8 | p[2] << 16;
 }
 
-Uint32 GetPixel4(Uint8 *p) {
+Uint32 GetPixel4(const Uint8 *p) {
   return *(Uint32 *)p;
 }
 
-SurfacePainter::SurfacePainter(Surface *surface) {
+SurfacePainter::SurfacePainter(Surface *surface) : SurfacePainter() {
   set_surface(surface);
 }
 

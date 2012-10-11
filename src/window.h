@@ -85,6 +85,7 @@ class Window {
   Rasterizer rasterizer_;
   Scene *scene_;
   unsigned int fps_step_;
+  bool show_fps_;
   myfloat projected_height_;
 };
 

@@ -17,6 +17,7 @@ void FrameTimer::set_fps(float fps) {
     throw Exception("FPS should be > 0");
   }
   fps_ = fps;
+  measured_fps_ = fps;
   tick_ = MSECS_IN_SEC / fps_;
   error_ = (float)MSECS_IN_SEC / fps_ - tick_;
   curr_error_ = 0;

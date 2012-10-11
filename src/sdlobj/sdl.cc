@@ -13,7 +13,7 @@ void SDL::Init(Uint32 flags) {
     throw Exception(SDL_GetError());
   }
   initialized_ = true;
-  //LogDebug("SDL initialized");
+  LogDebug("SDL initialized");
 }
 
 void SDL::Free() {
@@ -28,7 +28,7 @@ void SDL::SetVideoMode(int width, int height) {
 
 void SDL::SetVideoMode(int width, int height, int bpp, Uint32 flags) {
   surface_.surface_->surface = SDL_SetVideoMode(width, height, bpp, flags);
-  LogDebug((boost::format("Video mode setted: %1%x%2%@%3%") % width % height % bpp).str().data());
+  LogNotice((boost::format("Video mode setted: %1%x%2%@%3%") % width % height % bpp).str().data());
 
   if (!surface_.surface_) {
     throw Exception(SDL_GetError());

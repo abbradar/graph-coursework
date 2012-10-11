@@ -35,6 +35,8 @@ int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().set_name(kProgramName);
 #if DEBUG_LEVEL == 4
   Logger::instance().set_level(logging::kDebug);
+#else
+  Logger::instance().set_level(logging::kWarning);
 #endif
 
   SDL::instance().Init(Window::kSDLSubsystems);
@@ -56,7 +58,7 @@ int CourseWork::Run(int argc, const char **argv) {
   // placeholder
   window->scene()->Load();
 
-  LogDebug("Initialization complete");
+  LogNotice("Initialization complete");
 
   // we'll never return from this one
   window->Run();
@@ -68,5 +70,5 @@ int CourseWork::Run(int argc, const char **argv) {
 }
 
 void CourseWork::Terminate(int exit_code) noexcept {
-  LogDebug((boost::format("Terminating, exit code: %1%") % exit_code).str().data());
+  LogNotice((boost::format("Terminating, exit code: %1%") % exit_code).str().data());
 }
