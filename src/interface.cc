@@ -9,7 +9,7 @@ using namespace sdlobj;
 using namespace std;
 
 Interface::Interface(float fps) : move_speed_(1), rotation_speed_(1), fps_(fps),
-  position_(nullptr), grab_mouse_(false) {
+  position_(nullptr), x_(0), y_(0), grab_mouse_(false) {
   set_grab_mouse(false);
 }
 
@@ -90,9 +90,12 @@ void Interface::ProcessKeyUp(const SDL_KeyboardEvent &event) {
 }
 
 void Interface::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
-  if (!grab_mouse_) return;
-  move_state_.xrel -= event.xrel;
-  move_state_.yrel -= event.yrel;
+  x_ = event.x;
+  y_ = event.y;
+  if (grab_mouse_) {
+    move_state_.xrel -= event.xrel;
+    move_state_.yrel -= event.yrel;
+  }
 }
 
 void Interface::ProcessResize(const SDL_ResizeEvent &event) {

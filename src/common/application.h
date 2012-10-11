@@ -73,7 +73,7 @@ class Application : public Singleton<Application> {
  *     \/
  */
 
-template <typename Arg> int ApplicationRun(int argc, const char **argv) {
+template <class Arg> int ApplicationRun(int argc, const char **argv) {
   static_assert(std::is_base_of<Runnable, Arg>::value, "Given template argument must be class derived from Runnable");
   Application::instance().set_runnable(new Arg());
   return Application::instance().Run(argc, argv);

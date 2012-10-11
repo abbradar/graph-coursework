@@ -23,7 +23,7 @@ void Scene::Load() {
   // test object
   PointVector points(test_points, test_points + 8);
   TriangleVector polygons(test_indexes, test_indexes + 12);
-  SceneObject object(points, polygons, Position(0, 0, 0, 0, M_PI_4 / 2));
-  object.color() = Color(0xFF, 0xFF, 0xFF);
+  SceneObject object(points, polygons, Position(0, 0, 0/*, 0, M_PI_4 / 2*/));
+  object.color() = Color(0, 0xFF, 0);
   objects_.push_back(std::move(object));
 }

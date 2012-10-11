@@ -48,6 +48,14 @@ class Interface : public sdlobj::EventHandler {
     return fps_;
   }
 
+  inline int x() {
+    return x_;
+  }
+
+  inline int y() {
+    return y_;
+  }
+
   void set_fps(float fps);
 
  private:
@@ -70,6 +78,7 @@ class Interface : public sdlobj::EventHandler {
 
   MoveState move_state_;
   Position *position_;
+  int x_, y_;
   bool grab_mouse_;
 };
 

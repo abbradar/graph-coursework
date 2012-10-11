@@ -62,10 +62,10 @@ class Rasterizer {
   void FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color);
   void FillLine(const ScreenLine3D *a, const ScreenLine3D *b, const Uint32 color);
 
-  inline void SetPixel(const int x, const int y, const myfloat z, const Uint32 color) {
-    //if (z_buffer_.Check(x, y, z)) {
+  inline void SetPixel(const unsigned int x, const unsigned int y, const myfloat z, const Uint32 color) {
+    if (z_buffer_.Check(x, y, z)) {
       surface_painter_.SetPixel(x, y, color);
-    //}
+    }
   }
 
   Scene *scene_;

@@ -183,7 +183,7 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
   for (int i = 0; i < IndexedTriangle::kPointsSize - 1; ++i) {
     if (lines[i].y > lines[i + 1].y) swap(lines[i], lines[i + 1]);
   }
-  for (int i = 0; i < IndexedTriangle::kPointsSize - 2; ++i) {
+  for (int i = 0; i < IndexedTriangle::kPointsSize - 1; ++i) {
     if (lines[i].y == lines[i].fy) {
       swap(lines[i], lines[IndexedTriangle::kPointsSize - 1]);
       break;
@@ -192,32 +192,34 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
   // fill lines
   ScreenLine3D *a = &lines[0], *b = &lines[1], *c = &lines[2];
   if (a->x != b->x) {
-    if (a->x < b->x) swap(a, b);
+    if (a->x > b->x) swap(a, b);
 #if DEBUG_LEVEL == 4
     FillLine(a, b, 0xFFFFFF);
+    a->x += a->dx;
+    a->z += a->dz;
+    b->x += b->dx;
+    b->z += b->dz;
+    ++a->y;
 #endif
     FillLines(a, b, pixel);
   } else {
-    if (a->dx < b->dx) swap(a, b);
+    if (a->dx > b->dx) swap(a, b);
     FillLines(a, b, pixel);
+    if (a->fy < b->fy) swap(a, b);
+    if (a->x > c->x) swap(a, c);
+    if (c->y != c->fy) {
+      FillLines(a, c, pixel);
+  #if DEBUG_LEVEL == 4
+    } else {
+      FillLine(a, b, 0xFFFFFF);
+  #endif
+    }
   }
-  if (a->fy < b->fy) swap(a, b);
-  if (a->x > c->x) swap(a, c);
-  if (c->y != c->fy) {
-    FillLines(a, c, pixel);
-  }
-#if DEBUG_LEVEL == 4
-  else {
-    FillLine(a, c, 0xFFFFFF);
-  }
-#endif
 #endif
 }
 
-
-
 void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color) {
-  for (; a->y <= a->fy; ++a->y) {
+  for (; a->y < a->fy && a->y < b->fy; ++a->y) {
     FillLine(a, b, color);
 
     // move line points
@@ -226,6 +228,7 @@ void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color)
     b->x += b->dx;
     b->z += b->dz;
   }
+  FillLine(a, b, color);
   b->y = a->y;
 }
 
@@ -308,13 +311,17 @@ Rasterizer::ScreenLine3D::ScreenLine3D() = default;
 
 Rasterizer::ScreenLine3D::ScreenLine3D(const Point3D *a, const Point3D *b) : dx(0), dz(0) {
   if (a->y > b->y) swap(a, b);
-  x = a->x;
   y = PositiveRound(a->y);
-  z = a->z;
   fy = PositiveRound(b->y);
-  myfloat dy = b->y - a->y;
+  x = a->x;
   if (y != fy) {
+    myfloat dy = fy - y;
     dx = (b->x - a->x) / dy;
     dz = (b->z - a->z) / dy;
+    z = a->z;
+  } else {
+    dx = 0;
+    dz = 0;
+    z = min(a->z, b->z);
   }
 }

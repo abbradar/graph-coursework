@@ -166,6 +166,12 @@ void Window::Run() {
       SDL::instance().surface().Blit(fps_r, SDL::instance().surface().width() - fps_r.width() - 2,
                                      SDL::instance().surface().height() - font_.line_skip());
     }
+    if (!interface_->grab_mouse()) {
+      string mouse_str = (boost::format("x: %1%, y: %2%") % interface_->x() % interface_->y()).str();
+      Surface mouse_r = font_.RenderUTF8_Solid(mouse_str.data(), font_color_);
+      SDL::instance().surface().Blit(mouse_r, SDL::instance().surface().width() - mouse_r.width() - 2,
+                                     SDL::instance().surface().height() - 2 * font_.line_skip());
+    }
     SDL::instance().Flip();
   }
 

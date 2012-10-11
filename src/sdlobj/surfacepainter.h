@@ -34,7 +34,7 @@ class SurfacePainter {
   /** Get the pixel at (x, y) */
   inline Uint32 GetPixel(const unsigned int x, const unsigned int y) {
 #if DEBUG_LEVEL == 4
-    if (x < 0 || y < 0 || x >= surface_->width() || y >= surface_->height()) {
+    if (x >= surface_->width() || y >= surface_->height()) {
       throw Exception((boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str());
     }
 #endif
