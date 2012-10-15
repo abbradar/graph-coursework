@@ -262,11 +262,10 @@ void Rasterizer::Render() {
 
   static const myfloat system_transform_m[] = { 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1};
   static const Matrix4 system_transform = Matrix4(system_transform_m);
-  static const Point3D camera_direction = Point3D(-1, 0, 0);
+  static const Point3D camera_direction = Point3D(1, 0, 0);
 
-  Matrix4 rotate_transform = camera_->GetRotateMatrixTo();
-  Matrix4 transform = system_transform * rotate_transform * camera_->GetTranslateMatrixTo();
-  Point3D normal = rotate_transform * camera_direction;
+  Matrix4 transform = system_transform * camera_->GetMatrixTo();
+  Point3D normal = camera_->GetRotateMatrixFrom() * camera_direction;
 
   z_buffer_.set_size(surface_->width(), surface_->height());
   z_buffer_.Clear();
@@ -285,7 +284,7 @@ void Rasterizer::Render() {
     auto p = object.polygons().begin();
     auto n = object.positioned_polygon_normals().begin();
     for (auto pe = object.polygons().end(); p != pe; ++p, ++n) {
-      if (Point3D::ScalarMul(normal, *n) >= 0) {
+      if (Point3D::ScalarMul(normal, *n) <= 0) {
         DrawTriangle(*p, point_buffer_, object.color());
       }
     }
