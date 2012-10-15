@@ -12,7 +12,7 @@ class Font {
 public:
   Font();
 
-  Font(const char *file, int ptsize, long index = 0);
+  Font(const char *file, const unsigned int ptsize, const long index = 0);
 
   Font(TTF_Font *font);
   Font(const Font &other);

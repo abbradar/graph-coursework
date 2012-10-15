@@ -20,7 +20,7 @@ class ZBuffer {
 
   void set_size(const unsigned int width, const unsigned int height);
 
-  void clear();
+  void Clear();
 
   inline bool Check(const unsigned int x, const unsigned int y, const myfloat z) {
     myfloat *p = z_buffer_ + y * width_ + x;

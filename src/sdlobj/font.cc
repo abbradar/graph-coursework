@@ -13,7 +13,7 @@ Font::Font(const Font &other) : font_(other.font_), font_struct_(nullptr) {
   }
 }
 
-Font::Font(const char *file, int ptsize, long index) : font_(new FontWrapper()) {
+Font::Font(const char *file, const unsigned int ptsize, const long index) : font_(new FontWrapper()) {
   font_->font = TTF_OpenFontIndex(file, ptsize, index);
   if (!font_->font) {
     throw Exception(TTF_GetError());

@@ -3,13 +3,14 @@
 
 class Matrix4;
 
+#include <cstring>
 #include "point3d.h"
 #include "myfloat.h"
 
 class Matrix4 {
  public:
-  static const int kMatrixWidth;
-  static const int kMatrixHeight;
+  static const size_t kMatrixWidth;
+  static const size_t kMatrixHeight;
 
   Matrix4();
   Matrix4(myfloat fill);

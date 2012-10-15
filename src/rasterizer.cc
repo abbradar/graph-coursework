@@ -77,7 +77,7 @@ template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *tr
   int bad_indexes[IndexedTriangle::kPointsSize] = { -1, -1, -1 };
   int good_i = 0, bad_i = 0;
 
-  for (int i = 0; i < IndexedTriangle::kPointsSize; ++i)
+  for (size_t i = 0; i < IndexedTriangle::kPointsSize; ++i)
     if (Clipper::Compare(points[triangle.points[i]], value))
       bad_indexes[bad_i++] = triangle.points[i];
     else
@@ -135,31 +135,31 @@ template<class T> bool ClipAll(IndexedTriangle *triangles, size_t &triangles_num
   return triangles_num == 1 && triangles[0].points[0] == -1;
 }
 
-void Rasterizer::DrawTriangle(const IndexedTriangle &source, const Color &color) {
+void Rasterizer::DrawTriangle(const IndexedTriangle &source, const PointVector &points, const Color &color) {
   IndexedTriangle polygons[kPolygonsSize];
-  Point3D points[POINTS_SIZE];
+  Point3D points_buf[POINTS_SIZE];
   polygons[0] = IndexedTriangle(0, 1, 2);
-  for (int i = 0; i < IndexedTriangle::kPointsSize; ++i)
-    points[i] = point_buffer_[source.points[i]];
+  for (size_t i = 0; i < IndexedTriangle::kPointsSize; ++i)
+    points_buf[i] = points[source.points[i]];
   size_t polygons_size = 1;
   size_t points_size = IndexedTriangle::kPointsSize;
 
   // clipping
-  if (ClipAll<ZClipper<MyLessOrEqual<myfloat>>>(polygons, polygons_size, points,
+  if (ClipAll<ZClipper<MyLessOrEqual<myfloat>>>(polygons, polygons_size, points_buf,
                                                points_size, 0)) return;
-  if (ClipAll<XClipper<MyLessOrEqual<myfloat>>>(polygons, polygons_size, points,
+  if (ClipAll<XClipper<MyLessOrEqual<myfloat>>>(polygons, polygons_size, points_buf,
                                             points_size, 0)) return;
-  if (ClipAll<XClipper<MyGreaterOrEqual<myfloat>>>(polygons, polygons_size, points,
+  if (ClipAll<XClipper<MyGreaterOrEqual<myfloat>>>(polygons, polygons_size, points_buf,
                                                    points_size, surface_->width() - 1)) return;
-  if (ClipAll<YClipper<MyLessOrEqual<myfloat>>>(polygons, polygons_size, points,
+  if (ClipAll<YClipper<MyLessOrEqual<myfloat>>>(polygons, polygons_size, points_buf,
                                                 points_size, 0)) return;
-  if (ClipAll<YClipper<MyGreaterOrEqual<myfloat>>>(polygons,polygons_size, points,
+  if (ClipAll<YClipper<MyGreaterOrEqual<myfloat>>>(polygons,polygons_size, points_buf,
                                                    points_size, surface_->height() - 1)) return;
 
   // filling
   for (size_t i = 0; i < polygons_size; ++i) {
     if (polygons[i].points[0] != -1)
-      FillTriangle(polygons[i], points, color);
+      FillTriangle(polygons[i], points_buf, color);
   }
 }
 
@@ -180,10 +180,10 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
   lines[2] = ScreenLine3D(&points[source.points[2]], &points[source.points[0]]);
   // sort them
   // this is bubble sort with cheating for kPointsSize = 3
-  for (int i = 0; i < IndexedTriangle::kPointsSize - 1; ++i) {
+  for (size_t i = 0; i < IndexedTriangle::kPointsSize - 1; ++i) {
     if (lines[i].y > lines[i + 1].y) swap(lines[i], lines[i + 1]);
   }
-  for (int i = 0; i < IndexedTriangle::kPointsSize - 1; ++i) {
+  for (size_t i = 0; i < IndexedTriangle::kPointsSize - 1; ++i) {
     if (lines[i].y == lines[i].fy) {
       swap(lines[i], lines[IndexedTriangle::kPointsSize - 1]);
       break;
@@ -258,15 +258,18 @@ void Rasterizer::FillLine(const ScreenLine3D *a, const ScreenLine3D *b, const Ui
 }
 
 void Rasterizer::Render() {
-  const myfloat system_transform_m[] = { 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1};
-  const Matrix4 system_transform = Matrix4(system_transform_m);
-
   if (!(scene_ && camera_ && surface_)) throw Exception("Set scene, camera and surface");
 
-  Matrix4 transform = system_transform * camera_->GetMatrixTo();
+  static const myfloat system_transform_m[] = { 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1};
+  static const Matrix4 system_transform = Matrix4(system_transform_m);
+  static const Point3D camera_direction = Point3D(-1, 0, 0);
+
+  Matrix4 rotate_transform = camera_->GetRotateMatrixTo();
+  Matrix4 transform = system_transform * rotate_transform * camera_->GetTranslateMatrixTo();
+  Point3D normal = rotate_transform * camera_direction;
 
   z_buffer_.set_size(surface_->width(), surface_->height());
-  z_buffer_.clear();
+  z_buffer_.Clear();
   surface_painter_.StartDrawing();
   for (SceneObject &object : scene_->objects()) {
     point_buffer_.clear();
@@ -279,8 +282,12 @@ void Rasterizer::Render() {
       point_buffer_.push_back(dest);
     }
 
-    for (const IndexedTriangle &index : object.polygons()) {
-      DrawTriangle(index, object.color());
+    auto p = object.polygons().begin();
+    auto n = object.positioned_polygon_normals().begin();
+    for (auto pe = object.polygons().end(); p != pe; ++p, ++n) {
+      if (Point3D::ScalarMul(normal, *n) >= 0) {
+        DrawTriangle(*p, point_buffer_, object.color());
+      }
     }
   }
   surface_painter_.FinishDrawing();

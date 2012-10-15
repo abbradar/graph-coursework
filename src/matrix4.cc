@@ -2,13 +2,13 @@
 #include <cmath>
 #include "matrix4.h"
 
-const int Matrix4::kMatrixWidth = 4;
-const int Matrix4::kMatrixHeight = 4;
+const size_t Matrix4::kMatrixWidth = 4;
+const size_t Matrix4::kMatrixHeight = 4;
 
 Matrix4::Matrix4() : Matrix4(0.0) {}
 
 Matrix4::Matrix4(myfloat fill) : matrix_(new myfloat[kMatrixWidth * kMatrixHeight]) {
-  for (int i = 0; i < kMatrixWidth * kMatrixHeight; ++i) {
+  for (size_t i = 0; i < kMatrixWidth * kMatrixHeight; ++i) {
     matrix_[i] = fill;
   }
 }
@@ -92,14 +92,14 @@ Matrix4 Matrix4::Scale(myfloat x, myfloat y, myfloat z) {
 
 Matrix4 &Matrix4::operator +=(const Matrix4 &other) {
   myfloat *ti = matrix_, *oi = other.matrix_;
-  for (int i = 0; i < Matrix4::kMatrixHeight * Matrix4::kMatrixWidth; ++ti, ++oi, ++i)
+  for (size_t i = 0; i < Matrix4::kMatrixHeight * Matrix4::kMatrixWidth; ++ti, ++oi, ++i)
     *ti += *oi;
   return *this;
 }
 
 Matrix4 &Matrix4::operator -=(const Matrix4 &other) {
   myfloat *ti = matrix_, *oi = other.matrix_;
-  for (int i = 0; i < Matrix4::kMatrixHeight * Matrix4::kMatrixWidth; ++ti, ++oi, ++i)
+  for (size_t i = 0; i < Matrix4::kMatrixHeight * Matrix4::kMatrixWidth; ++ti, ++oi, ++i)
     *ti -= *oi;
   return *this;
 }
@@ -125,11 +125,11 @@ Matrix4 operator *(const Matrix4 &a, const Matrix4 &b) {
   Matrix4 r;
   myfloat *ri = r.matrix_;
   myfloat *astart = a.matrix_;
-  for (int i = 0; i < Matrix4::kMatrixHeight; ++i) {
-    for (int j = 0; j < Matrix4::kMatrixWidth; ++j, ++ri) {
+  for (size_t i = 0; i < Matrix4::kMatrixHeight; ++i) {
+    for (size_t j = 0; j < Matrix4::kMatrixWidth; ++j, ++ri) {
       myfloat cr = 0;
       myfloat *ai = astart, *bi = b.matrix_ + j;
-      for (int k = 0; k < Matrix4::kMatrixHeight; ++k) {
+      for (size_t k = 0; k < Matrix4::kMatrixHeight; ++k) {
         cr += *ai * *bi;
         ++ai;
         bi += Matrix4::kMatrixWidth;

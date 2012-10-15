@@ -24,11 +24,23 @@ Point3D &Point3D::operator *=(const Matrix4 &matrix) {
   return *this;
 }
 
-void Point3D::Normalize() {
+void Point3D::WeightNormalize() {
   x /= w;
   y /= w;
   z /= w;
   w = 1;
+}
+
+Point3D Point3D::VectorMul(const Point3D &a, const Point3D &b) {
+  Point3D result;
+  result.x = a.y * b.z - a.z * b.y;
+  result.y = a.z * b.x - a.x * b.z;
+  result.z = a.x * b.y - a.y * b.x;
+  return result;
+}
+
+myfloat Point3D::ScalarMul(const Point3D &a, const Point3D &b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 Point3D operator +(const Point3D &a, const Point3D &b) {

@@ -2,6 +2,7 @@
 #define GRAPH_POSITION_H_
 
 #include "matrix4.h"
+#include "point3d.h"
 #include "myfloat.h"
 
 /** Object position in 3D space.
@@ -22,6 +23,10 @@ struct Position {
 
   Matrix4 GetMatrixFrom();
   Matrix4 GetMatrixTo();
+  Matrix4 GetRotateMatrixFrom();
+  Matrix4 GetRotateMatrixTo();
+  Matrix4 GetTranslateMatrixFrom();
+  Matrix4 GetTranslateMatrixTo();
 };
 
 #endif // GRAPH_POSITION_H_

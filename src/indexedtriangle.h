@@ -1,8 +1,10 @@
 #ifndef GRAPH_INDEXEDTRIANGLE_H_
 #define GRAPH_INDEXEDTRIANGLE_H_
 
+#include <cstring>
+
 struct IndexedTriangle {
-  static constexpr int kPointsSize = 3;
+  static constexpr size_t kPointsSize = 3;
 
   int points[kPointsSize];
 

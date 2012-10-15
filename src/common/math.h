@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+// begin paste from GNU libc math.h
 # define M_E		2.7182818284590452354	/* e */
 # define M_LOG2E	1.4426950408889634074	/* log_2 e */
 # define M_LOG10E	0.43429448190325182765	/* log_10 e */
@@ -16,8 +17,9 @@
 # define M_2_SQRTPI	1.12837916709551257390	/* 2/sqrt(pi) */
 # define M_SQRT2	1.41421356237309504880	/* sqrt(2) */
 # define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
+// end paste
 
-template <class T> char Sign(const T val) {
+template <class T> inline char Sign(const T val) {
     return (char)((T(0) < val) - (val < T(0)));
 }
 
@@ -33,20 +35,54 @@ template <class T> T Circle(T val, const T min, const T max) {
   return val;
 }
 
-template <class T> T PositiveRound(const T val) {
+template <class T> inline T PositiveRound(const T val) {
   return floor(val + T(0.5));
 }
 
-template <class T> T Round(const T val) {
+template <class T> inline T Round(const T val) {
   return (val > T(0.0)) ? floor(val + T(0.5)) : ceil(val - T(0.5));
 }
 
-inline bool FuzzyNull(const float x) {
-  return fabs(x) < 0.000001;
+template <class T> inline T Sqr(const T val) {
+  return val * val;
 }
 
-inline bool FuzzyNull(const double x) {
-  return fabs(x) < 0.000000000001;
+template <class T> void LinearInterpolation(const T x1, const T y1, const T x2, const T y2,
+                                            T &a, T &b) {
+  if (x1 == x2) {
+    a = 0;
+    b = (y1 + y2) / 2;
+    return;
+  }
+  a = (y1 - y2) / (x1 - x2);
+  b = y1 - a * x1;
+}
+
+template <class T> void QuadraticInterpolation(const T x1, const T y1, const T x2, const T y2,
+                                               const T x3, const T y3, T &a, T &b, T &c) {
+  if (x1 == x2) {
+    a = 0;
+    LinearInterpolation(x1, y1, x3, y3, b, c);
+    return;
+  }
+  if (x2 == x3) {
+    a = 0;
+    LinearInterpolation(x1, y1, x2, y2, b, c);
+    return;
+  }
+  if (x1 == x3) {
+    a = 0;
+    LinearInterpolation(x2, y2, x3, y3, b, c);
+    return;
+  }
+  a = ((y3 - y1) * (x2 - x1) - (y2 - y1) * (x3 - x1)) /
+      ((Sqr(x3) - Sqr(x1)) * (x2 - x1) - (Sqr(x2) - Sqr(x1)) * (x3 - x1));
+  b = (y2 - y1 - a * (Sqr(x2) - Sqr(x1))) / (x2 - x1);
+  c = y1 - (a * Sqr(x1) + b * x1);
+}
+
+template <class T> inline T QuadraticFunc(const T a, const T b, const T c, const T x) {
+  return a * Sqr(x) + b * x + c;
 }
 
 #endif // COMMON_MATH_H_

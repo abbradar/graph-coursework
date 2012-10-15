@@ -9,9 +9,9 @@ syntax: regexp
 \.mtc\d*$
 \.autosave$
 \.orig$
-build$
 CMakeLists\.txt\.user$
 CMakeCache\.txt$
 Makefile$
 CMakeFiles$
 cmake_install\.cmake$
+^build/build$

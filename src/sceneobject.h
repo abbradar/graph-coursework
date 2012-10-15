@@ -16,7 +16,8 @@ typedef std::vector<IndexedTriangle> TriangleVector;
 class SceneObject {
  public:
   SceneObject();
-  SceneObject(const PointVector &points, const TriangleVector &polygons, const Position &position);
+  SceneObject(const PointVector &points, const TriangleVector &polygons,
+              const PointVector &vertex_normals, const Position &position);
 
   /** Points vector */
   inline const PointVector &points() const {
@@ -27,10 +28,23 @@ class SceneObject {
     return polygons_;
   }
 
-  void set_model(const PointVector &points, const TriangleVector &polygons);
+  void set_model(const PointVector &points, const TriangleVector &polygons,
+                 const PointVector &vertex_normals);
 
   inline const PointVector &positioned_points() const {
     return positioned_points_;
+  }
+
+  inline const PointVector &positioned_polygon_normals() const {
+    return positioned_polygon_normals_;
+  }
+
+  inline const PointVector &vertex_normals() const {
+    return vertex_normals_;
+  }
+
+  inline const PointVector &polygon_normals() const {
+    return polygon_normals_;
   }
 
   inline const Position &position() const {
@@ -47,11 +61,15 @@ class SceneObject {
   PointVector points_;
   PointVector positioned_points_;
   TriangleVector polygons_;
+  PointVector vertex_normals_;
+  PointVector polygon_normals_;
+  PointVector positioned_polygon_normals_;
   Position position_;
   sdlobj::Color color_;
 
   void UpdatePositioned();
   void PopulateTransformed();
+  void ComputePolygonNormals();
 };
 
 #endif // GRAPH_SCENEOBJECT_H_

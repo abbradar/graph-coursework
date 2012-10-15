@@ -1,6 +1,9 @@
 project(graph-coursework)
 cmake_minimum_required(VERSION 2.8)
 
+# Additional modules dir
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build")
+
 add_definitions(-std=c++11 -Wall)
 
 # Build type
@@ -29,8 +32,10 @@ find_package(SDL_ttf REQUIRED)
 include_directories(${SDLTTF_INCLUDE_DIR})
 find_package(Boost REQUIRED COMPONENTS system)
 include_directories(${Boost_INCLUDE_DIR})
+find_package(YamlCpp REQUIRED)
+include_directories(${YAMLCPP_INCLUDE_DIR})
 
-link_libraries(${SDL_LIBRARY} ${SDLIMAGE_LIBRARY} ${SDLTTF_LIBRARY} ${Boost_LIBRARIES})
+link_libraries(${SDL_LIBRARY} ${SDLIMAGE_LIBRARY} ${SDLTTF_LIBRARY} ${Boost_LIBRARIES} ${YAMLCPP_LIBRARY})
 
 include_directories(src)
 aux_source_directory(src SRC_LIST)
@@ -40,7 +45,7 @@ aux_source_directory(src/common COMMON_LIST)
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
-  configure_file(Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+  configure_file(build/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
   add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                     COMMENT "Generating API documentation with Doxygen" VERBATIM)

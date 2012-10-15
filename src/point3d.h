@@ -20,7 +20,10 @@ struct Point3D {
   Point3D &operator -=(const Point3D &other);
   Point3D &operator *=(const Matrix4 &matrix);
 
-  void Normalize();
+  void WeightNormalize();
+
+  static Point3D VectorMul(const Point3D &a, const Point3D &b);
+  static myfloat ScalarMul(const Point3D &a, const Point3D &b);
 
  private:
   friend Point3D operator +(const Point3D &a, const Point3D &b);

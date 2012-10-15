@@ -21,6 +21,6 @@ void ZBuffer::set_size(const unsigned int width, const unsigned int height) {
   size_ = new_size;
 }
 
-void ZBuffer::clear() {
+void ZBuffer::Clear() {
   memset(z_buffer_, 0xFF, sizeof(myfloat) * size_);
 }

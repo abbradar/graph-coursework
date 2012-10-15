@@ -69,6 +69,8 @@ class Window {
 
   void set_projected_height(const myfloat projected_height);
 
+  void set_camera_direction(const Point3D &camera_direction);
+
   void SetVideoMode(const int width, const int height, const int bpp);
 
   void Run();

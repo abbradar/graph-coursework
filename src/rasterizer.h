@@ -6,6 +6,7 @@
 #include "sdlobj/surfacepainter.h"
 #include "scene.h"
 #include "myfloat.h"
+#include "matrix4.h"
 #include "zbuffer.h"
 
 class Rasterizer {
@@ -57,7 +58,7 @@ class Rasterizer {
     ScreenLine3D(const Point3D *a, const Point3D *b);
   };
 
-  void DrawTriangle(const IndexedTriangle &source, const sdlobj::Color &color);
+  void DrawTriangle(const IndexedTriangle &source, const PointVector &points, const sdlobj::Color &color);
   void FillTriangle(const IndexedTriangle &source, const Point3D *points, const sdlobj::Color &color);
   void FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color);
   void FillLine(const ScreenLine3D *a, const ScreenLine3D *b, const Uint32 color);
