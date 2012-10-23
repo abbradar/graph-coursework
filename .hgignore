@@ -9,7 +9,7 @@ syntax: regexp
 \.mtc\d*$
 \.autosave$
 \.orig$
-CMakeLists\.txt\.user$
+CMakeLists\.txt\.user.*
 CMakeCache\.txt$
 Makefile$
 CMakeFiles$

@@ -1,8 +1,11 @@
 #include "guid.h"
 
-const char * const kGUIDSize = 16;
+using namespace xparse;
+using namespace std;
 
-inline char HexToInt(char hex) {
+GUID::GUID() = default;
+
+char HexToInt(char hex) {
   if (hex >= '0' && hex <= '9') {
     return hex - '0';
   } else {
@@ -24,10 +27,10 @@ inline char HexToInt(char hex) {
   }
 }
 
-void StringToGUID(const char *guid, char *out) {
+GUID::GUID(const char *guid) {
   char curr = 0;
   int n = 0;
-  char *cout = out;
+  char *cout = guid_;
   for (char *i = guid; n < kGUIDSize; ++i) {
     curr = HexToInt(*i);
     if (curr == (char)-1) continue;
@@ -41,3 +44,4 @@ void StringToGUID(const char *guid, char *out) {
     ++n;
   }
 }
+
