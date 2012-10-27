@@ -53,15 +53,20 @@ using namespace std;
   double float_value;
   GUID *guid_value;
 
-  XTemplateMember *template_member;
-  XTemplate *template;
-  XDataValue *data_value;
-  XNode *node;
   list<int> *int_array;
   list<float> *float_array;
+  list<string> *string_array;
+
+  XTemplate *template;
   list<XTemplateMember> *template_member_array;
-  list<XNode> *node_array;
+  XTemplateMember *template_member;
   XTemplateMember::BasicType base_type;
+
+  XNode *node;
+  list<XDataValue> *data_value_array;
+  XDataValue *data_value;
+  list<XNode> *node_array;
+  XDataReference *data_reference;
 }
 
 %token end-of-file 0
@@ -76,12 +81,23 @@ using namespace std;
 %token triple-dot
 %token <string_value> identifier
 
-%type <template_member> type array-type
-%type <int_value> dimension-size dimension
-%type <int_array> dimension-list
-%type <base_type> base-type
+%type <template> template template-body
 %type <template_member_array> member-list
-%type <template> template-body
+%type <template_member> type array-type
+%type <base_type> base-type
+%type <int_array> dimension-list
+%type <int_value> dimension-size dimension
+
+%type <node> data-node
+%type <guid_value> optional-guid
+%type <string_value> optional-identifier
+%type <data_value_array> member-data-list
+%type <data_value> member-data data-value data-reference
+%type <int_array> integer-list
+%type <float_array> float-list
+%type <string_array> string-list
+%type <node_array> node-list
+%type <data_reference> node-reference
 
 %destructor { delete $$; } header
 %destructor { delete $$; } string-value base-type identifier
@@ -105,44 +121,51 @@ using namespace std;
 x-file : header data-list end-of-file
 
 data-list : template-or-node | template-or-node data-list
-template-or-node : template | data-node
+template-or-node : template {
+  driver.context()->templates().insert(pair<string, XTemplate>($1->id(), move(*$1)));
+  delete $1;
+} | data-node {
+  driver.context()->data_nodes().push_back(move(*$1));
+  delete $1;
+}
 
 template : template-keyword identifier '{' template-body '}' {
-  $4->id() = identifier;
-  driver.context->templates_.insert(pair<string, XTemplate>($4->id(), *$4));
-  delete $4;
+  $$ = $4;
+  $$->id() = move(*$2);
+  delete $2;
 }
 
 template-body : guid-value member-list restrictions {
   $$ = new XTemplate();
-  $$->guid = $1;
+  $$->guid = move(*$1);
+  delete $1;
   for (auto &i : *$2) {
-    $$->members.insert(pair<string, XTemplateMember>(i.id(). i));
+    $$->members.insert(pair<string, XTemplateMember>(i.id(), move(i)));
   }
   delete $2;
 }
 
 member-list : member {
   $$ = new list<XTemplateMember>();
-  $$->push_front(*$1);
+  $$->push_front(move(*$1));
   delete $1;
 } | member member-list {
   $$ = $2;
-  $$->push_front(*$1);
+  $$->push_front(move(*$1));
   delete $1;
 }
 
 member : type identifier ';' {
   $$ = $1;
-  $$->id() = $2;
+  $$->id() = move(*$2);
+  delete $2;
 }
 
 type : base-type {
   $$ = new XTemplateMember(kBasic);
   $$->data().basic_type = $1;
-} | array-type {
-  $$ = $1;
-} | identifier {
+} | array-type
+  | identifier {
   error(yyloc, "Not supported");
 }
 
@@ -163,6 +186,7 @@ base-type : type-name {
   } else {
     error(yyloc, (boost::format("Type {1} is not supported") % $1).str()); 
   }
+  delete $1;
 }
 
 dimension-list : dimension {
@@ -177,9 +201,8 @@ dimension : '[' dimension-size ']' {
   $$ = $2;
 }
 
-dimension-size : integer-value {
-  $$ = $1;
-} | identifier {
+dimension-size : integer-value
+               | identifier {
   error(yyloc, "Not implemented");
 }
 
@@ -191,27 +214,125 @@ restriction-list : restriction | restriction ',' restriction-list
 restriction : binary-keyword | identifier | identifier guid-value
 
 data-node : identifier optional-identifier '{' optional-guid
-            member-data-list nested-data-list '}'
-optional-identifier : 
-                    | identifier
-optional-guid : 
-              | guid-value
-member-data-list : member-data | member-data member-data-list
+            member-data-list '}' {
+  $$ = new XNode();
+  node.template_id = move(*$1);
+  delete $1;
+  node.id = move(*$2);
+  delete $2;
+  node.guid = move(*$4);
+  delete $4;
+  node.data.assign($5->begin(), $5->end());
+  delete $5;
+}
+
+optional-identifier : {
+  $$ = new string();
+} | identifier
+
+optional-guid : {
+  $$ = new GUID();
+} | guid-value
+
+member-data-list : member-data {
+  $$ = new list<XDataValue>();
+  $$->push_front(move(*$1));
+  delete $1;
+} | member-data member-data-list {
+  $$ = $2;
+  $$->push_front(move(*$1));
+  delete $1;
+}
+
 member-data : data-value ';'
-data-value : integer-value | float-value
-           | string-value | member-data-list
-           | array-value
-array-value : integer-list | float-list
-            | string-list | node-list
-integer-list : integer-value | integer-value ',' integer-list
-float-list : float-value | float-value ',' float-list
-string-list : string-value | string-value ',' string-list
-node-list : member-data-list | data-node ',' node-list
-nested-data-list :
-                 | nested-data nested-data-list
-nested-data : data-node | data-reference
-data-reference : '{' node-reference '}'
-node-reference : identifier | guid-value | identifier guid-value
+
+data-value : integer-value {
+  $$ = new XDataValue(kInteger);
+  $$->data().int_value = $1;
+} | float-value {
+  $$ = new XDataValue(kFloat);
+  $$->data().float_value = $1;
+} | string-value {
+  $$ = new XDataValue(kString);
+  *($$->data().string_value) = move(*$1);
+  delete $1;
+} | array-value | data-node | data-reference
+
+array-value : integer-list {
+  $$ = new XDataValue(kIntegerArray);
+  $$->data().int_array->assign($1->begin(), $1->end());
+  delete $1;
+} | float-list {
+  $$ = new XDataValue(kFloatArray);
+  $$->data().int_array->assign($1->begin(), $1->end());
+  delete $1;
+} | string-list {
+  $$ = new XDataValue(kStringArray);
+  $$->data().float_array->assign($1->begin(), $1->end());
+  delete $1;
+} | node-list {
+  $$ = new XDataValue(kNodeArray);
+  $$->data().node_array->assign($1->begin(), $1->end());
+  delete $1;
+}
+
+integer-list : integer-value {
+  $$ = new list<int>();
+  $$->push_front($1);
+} | integer-value ',' integer-list {
+  $$ = $3;
+  $$->push_front($1);
+}
+
+float-list : float-value {
+  $$ = new list<float>();
+  $$->push_front($1);
+} | float-value ',' float-list {
+  $$ = $3;
+  $$->push_front($1);
+}
+
+string-list : string-value {
+  $$ = new list<string>();
+  $$->push_front(move(*$1));
+  delete $1;
+} | string-value ',' string-list {
+  $$ = $3;
+  $$->push_front(move(*$1));
+  delete $1;
+}
+
+node-list : data-node {
+  $$ = new list<XNode>();
+  $$->push_front(move(*$1));
+  delete $1;
+} | data-node ',' node-list {
+  $$ = $3;
+  $$->push_front(move(*$1));
+  delete $1;
+}
+
+data-reference : '{' node-reference '}' {
+  $$ = new XDataValue(kNodeReference);
+  *($$->data().node_reference) = move(*$2);
+  delete $2;
+}
+
+node-reference : identifier {
+  $$ = new XDataReference();
+  $$->id = move(*$1);
+  delete $1;
+} | guid-value {
+  $$ = new XDataReference();
+  $$->guid = move(*$1);
+  delete $1;
+} | identifier guid-value {
+  $$ = new XDataReference();
+  $$->id = move(*$1);
+  delete $1;
+  $$->guid = move(*$2);
+  delete $2;
+}
 
 %%
 
