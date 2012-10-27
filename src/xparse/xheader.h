@@ -7,7 +7,7 @@ struct XHeader {
  public:
   XHeader();
   
-  const char magic[4];
+  char magic[4];
   char major_version[2];
   char minor_version[2];
   char format[4];
@@ -15,5 +15,7 @@ struct XHeader {
 
   bool Validate();
 };
+
+}
 
 #endif // XPARSE_XHEADER_H_

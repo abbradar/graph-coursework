@@ -1,56 +1,37 @@
 // $Id: driver.cc 39 2008-08-03 10:07:15Z tb $
 /** \file driver.cc Implementation of the example::Driver class. */
 
-#include <fstream>
-#include <sstream>
-
+#include <boost/format.hpp>
+#include "common/logging.h"
 #include "driver.h"
-#include "scanner.h"
+#include "lexer.h"
 
-namespace example {
+using namespace xparse;
 
-Driver::Driver(class CalcContext& _calc)
-    : trace_scanning(false),
-      trace_parsing(false),
-      calc(_calc)
-{
+Driver::Driver(XFile *context) : context_(context), trace_lexing_(false),
+ trace_parsing_(false) { }
+
+bool Driver::set_trace_lexing(bool trace_lexing) {
+  trace_lexing_ = trace_lexing;
 }
 
-bool Driver::parse_stream(std::istream& in, const std::string& sname)
-{
-    streamname = sname;
+bool Driver::Parse(std::istream &in) {
+  Scanner scanner(&in);
+  scanner.set_debug(trace_lexing_);
+  this->lexer = &scanner;
 
-    Scanner scanner(&in);
-    scanner.set_debug(trace_scanning);
-    this->lexer = &scanner;
-
-    Parser parser(*this);
-    parser.set_debug_level(trace_parsing);
-    return (parser.parse() == 0);
+  Parser parser(*this);
+  parser.set_debug_level(trace_parsing_);
+  return (parser.parse() == 0);
 }
 
-bool Driver::parse_file(const std::string &filename)
-{
-    std::ifstream in(filename.c_str());
-    if (!in.good()) return false;
-    return parse_stream(in, filename);
+void Driver::Error(const location &loc,
+                   const std::string &msg) {
+  LogError((boost::format(".x parse error: (%1%) %2%") % loc % msg).str().data());
 }
 
-bool Driver::parse_string(const std::string &input, const std::string& sname)
-{
-    std::istringstream iss(input);
-    return parse_stream(iss, sname);
-}
-
-void Driver::error(const class location& l,
-		   const std::string& m)
-{
-    std::cerr << l << ": " << m << std::endl;
-}
-
-void Driver::error(const std::string& m)
-{
-    std::cerr << m << std::endl;
+void Driver::Error(const std::string &msg) {
+  LogError((boost::format(".x parse error: %1%") % l % msg).str().data());
 }
 
 } // namespace example

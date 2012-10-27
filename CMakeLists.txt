@@ -19,7 +19,7 @@ endif()
 # Debug levels
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   add_definitions(-DDEBUG_LEVEL=4 -O0 -rdynamic)
-elseif(CMAKE_BUILD_TYPE STREQUAL Release)
+else()
   add_definitions(-DDEBUG_LEVEL=1 -O3)
 endif()
 
@@ -37,10 +37,29 @@ include_directories(${YAMLCPP_INCLUDE_DIR})
 
 link_libraries(${SDL_LIBRARY} ${SDLIMAGE_LIBRARY} ${SDLTTF_LIBRARY} ${Boost_LIBRARIES} ${YAMLCPP_LIBRARY})
 
+find_package(FLEX REQUIRED)
+find_package(BISON REQUIRED)
+
 include_directories(src)
+
 aux_source_directory(src SRC_LIST)
 aux_source_directory(src/sdlobj SDLOBJ_LIST)
+aux_source_directory(src/xparse XPARSE_LIST)
 aux_source_directory(src/common COMMON_LIST)
+
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+  set(BISON_FLEX_ARGS "-d")
+else()
+  set(BISON_FLEX_ARGS "")
+endif()
+
+BISON_TARGET(XParser src/xparse/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser.cc COMPILE_FLAGS BISON_FLEX_ARGS)
+FLEX_TARGET(XLexer src/xparse/lexer.ll ${CMAKE_CURRENT_BINARY_DIR}/lexer.cc COMPILE_FLAGS BISON_FLEX_ARGS)
+ADD_FLEX_BISON_DEPENDENCY(XLexer XParser)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+add_executable(${PROJECT_NAME} ${SRC_LIST} ${SDLOBJ_LIST} ${COMMON_LIST} ${XPARSE_LIST}
+  ${CMAKE_CURRENT_BINARY_DIR}/parser.cc ${CMAKE_CURRENT_BINARY_DIR}/lexer.cc)
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
@@ -50,5 +69,3 @@ if(DOXYGEN_FOUND)
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                     COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif(DOXYGEN_FOUND)
-
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${SDLOBJ_LIST} ${COMMON_LIST})

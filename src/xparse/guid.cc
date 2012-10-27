@@ -1,9 +1,10 @@
+#include <cstring>
 #include "guid.h"
 
 using namespace xparse;
 using namespace std;
 
-GUID::GUID() = default;
+GUID::GUID() : guid_({ 0, 0, 0, 0 }) { }
 
 char HexToInt(char hex) {
   if (hex >= '0' && hex <= '9') {
@@ -37,11 +38,10 @@ GUID::GUID(const char *guid) {
     char next = HexToInt(*(++i));
     if (next == (char)-1) {
       // something is wrong with this GUID
-      *cout = '\0';
+      *cout = 0;
       return;
     }
     *cout = curr << 4 + next;
     ++n;
   }
 }
-
