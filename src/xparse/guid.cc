@@ -45,3 +45,7 @@ GUID::GUID(const char *guid) {
     ++n;
   }
 }
+
+bool operator ==(const GUID &a, const GUID &b) {
+  return memcmp(&a->guid_, &b->guid_, GUID::kGUIDSize) == 0;
+}

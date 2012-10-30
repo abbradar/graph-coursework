@@ -6,64 +6,77 @@
 using namespace xparse;
 using namespace std;
 
-XTemplateMember::XTemplateMember(MemberType type) : type_(type) {
-  switch (type_) {
+bool XTemplateReference::Resolve(XFile *file) {
+  if (!id.empty()) {
+    auto i = file->templates().find(id);
+    if (i == file->templates().begin()) return false;
+    ptr = i->second().get();
+    return true;
+  } else {
+    for (auto i : file->templates()) {
+      if (i->second()->guid == guid) {
+        ptr = i->second().get();
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+XTemplateMember::XTemplateMember(MemberType member_type, BasicType basic_type) {
+  member_type_ = member_type;
+  basic_type_ = basic_type;
+  switch (member_type_) {
     case kBasic:
       break;
     case kArray:
-      data_.array_type.size = new vector<size_t>();
-      break;
-    case kTemplate:
-      data_.template_type = new string();
-      break;
+      array_size.reset(new vector<size_t>());
     default:
       throw Exception("Invalid member type");
+  }
+  switch (basic_type_) {
+    case kInteger:
+    case kFloat:
+    case kString:
+      break;
+    case kNode:
+      template_reference_.reset(new XTemplateReference());
+      break;
+    default:
+      throw Exception("Invalid basic type");
   }
 }
 
 XTemplateMember::XTemplateMember(const XTemplateMember &other) {
-  memset(&data_, 0, sizeof(TypeData)); // for ensuring that all pointers in union are nullptr
   operator =(other);
 }
 
-XTemplateMember::~XTemplateMember() {
-  FreeData();
-}
-
-void XTemplateMember::FreeData() {
-  switch (type_) {
-    case kBasic:
-      break;
-    case kArray:
-      delete data_.array_type.size;
-      break;
-    case kTemplate:
-      delete data_.template_type;
-      break;
-    default:
-      Assert(false);
-      break;
-  }
-}
-
 XTemplateMember &XTemplateMember::operator =(const XTemplateMember &other) {
-  FreeData();
   id_ = other.id_;
-  type_ = other.type_;
-  switch (type_) {
+  member_type_ = other.member_type_;
+  basic_type_ = other.basic_type_;
+  switch (member_type_) {
     case kBasic:
-      data_.basic_type = other.data_.basic_type;
       break;
     case kArray:
-      data_.array_type.basic_type = other.data_.array_type.basic_type;
-      data_.array_type.size = new vector<int>(other.data_.array_type.size);
-      break;
-    case kTemplate:
-      data_.template_type = new string(other.data_.template_type);
+      array_size.reset(new vector<size_t>(*(other.array_size_)));
       break;
     default:
       Assert(false);
       break;
   }
+  switch (basic_type_) {
+    case kInteger:
+    case kFloat:
+    case kString:
+      break;
+    case kNode:
+      template_reference_.reset(new XTemplateReference());
+      break;
+    default:
+      Assert(false);
+      break;
+  }
+
   return *this;
 }

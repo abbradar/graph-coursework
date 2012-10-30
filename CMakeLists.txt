@@ -53,8 +53,8 @@ else()
   set(BISON_FLEX_ARGS "")
 endif()
 
-BISON_TARGET(XParser src/xparse/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser.cc COMPILE_FLAGS BISON_FLEX_ARGS)
-FLEX_TARGET(XLexer src/xparse/lexer.ll ${CMAKE_CURRENT_BINARY_DIR}/lexer.cc COMPILE_FLAGS BISON_FLEX_ARGS)
+BISON_TARGET(XParser src/xparse/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser.cc COMPILE_FLAGS ${BISON_FLEX_ARGS})
+FLEX_TARGET(XLexer src/xparse/lexer.ll ${CMAKE_CURRENT_BINARY_DIR}/lexer.cc COMPILE_FLAGS ${BISON_FLEX_ARGS})
 ADD_FLEX_BISON_DEPENDENCY(XLexer XParser)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 

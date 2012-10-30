@@ -20,8 +20,11 @@ class GUID {
   }
 
  private:
+  friend bool operator ==(const GUID &a, const GUID &b);
   char guid_[kGUIDSize];
-}
+};
+
+bool operator ==(const GUID &a, const GUID &b);
 
 }
 

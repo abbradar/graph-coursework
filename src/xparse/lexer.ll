@@ -38,10 +38,8 @@ typedef Parser::token_type token_type;
 /* enables the use of start condition stacks */
 %option stack
 
-%%
-
-/* The following paragraph suffices to track locations accurately. Each time
- * yylex is invoked, the begin position is moved onto the end position. */
+/** The following paragraph suffices to track locations accurately. Each time
+ * yylex is invoked, the begin position is moved onto the end position. **/
 %{
 #define YY_USER_ACTION yylloc->columns(yyleng);
 %}
@@ -62,7 +60,7 @@ typedef Parser::token_type token_type;
 }
 
 #.* |
-//.* {
+\/\/.* {
   yylloc->step();
 }
 
@@ -126,7 +124,7 @@ typedef Parser::token_type token_type;
 
 \n {
   yylloc->lines(yyleng);
-  yylloc->step();
+  // return end-of-line;
 }
 
 . {

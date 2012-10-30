@@ -5,28 +5,32 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
 #include "guid.h"
+#include "xfile.h"
 
 namespace xparse {
+
+class XFile;
+
+struct XTemplateReference {
+  std::string name;
+  GUID guid;
+  XTemplate *ptr;
+
+  bool Resolve(XFile *file);
+}
 
 class XTemplateMember {
  public:
   enum MemberType {
-    kBasic, kArray, kTemplate
+    kBasic, kArray
   };
   enum BasicType {
-    kInteger, kFloat, kString
-  };
-  union TypeData {
-    BasicType basic_type;
-    struct {
-      BasicType basic_type;
-      std::vector<size_t> *size;
-    } array_type;
-    std::string *template_type;
+    kInteger, kFloat, kString, kTemplate
   };
 
-  XTemplateMember(MemberType type);
+  XTemplateMember(MemberType member_type, BasicType basic_type);
   XTemplateMember(const XTemplateMember &other);
   ~XTemplateMember();
 
@@ -36,26 +40,40 @@ class XTemplateMember {
     return id_;
   }
 
-  inline MemberType type() {
-    return type_;
+  inline MemberType member_type() {
+    return member_type_;
   }
 
-  inline TypeData &data() {
-    return data_;
+  inline BasicType basic_type() {
+    return basic_type_;
+  }
+
+  inline XTemplateReference *template_reference() {
+    return template_reference_.get();
+  }
+
+  inline std::vector<size_t> *array_size() {
+    return array_size_.get();
   }
 
  private:
-  void FreeData();
-
   std::string id_;
-  MemberType type_;
-  TypeData data_;
+  MemberType member_type_;
+  BasicType basic_type_;
+  std::unique_ptr<XTemplateReference> template_reference_;
+  std::unique_ptr<std::vector<size_t>> array_size_;
 };
 
 struct XTemplate {
+  enum RestrictionType {
+    kOpened, kClosed, kRestricted;
+  }
+  
   std::string id;
   GUID guid;
-  std::map<std::string, XTemplateMember> members;
+  std::vector<XTemplateMember> members;
+  RestrictionType restriction_type;
+  std::unique_ptr<std::vector<XTemplateReference>> restrictions;
 };
 
 }

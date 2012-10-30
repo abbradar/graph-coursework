@@ -5,9 +5,15 @@
 #include <boost/format.hpp>
 #include "guid.h"
 #include "xheader.h"
-#include "xfile.h"
+#include "xdata.h"
 
 using namespace std;
+
+struct XTemplateRestriction {
+  XTemplate::RestrictionType restriction_type = kClosed;
+  vector<XTemplateReference> *restrictions = nullptr;
+}
+
 %}
 
 /*** yacc/bison Declarations ***/
@@ -61,11 +67,15 @@ using namespace std;
   list<XTemplateMember> *template_member_array;
   XTemplateMember *template_member;
   XTemplateMember::BasicType base_type;
+  XTemplateRestriction *restriction;
+  list<XTemplateReference> *template_reference_array;
+  XTemplateReference *template_reference;
 
-  XNode *node;
+  XData *node;
   list<XDataValue> *data_value_array;
   XDataValue *data_value;
-  list<XNode> *node_array;
+  list<XNestedData> *nested_data_array;
+  XNestedData *nested_data;
   XDataReference *data_reference;
 }
 
@@ -78,26 +88,28 @@ using namespace std;
 %token <string_value> type-name
 %token array-keyword
 %token template-keyword
+%token binary-keyword
 %token triple-dot
 %token <string_value> identifier
 
 %type <template> template template-body
 %type <template_member_array> member-list
-%type <template_member> type array-type
+%type <template_member> member type array-type
 %type <base_type> base-type
 %type <int_array> dimension-list
 %type <int_value> dimension-size dimension
+%type <restriction> restrictions
+%type <template_reference_array> restriction-list
+%type <template_reference> restriction
 
 %type <node> data-node
 %type <guid_value> optional-guid
 %type <string_value> optional-identifier
 %type <data_value_array> member-data-list
-%type <data_value> member-data data-value data-reference
-%type <int_array> integer-list
-%type <float_array> float-list
-%type <string_array> string-list
-%type <node_array> node-list
-%type <data_reference> node-reference
+%type <data_value> member-data data-value
+%type <nested_data_array> nested-data-list
+%type <nested_data> nested-data
+%type <data_reference> data-reference node-reference
 
 %destructor { delete $$; } header
 %destructor { delete $$; } string-value base-type identifier
@@ -118,15 +130,17 @@ using namespace std;
 
 %% /*** Grammar Rules ***/
 
-x-file : header data-list end-of-file
+x-file : header data-list end-of-file {
+  delete $1;
+}
 
 data-list : template-or-node | template-or-node data-list
+
 template-or-node : template {
-  driver.context()->templates().insert(pair<string, XTemplate>($1->id(), move(*$1)));
-  delete $1;
+  driver.context()->templates().insert(pair<string, unique_ptr<XTemplate>>
+    ($1->id(), unique_ptr<XTemplate>($1)));
 } | data-node {
-  driver.context()->data_nodes().push_back(move(*$1));
-  delete $1;
+  driver.context()->data_nodes().push_back(unique_ptr<XData>($1));
 }
 
 template : template-keyword identifier '{' template-body '}' {
@@ -140,9 +154,12 @@ template-body : guid-value member-list restrictions {
   $$->guid = move(*$1);
   delete $1;
   for (auto &i : *$2) {
-    $$->members.insert(pair<string, XTemplateMember>(i.id(), move(i)));
+    $$->members.insert(pair<XTemplateMember>(i.id(), move(i)));
   }
   delete $2;
+  $$->restriction_type = $3->restriction_type;
+  $$->restrictions.reset($3->restrictions);
+  delete $3;
 }
 
 member-list : member {
@@ -155,25 +172,33 @@ member-list : member {
   delete $1;
 }
 
-member : type identifier ';' {
+member : member-description ';'
+
+member-description : type identifier {
   $$ = $1;
-  $$->id() = move(*$2);
+  $$->id() = std::move(*$2);
   delete $2;
+} | array-keyword type identifier dimension-list {
+  $$ = new XTemplateMember(kArray, $2->basic_type());
+  if ($$->basic_type() == kTemplate) {
+    *($$->template_reference()) = *($2->template_reference());
+  }
+  delete $2;
+  $$->id() = std::move(*$3);
+  delete $3;
+  $$->array_size()->assign($4->begin(), $4->end());
+  delete $4;
 }
 
 type : base-type {
-  $$ = new XTemplateMember(kBasic);
-  $$->data().basic_type = $1;
-} | array-type
-  | identifier {
-  error(yyloc, "Not supported");
-}
-
-array-type : array-keyword base-type dimension-list {
-  $$ = new XTemplateMember(kArray);
-  $$->data().array_type.basic_type = $2;
-  $$->data().array_type.size->assign($3->begin(), $3->end());
-  delete $3;
+  $$ = new XTemplateMember(kBasic, $1);
+} | identifier {
+  $$ = new XTemplateMember(kBasic, kTemplate);
+  $$->template_reference()->id = move(*$1);
+  delete $1;
+  if (!$$->template_reference()->Resolve(driver.context())) {
+    error(yyloc, "Cannot resolve nested template type");
+  }
 }
 
 base-type : type-name {
@@ -203,27 +228,68 @@ dimension : '[' dimension-size ']' {
 
 dimension-size : integer-value
                | identifier {
+  delete $1;
   error(yyloc, "Not implemented");
 }
 
-/* Not implemented */
 restrictions : 
-             | '[' triple-dot ']'
-             | '[' restriction-list ']'
-restriction-list : restriction | restriction ',' restriction-list
-restriction : binary-keyword | identifier | identifier guid-value
+             | '[' triple-dot ']' {
+  $$ = new XTemplateRestriction();
+  $$->restriction_type = kOpened;
+} | '[' restriction-list ']' {
+  $$ = new XTemplateRestriction();
+  $$->restriction_type = kRestricted;
+  $$->restrictions = new vector<XTemplateReference>();
+  $$->restrictions.assign($2->begin(), $2->end());
+  delete $2;
+}
+
+restriction-list : restriction {
+  $$ = list<XTemplateReference>();
+  $$->push_front(move(*$1));
+  delete $1;
+} | restriction ',' restriction-list {
+  $$ = $3;
+  $$->push_front(move(*$1));
+  delete $1;
+}
+
+restriction : binary-keyword {
+  error(yyloc, "Not implemented");
+} | identifier {
+  $$ = new XTemplateReference();
+  $$->id = move(*$1);
+  delete $1;
+  if (!$$->Resolve(driver.context())) {
+    error(yyloc, "Cannot resolve template reference for restriction");
+  }
+} | identifier guid-value {
+  $$ = new XTemplateReference();
+  $$->id = *$1;
+  delete $1;
+  $$->guid = move(*$2);
+  delete $2;
+  if (!$$->Resolve(driver.context())) {
+    error(yyloc, "Cannot resolve template reference");
+  }
+}
 
 data-node : identifier optional-identifier '{' optional-guid
-            member-data-list '}' {
-  $$ = new XNode();
-  node.template_id = move(*$1);
+            member-data-list nested-data-list '}' {
+  $$ = new XData();
+  $$->template_id = move(*$1);
   delete $1;
-  node.id = move(*$2);
+  $$->id = move(*$2);
   delete $2;
-  node.guid = move(*$4);
+  $$->guid = move(*$4);
   delete $4;
-  node.data.assign($5->begin(), $5->end());
+  $$->data.assign($5->begin(), $5->end());
   delete $5;
+  $$->nested_data.assign($6->begin(), $6->end());
+  delete $6;
+  if (!$$->Validate(driver.context())) {
+    error(yyloc, "Data cannot be validated by template");
+  }
 }
 
 optional-identifier : {
@@ -244,7 +310,11 @@ member-data-list : member-data {
   delete $1;
 }
 
-member-data : data-value ';'
+/* Dirty grammar which ignores some file structure; it will be built by template */
+member-data : data-value maybe-comma semicolon-list
+
+maybe-comma : | ','
+semicolon-list : ';' | ';' semicolon-list
 
 data-value : integer-value {
   $$ = new XDataValue(kInteger);
@@ -256,66 +326,31 @@ data-value : integer-value {
   $$ = new XDataValue(kString);
   *($$->data().string_value) = move(*$1);
   delete $1;
-} | array-value | data-node | data-reference
-
-array-value : integer-list {
-  $$ = new XDataValue(kIntegerArray);
-  $$->data().int_array->assign($1->begin(), $1->end());
-  delete $1;
-} | float-list {
-  $$ = new XDataValue(kFloatArray);
-  $$->data().int_array->assign($1->begin(), $1->end());
-  delete $1;
-} | string-list {
-  $$ = new XDataValue(kStringArray);
-  $$->data().float_array->assign($1->begin(), $1->end());
-  delete $1;
-} | node-list {
-  $$ = new XDataValue(kNodeArray);
-  $$->data().node_array->assign($1->begin(), $1->end());
-  delete $1;
 }
 
-integer-list : integer-value {
-  $$ = new list<int>();
-  $$->push_front($1);
-} | integer-value ',' integer-list {
-  $$ = $3;
-  $$->push_front($1);
-}
-
-float-list : float-value {
-  $$ = new list<float>();
-  $$->push_front($1);
-} | float-value ',' float-list {
-  $$ = $3;
-  $$->push_front($1);
-}
-
-string-list : string-value {
-  $$ = new list<string>();
+nested-data-list : nested-data {
+  $$ = new list<XNestedData>();
   $$->push_front(move(*$1));
   delete $1;
-} | string-value ',' string-list {
-  $$ = $3;
+} | nested-data nested-data-list {
+  $$ = $2;
   $$->push_front(move(*$1));
   delete $1;
 }
 
-node-list : data-node {
-  $$ = new list<XNode>();
-  $$->push_front(move(*$1));
-  delete $1;
-} | data-node ',' node-list {
-  $$ = $3;
-  $$->push_front(move(*$1));
-  delete $1;
+nested-data : data-node {
+  $$ = new XNestedData(kNode);
+  $$->data().node = $1;
+} | data-reference {
+  $$ = new XNestedData(kNodeReference);
+  $$->data().reference = $1;
 }
 
 data-reference : '{' node-reference '}' {
-  $$ = new XDataValue(kNodeReference);
-  *($$->data().node_reference) = move(*$2);
-  delete $2;
+  $$ = $2;
+  if (!$$->Resolve(driver.context())) {
+    error(yyloc, "Cannot resolve data reference");
+  }
 }
 
 node-reference : identifier {

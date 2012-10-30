@@ -5,15 +5,19 @@
 #include <vector>
 #include <string>
 #include <istream>
+#include <memory>
 #include "xtemplate.h"
-#include "xnode.h"
+#include "xdata.h"
 
 namespace xparse {
 
+struct XTemplate;
+struct XData;
+
 class XFile {
  public:
-  typedef std::map<std::string, XTemplate> TemplateMap;
-  typedef std::vector<XNode> NodeVector;
+  typedef std::map<std::string, std::unique_ptr<XTemplate>> TemplateMap;
+  typedef std::vector<std::unique_ptr<XData>> NodeVector;
 
   XFile();
 
@@ -21,7 +25,7 @@ class XFile {
     return templates_;
   }
 
-  inline NodeVector data_nodes() {
+  inline NodeVector &data_nodes() {
     return data_nodes_;
   }
 
