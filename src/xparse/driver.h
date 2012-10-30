@@ -8,6 +8,7 @@ namespace xparse {
 
 class XFile;
 class Parser;
+class Lexer;
 class location;
 
 /** The Driver class brings together all components. It creates an instance of
@@ -25,13 +26,13 @@ class Driver {
     return trace_lexing_;
   }
 
-  bool set_trace_lexing(bool trace_lexing);
+  void set_trace_lexing(bool trace_lexing);
 
   inline bool trace_parsing() {
     return trace_parsing_;
   }
 
-  bool set_trace_parsing(bool trace_parsing);
+  void set_trace_parsing(bool trace_parsing);
 
   inline XFile *context() {
     return context_;
@@ -57,6 +58,8 @@ class Driver {
   void Error(const std::string &msg);
 
   XFile *context_;
+  Lexer *lexer;
+
   bool trace_lexing_;
   bool trace_parsing_;
 };

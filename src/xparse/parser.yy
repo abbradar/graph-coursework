@@ -1,21 +1,3 @@
-%{ /*** C/C++ Declarations ***/
-#include <cstdio>
-#include <string>
-#include <list>
-#include <boost/format.hpp>
-#include "guid.h"
-#include "xheader.h"
-#include "xdata.h"
-
-using namespace std;
-
-struct XTemplateRestriction {
-  XTemplate::RestrictionType restriction_type = kClosed;
-  vector<XTemplateReference> *restrictions = nullptr;
-}
-
-%}
-
 /*** yacc/bison Declarations ***/
 
 /* Require bison 2.3 or later */
@@ -23,9 +5,6 @@ struct XTemplateRestriction {
 
 /* start symbol */
 %start x-file
-
-/* write out a header file containing the token defines */
-%defines
 
 /* use newer C++ skeleton file */
 %skeleton "lalr1.cc"
@@ -38,63 +17,79 @@ struct XTemplateRestriction {
 
 /* keep track of the current position within the input */
 %locations
-%initial-action
-{
-    // initialize the initial location object
-    @$.begin.filename = @$.end.filename = &driver.streamname;
-};
-
-/* The driver is passed by reference to the parser and to the scanner. This
- * provides a simple but effective pure interface, not relying on global
- * variables. */
-%parse-param { Driver &driver }
 
 /* verbose error messages */
 %error-verbose
 
-%union {
-  XHeader *header;
-  string *string_value;
-  int int_value;
-  double float_value;
-  GUID *guid_value;
+/* write out a header file containing the token defines */
+%defines
 
-  list<int> *int_array;
-  list<float> *float_array;
-  list<string> *string_array;
+%code requires { /*** C/C++ Declarations ***/
+#include <string>
+#include <list>
+#include "xparse/guid.h"
+#include "xparse/xheader.h"
+#include "xparse/xdata.h"
+#include "xparse/xtemplate.h"
+#include "xparse/driver.h"
 
-  XTemplate *template;
-  list<XTemplateMember> *template_member_array;
-  XTemplateMember *template_member;
-  XTemplateMember::BasicType base_type;
-  XTemplateRestriction *restriction;
-  list<XTemplateReference> *template_reference_array;
-  XTemplateReference *template_reference;
+struct XTemplateRestriction {
+  xparse::XTemplate::RestrictionType restriction_type = xparse::XTemplate::kClosed;
+  std::vector<xparse::XTemplateReference> *restrictions = nullptr;
+};
 
-  XData *node;
-  list<XDataValue> *data_value_array;
-  XDataValue *data_value;
-  list<XNestedData> *nested_data_array;
-  XNestedData *nested_data;
-  XDataReference *data_reference;
 }
 
-%token end-of-file 0
-%token <header> header
-%token <float_value> float-value
-%token <int_value> integer-value
-%token <string_value> string-value
-%token <guid_value> guid-value
-%token <string_value> type-name
-%token array-keyword
-%token template-keyword
-%token binary-keyword
-%token triple-dot
-%token <string_value> identifier
+/* The driver is passed by reference to the parser and to the scanner. This
+ * provides a simple but effective pure interface, not relying on global
+ * variables. */
+%parse-param { xparse::Driver &driver }
 
-%type <template> template template-body
+%union {
+  xparse::XHeader *header;
+  std::string *string_value;
+  int int_value;
+  double float_value;
+  xparse::GUID *guid_value;
+
+  std::list<int> *int_array;
+  std::list<float> *float_array;
+  std::list<std::string> *string_array;
+
+  xparse::XTemplate *template_item;
+  std::list<xparse::XTemplateMember> *template_member_array;
+  xparse::XTemplateMember *template_member;
+  xparse::XTemplateMember::BasicType base_type;
+  XTemplateRestriction *restriction;
+  std::list<xparse::XTemplateReference> *template_reference_array;
+  xparse::XTemplateReference *template_reference;
+
+  xparse::XData *data_item;
+  std::list<xparse::XDataValue> *data_value_array;
+  xparse::XDataValue *data_value;
+  std::list<xparse::XNestedData> *nested_data_array;
+  xparse::XNestedData *nested_data;
+  xparse::XDataReference *data_reference;
+}
+
+%token tEndOfFile 0
+%token <header> tHeader
+%token <float_value> tFloatValue
+%token <int_value> tIntegerValue
+%token <string_value> tStringValue
+%token <guid_value> tGUIDValue
+%token <string_value> tTypeName
+%token tArrayKeyword
+%token tTemplateKeyword
+%token tBinaryKeyword
+%token tBinaryResourceKeyword
+%token tTripleDot
+%token <string_value> tIdentifier
+
+
+%type <template_item> template template-body
 %type <template_member_array> member-list
-%type <template_member> member type array-type
+%type <template_member> member member-description type
 %type <base_type> base-type
 %type <int_array> dimension-list
 %type <int_value> dimension-size dimension
@@ -102,7 +97,7 @@ struct XTemplateRestriction {
 %type <template_reference_array> restriction-list
 %type <template_reference> restriction
 
-%type <node> data-node
+%type <data_item> data-node
 %type <guid_value> optional-guid
 %type <string_value> optional-identifier
 %type <data_value_array> member-data-list
@@ -111,26 +106,36 @@ struct XTemplateRestriction {
 %type <nested_data> nested-data
 %type <data_reference> data-reference node-reference
 
-%destructor { delete $$; } header
-%destructor { delete $$; } string-value base-type identifier
-%destructor { delete $$; } guid-value
+%destructor { delete $$; } <header> <string_value> <guid_value>
+%destructor { delete $$; } <int_array> <float_array> <string_array>
+
+%destructor { delete $$; } <template_item> <template_member_array> <template_member>
+%destructor { delete $$; } <restriction> <template_reference_array> <template_reference>
+
+%destructor { delete $$; } <data_item> <data_value_array> <data_value>
+%destructor { delete $$; } <nested_data_array> <nested_data> <data_reference>
 
 %{
+#include <cstdio>
+#include <boost/format.hpp>
+#include "xparse/driver.h"
+#include "xparse/lexer.h"
 
-#include "driver.h"
-#include "lexer.h"
+using namespace std;
+using namespace xparse;
 
 /* this "connects" the bison parser in the driver to the flex scanner class
  * object. it defines the yylex() function call to pull the next token from the
  * current lexer object of the driver context. */
 #undef yylex
-#define yylex driver.lexer()->lex
-
+#define yylex driver.lexer->Lex
 %}
 
 %% /*** Grammar Rules ***/
 
-x-file : header data-list end-of-file {
+x-file : tHeader data-list tEndOfFile {
+  if (!$1->Validate())
+    error(yyloc, "Invalid file header.");
   delete $1;
 }
 
@@ -138,24 +143,22 @@ data-list : template-or-node | template-or-node data-list
 
 template-or-node : template {
   driver.context()->templates().insert(pair<string, unique_ptr<XTemplate>>
-    ($1->id(), unique_ptr<XTemplate>($1)));
+    ($1->id, unique_ptr<XTemplate>($1)));
 } | data-node {
   driver.context()->data_nodes().push_back(unique_ptr<XData>($1));
 }
 
-template : template-keyword identifier '{' template-body '}' {
+template : tTemplateKeyword tIdentifier '{' template-body '}' {
   $$ = $4;
-  $$->id() = move(*$2);
+  $$->id = move(*$2);
   delete $2;
 }
 
-template-body : guid-value member-list restrictions {
+template-body : tGUIDValue member-list restrictions {
   $$ = new XTemplate();
   $$->guid = move(*$1);
   delete $1;
-  for (auto &i : *$2) {
-    $$->members.insert(pair<XTemplateMember>(i.id(), move(i)));
-  }
+  $$->members.assign($2->begin(), $2->end());
   delete $2;
   $$->restriction_type = $3->restriction_type;
   $$->restrictions.reset($3->restrictions);
@@ -174,13 +177,13 @@ member-list : member {
 
 member : member-description ';'
 
-member-description : type identifier {
+member-description : type tIdentifier {
   $$ = $1;
   $$->id() = std::move(*$2);
   delete $2;
-} | array-keyword type identifier dimension-list {
-  $$ = new XTemplateMember(kArray, $2->basic_type());
-  if ($$->basic_type() == kTemplate) {
+} | tArrayKeyword type tIdentifier dimension-list {
+  $$ = new XTemplateMember(XTemplateMember::kArray, $2->basic_type());
+  if ($$->basic_type() == XTemplateMember::kNode) {
     *($$->template_reference()) = *($2->template_reference());
   }
   delete $2;
@@ -191,9 +194,9 @@ member-description : type identifier {
 }
 
 type : base-type {
-  $$ = new XTemplateMember(kBasic, $1);
-} | identifier {
-  $$ = new XTemplateMember(kBasic, kTemplate);
+  $$ = new XTemplateMember(XTemplateMember::kBasic, $1);
+} | tIdentifier {
+  $$ = new XTemplateMember(XTemplateMember::kBasic, XTemplateMember::kNode);
   $$->template_reference()->id = move(*$1);
   delete $1;
   if (!$$->template_reference()->Resolve(driver.context())) {
@@ -201,7 +204,7 @@ type : base-type {
   }
 }
 
-base-type : type-name {
+base-type : tTypeName {
   if (*$1 == "word" || *$1 == "dword" || *$1 == "ulonglong" || *$1 == "byte") {
     $$ = XTemplateMember::kInteger;
   } else if (*$1 == "float" || *$1 == "double") {
@@ -226,26 +229,28 @@ dimension : '[' dimension-size ']' {
   $$ = $2;
 }
 
-dimension-size : integer-value
-               | identifier {
+dimension-size : tIntegerValue
+               | tIdentifier {
   delete $1;
   error(yyloc, "Not implemented");
 }
 
-restrictions : 
-             | '[' triple-dot ']' {
+restrictions : {
   $$ = new XTemplateRestriction();
-  $$->restriction_type = kOpened;
+  $$->restriction_type = XTemplate::kClosed;
+} | '[' tTripleDot ']' {
+  $$ = new XTemplateRestriction();
+  $$->restriction_type = XTemplate::kOpened;
 } | '[' restriction-list ']' {
   $$ = new XTemplateRestriction();
-  $$->restriction_type = kRestricted;
+  $$->restriction_type = XTemplate::kRestricted;
   $$->restrictions = new vector<XTemplateReference>();
-  $$->restrictions.assign($2->begin(), $2->end());
+  $$->restrictions->assign($2->begin(), $2->end());
   delete $2;
 }
 
 restriction-list : restriction {
-  $$ = list<XTemplateReference>();
+  $$ = new list<XTemplateReference>();
   $$->push_front(move(*$1));
   delete $1;
 } | restriction ',' restriction-list {
@@ -254,16 +259,17 @@ restriction-list : restriction {
   delete $1;
 }
 
-restriction : binary-keyword {
+restriction : tBinaryKeyword {
   error(yyloc, "Not implemented");
-} | identifier {
+  $$ = new XTemplateReference();
+} | tIdentifier {
   $$ = new XTemplateReference();
   $$->id = move(*$1);
   delete $1;
   if (!$$->Resolve(driver.context())) {
     error(yyloc, "Cannot resolve template reference for restriction");
   }
-} | identifier guid-value {
+} | tIdentifier tGUIDValue {
   $$ = new XTemplateReference();
   $$->id = *$1;
   delete $1;
@@ -274,7 +280,7 @@ restriction : binary-keyword {
   }
 }
 
-data-node : identifier optional-identifier '{' optional-guid
+data-node : tIdentifier optional-identifier '{' optional-guid
             member-data-list nested-data-list '}' {
   $$ = new XData();
   $$->template_id = move(*$1);
@@ -294,11 +300,11 @@ data-node : identifier optional-identifier '{' optional-guid
 
 optional-identifier : {
   $$ = new string();
-} | identifier
+} | tIdentifier
 
 optional-guid : {
   $$ = new GUID();
-} | guid-value
+} | tGUIDValue
 
 member-data-list : member-data {
   $$ = new list<XDataValue>();
@@ -316,14 +322,14 @@ member-data : data-value maybe-comma semicolon-list
 maybe-comma : | ','
 semicolon-list : ';' | ';' semicolon-list
 
-data-value : integer-value {
-  $$ = new XDataValue(kInteger);
+data-value : tIntegerValue {
+  $$ = new XDataValue(XDataValue::kInteger);
   $$->data().int_value = $1;
-} | float-value {
-  $$ = new XDataValue(kFloat);
+} | tFloatValue {
+  $$ = new XDataValue(XDataValue::kFloat);
   $$->data().float_value = $1;
-} | string-value {
-  $$ = new XDataValue(kString);
+} | tStringValue {
+  $$ = new XDataValue(XDataValue::kString);
   *($$->data().string_value) = move(*$1);
   delete $1;
 }
@@ -339,10 +345,10 @@ nested-data-list : nested-data {
 }
 
 nested-data : data-node {
-  $$ = new XNestedData(kNode);
+  $$ = new XNestedData(XNestedData::kNode);
   $$->data().node = $1;
 } | data-reference {
-  $$ = new XNestedData(kNodeReference);
+  $$ = new XNestedData(XNestedData::kNodeReference);
   $$->data().reference = $1;
 }
 
@@ -353,15 +359,15 @@ data-reference : '{' node-reference '}' {
   }
 }
 
-node-reference : identifier {
+node-reference : tIdentifier {
   $$ = new XDataReference();
   $$->id = move(*$1);
   delete $1;
-} | guid-value {
+} | tGUIDValue {
   $$ = new XDataReference();
   $$->guid = move(*$1);
   delete $1;
-} | identifier guid-value {
+} | tIdentifier tGUIDValue {
   $$ = new XDataReference();
   $$->id = move(*$1);
   delete $1;
@@ -371,3 +377,7 @@ node-reference : identifier {
 
 %%
 
+void xparse::Parser::error(const Parser::location_type& loc,
+                            const std::string& msg) {
+  driver.Error(loc, msg);
+}

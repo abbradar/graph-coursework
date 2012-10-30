@@ -12,14 +12,15 @@
 namespace xparse {
 
 class XFile;
+struct XTemplate;
 
 struct XTemplateReference {
-  std::string name;
+  std::string id;
   GUID guid;
   XTemplate *ptr;
 
   bool Resolve(XFile *file);
-}
+};
 
 class XTemplateMember {
  public:
@@ -27,7 +28,7 @@ class XTemplateMember {
     kBasic, kArray
   };
   enum BasicType {
-    kInteger, kFloat, kString, kTemplate
+    kInteger, kFloat, kString, kNode
   };
 
   XTemplateMember(MemberType member_type, BasicType basic_type);
@@ -40,11 +41,15 @@ class XTemplateMember {
     return id_;
   }
 
-  inline MemberType member_type() {
+  inline const std::string &id() const {
+    return id_;
+  }
+
+  inline MemberType member_type() const {
     return member_type_;
   }
 
-  inline BasicType basic_type() {
+  inline BasicType basic_type() const {
     return basic_type_;
   }
 
@@ -52,7 +57,15 @@ class XTemplateMember {
     return template_reference_.get();
   }
 
+  inline const XTemplateReference *template_reference() const {
+    return template_reference_.get();
+  }
+
   inline std::vector<size_t> *array_size() {
+    return array_size_.get();
+  }
+
+  inline const std::vector<size_t> *array_size() const {
     return array_size_.get();
   }
 
@@ -66,8 +79,8 @@ class XTemplateMember {
 
 struct XTemplate {
   enum RestrictionType {
-    kOpened, kClosed, kRestricted;
-  }
+    kOpened, kClosed, kRestricted
+  };
   
   std::string id;
   GUID guid;

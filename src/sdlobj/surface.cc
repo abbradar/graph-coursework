@@ -1,6 +1,6 @@
 #include "surface.h"
 
-using namespace sdlobj;
+namespace sdlobj {
 
 Surface::Surface() : surface_(), surface_struct_(nullptr) {}
 Surface::Surface(SDL_Surface *surface) : surface_(new SurfaceWrapper(surface)), surface_struct_(surface_->surface) {}
@@ -79,4 +79,6 @@ Surface::SurfaceWrapper::SurfaceWrapper(SDL_Surface *surface_) : surface(surface
 
 Surface::SurfaceWrapper::~SurfaceWrapper() {
   if (surface) SDL_FreeSurface(surface);
+}
+
 }

@@ -3,7 +3,8 @@
 #include "font.h"
 
 using namespace std;
-using namespace sdlobj;
+
+namespace sdlobj {
 
 Font::Font() : font_(), font_struct_(nullptr) {}
 Font::Font(TTF_Font *font) : font_(new FontWrapper(font)), font_struct_(font_->font) {}
@@ -52,4 +53,6 @@ Font::FontWrapper::FontWrapper(TTF_Font *font_) : font(font_) {}
 
 Font::FontWrapper::~FontWrapper() {
   if (font) TTF_CloseFont(font);
+}
+
 }

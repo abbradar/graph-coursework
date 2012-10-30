@@ -2,7 +2,8 @@
 #include "frametimer.h"
 
 using namespace std;
-using namespace sdlobj;
+
+namespace sdlobj {
 
 #define MSECS_IN_SEC 1000
 
@@ -76,4 +77,6 @@ void FrameTimer::Reset() {
   measured_ticks_ = 0;
   measured_fps_ = fps_;
   time_sum_ = 0;
+}
+
 }

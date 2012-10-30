@@ -5,10 +5,12 @@
 #include <vector>
 #include "guid.h"
 #include "xfile.h"
+#include "xtemplate.h"
 
 namespace xparse {
 
 class XFile;
+class XTemplate;
 struct XData;
 
 struct XDataReference {
@@ -23,12 +25,12 @@ class XNestedData {
  public:
   enum Type {
     kNode, kNodeReference
-  }
+  };
 
   union Data {
     XData *node;
     XDataReference *reference;
-  }
+  };
 
   XNestedData(Type type);
   XNestedData(const XNestedData &other);
@@ -49,12 +51,11 @@ class XNestedData {
 
   Type type_;
   Data data_;
-}
+};
 
 class XDataValue {
  public:
-  typedef std::vector<XDataValue> ArrayData;
-  typedef std::vector<XData> NestedData;
+  typedef std::vector<XDataValue> NestedData;
 
   enum Type {
     kInteger, kFloat, kString, kNode, kNested
@@ -64,11 +65,13 @@ class XDataValue {
     int int_value;
     float float_value;
     std::string *string_value;
-    ArrayData *array_value;
-    NestedData *nested_data;
+    std::vector<Data> *array_value;
+    NestedData *nested_value;
   };
 
-  XDataValue(XType type, bool array_type = false);
+  typedef std::vector<Data> ArrayData;
+
+  XDataValue(Type type, bool array_type = false);
   XDataValue(const XDataValue &other);
   ~XDataValue();
 

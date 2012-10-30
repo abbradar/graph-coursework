@@ -1,10 +1,11 @@
 #include <cstring>
 #include "guid.h"
 
-using namespace xparse;
 using namespace std;
 
-GUID::GUID() : guid_({ 0, 0, 0, 0 }) { }
+namespace xparse {
+
+GUID::GUID() : guid_{ 0, 0, 0, 0 } { }
 
 char HexToInt(char hex) {
   if (hex >= '0' && hex <= '9') {
@@ -32,7 +33,7 @@ GUID::GUID(const char *guid) {
   char curr = 0;
   int n = 0;
   char *cout = guid_;
-  for (char *i = guid; n < kGUIDSize; ++i) {
+  for (const char *i = guid; n < kGUIDSize; ++i) {
     curr = HexToInt(*i);
     if (curr == (char)-1) continue;
     char next = HexToInt(*(++i));
@@ -41,11 +42,17 @@ GUID::GUID(const char *guid) {
       *cout = 0;
       return;
     }
-    *cout = curr << 4 + next;
+    *cout = (curr << 4) + next;
     ++n;
   }
 }
 
+GUID::GUID(const GUID &other) {
+  memcpy(guid_, other.guid_, kGUIDSize);
+}
+
 bool operator ==(const GUID &a, const GUID &b) {
-  return memcmp(&a->guid_, &b->guid_, GUID::kGUIDSize) == 0;
+  return memcmp(a.guid_, b.guid_, GUID::kGUIDSize) == 0;
+}
+
 }

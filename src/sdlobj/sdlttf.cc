@@ -3,7 +3,8 @@
 #include "sdlttf.h"
 
 using namespace std;
-using namespace sdlobj;
+
+namespace sdlobj {
 
 void SDLTTF::Init() {
   if (initialized()) return;
@@ -23,3 +24,5 @@ SDLTTF::~SDLTTF() {
 }
 
 SDLTTF::SDLTTF() = default;
+
+}

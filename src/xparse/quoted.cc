@@ -1,8 +1,9 @@
 #include <sstream>
 #include "quoted.h"
 
-using namespace xparse;
 using namespace std;
+
+namespace xparse {
 
 string QuotedToString(const char *str, size_t size) {
   stringstream ss;
@@ -28,4 +29,6 @@ string QuotedToString(const char *str, size_t size) {
     }
   }
   return ss.str();
+}
+
 }

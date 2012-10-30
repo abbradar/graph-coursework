@@ -13,18 +13,21 @@ class GUID {
 
   static constexpr int kGUIDSize = 16;
 
+  friend bool operator ==(const GUID &a, const GUID &b);
+
   //std::string ToString() const;
   
   inline char *guid() {
     return guid_;
   }
 
+  inline const char *guid() const {
+    return guid_;
+  }
+
  private:
-  friend bool operator ==(const GUID &a, const GUID &b);
   char guid_[kGUIDSize];
 };
-
-bool operator ==(const GUID &a, const GUID &b);
 
 }
 

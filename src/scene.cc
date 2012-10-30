@@ -1,7 +1,10 @@
+#include <fstream>
 #include "common/math.h"
+#include "xparse/xfile.h"
 #include "scene.h"
 
 using namespace sdlobj;
+using namespace xparse;
 
 const Point3D test_points[] = { Point3D(0, 0, 0), Point3D(100, 0, 0), Point3D(0, 0, 100),
                                 Point3D(0, 100, 0), Point3D(100, 100, 0), Point3D(0, 100, 100),
@@ -30,4 +33,8 @@ void Scene::Load() {
   SceneObject object(points, polygons, vertex_normals, Position(0, 0, 0));
   object.color() = Color(0, 0xFF, 0);
   objects_.push_back(std::move(object));
+
+  XFile file;
+  std::ifstream in("cube.x");
+  file.Parse(in);
 }

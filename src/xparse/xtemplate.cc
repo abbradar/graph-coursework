@@ -3,19 +3,20 @@
 #include "common/debug.h"
 #include "xtemplate.h"
 
-using namespace xparse;
 using namespace std;
+
+namespace xparse {
 
 bool XTemplateReference::Resolve(XFile *file) {
   if (!id.empty()) {
     auto i = file->templates().find(id);
     if (i == file->templates().begin()) return false;
-    ptr = i->second().get();
+    ptr = i->second.get();
     return true;
   } else {
-    for (auto i : file->templates()) {
-      if (i->second()->guid == guid) {
-        ptr = i->second().get();
+    for (auto &i : file->templates()) {
+      if (i.second->guid == guid) {
+        ptr = i.second.get();
         return true;
       }
     }
@@ -30,7 +31,7 @@ XTemplateMember::XTemplateMember(MemberType member_type, BasicType basic_type) {
     case kBasic:
       break;
     case kArray:
-      array_size.reset(new vector<size_t>());
+      array_size_.reset(new vector<size_t>());
     default:
       throw Exception("Invalid member type");
   }
@@ -59,7 +60,7 @@ XTemplateMember &XTemplateMember::operator =(const XTemplateMember &other) {
     case kBasic:
       break;
     case kArray:
-      array_size.reset(new vector<size_t>(*(other.array_size_)));
+      array_size_.reset(new vector<size_t>(*(other.array_size_)));
       break;
     default:
       Assert(false);
@@ -79,4 +80,8 @@ XTemplateMember &XTemplateMember::operator =(const XTemplateMember &other) {
   }
 
   return *this;
+}
+
+XTemplateMember::~XTemplateMember() = default;
+
 }

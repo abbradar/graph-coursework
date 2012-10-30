@@ -5,7 +5,8 @@
 #include "sdl.h"
 
 using namespace std;
-using namespace sdlobj;
+
+namespace sdlobj {
 
 void SDL::Init(Uint32 flags) {
   if (initialized()) return;
@@ -163,4 +164,6 @@ void SDL::ProcessEvent(const SDL_Event &event)
       event_handler_->ProcessSysWM(event.syswm);
       break;
   }
+}
+
 }

@@ -4,7 +4,8 @@
 #include "surfacepainter.h"
 
 using namespace std;
-using namespace sdlobj;
+
+namespace sdlobj {
 
 SurfacePainter::SurfacePainter() : surface_(nullptr), surface_struct_(nullptr),
  get_pixel_(nullptr), set_pixel_(nullptr) {}
@@ -104,4 +105,6 @@ void SurfacePainter::DrawLine(const unsigned int x1, const unsigned int y1, cons
       x = x + sx;
     e += 2 * dy;
   }
+}
+
 }

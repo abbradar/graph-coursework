@@ -4,8 +4,10 @@
 #include <cstring>
 #include <string>
 
-namespace xparse;
+namespace xparse {
 
 std::string QuotedToString(const char *, size_t);
+
+}
 
 #endif

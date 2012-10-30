@@ -1,9 +1,10 @@
 #include <cstring>
-#include "xmagic.h"
+#include "xheader.h"
 
-using namespace xparse;
+namespace xparse {
 
-XHeader::XHeader() : magic("xof "), major_version("03"), minor_version("03"), format("txt "), float_size("0032") {}
+XHeader::XHeader() : magic{'x','o','f',' '}, major_version{'0','3'}, minor_version{'0','3'},
+  format{'t','x','t',' '}, float_size{'0','0','3','2'} {}
 
 bool XHeader::Validate() {
   static const XHeader kReferenceHeader;
@@ -21,4 +22,6 @@ bool XHeader::Validate() {
     return false;
   }
   return true;
+}
+
 }

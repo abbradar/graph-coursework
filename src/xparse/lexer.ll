@@ -2,11 +2,12 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <boost/format.hpp>
 #include "common/debug.h"
-#include "lexer.h"
-#include "guid.h"
-#include "quoted.h"
-#include "xheader.h"
+#include "xparse/lexer.h"
+#include "xparse/guid.h"
+#include "xparse/quoted.h"
+#include "xparse/xheader.h"
 
 using namespace xparse;
 using namespace std;
@@ -17,7 +18,7 @@ typedef Parser::token_type token_type;
 
 /* By default yylex returns int, we use token_type. Unfortunately yyterminate
  * by default returns 0, which is not of token_type. */
-#define yyterminate() return token_type::end-of-file
+#define yyterminate() return token_type::tEndOfFile;
 
 /* This disables inclusion of unistd.h, which is not available under Visual C++
  * on Win32. The C++ scanner uses STL streams instead. */
@@ -33,10 +34,13 @@ typedef Parser::token_type token_type;
 %option batch
 
 /* no support for include files is planned */
-%option yywrap nounput
+%option noyywrap
 
 /* enables the use of start condition stacks */
 %option stack
+
+/* change the name of lexer class */
+%option prefix="X"
 
 /** The following paragraph suffices to track locations accurately. Each time
  * yylex is invoked, the begin position is moved onto the end position. **/
@@ -55,8 +59,8 @@ typedef Parser::token_type token_type;
 ^.{16} {
   XHeader *header = new XHeader();
   memcpy(header, yytext, sizeof(XHeader));
-  ylval->header = header;
-  return header;
+  yylval->header = header;
+  return token::tHeader;
 }
 
 #.* |
@@ -65,33 +69,31 @@ typedef Parser::token_type token_type;
 }
 
 -?[[:digit:]]+\.[[:digit:]]+ {
-  yylval.float_value = atof(yytext);
-  return float-value;
+  yylval->float_value = atof(yytext);
+  return token::tFloatValue;
 }
 -?[[:digit:]]+ {
-  yylval.int_value = atoi(yytext);
-  return integer-value;
+  yylval->int_value = atoi(yytext);
+  return token::tIntegerValue;
 }
 \"([^"]|\\\")*\" {
-  yylval.string_value = new string(QuotedToString(yytext, yyleng));
-  return string-value;
+  yylval->string_value = new string(QuotedToString(yytext, yyleng));
+  return token::tStringValue;
 }
 
 [[:alnum:]]{8}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{12} {
-  yylval.guid_value = new GUID(StringToGUID(yytext, str));
-  return guid-value;
+  yylval->guid_value = new GUID(yytext);
+  return token::tGUIDValue;
 }
 
-\.\.\. {
-  return triple-dot
-}
+\.\.\. return token::tTripleDot;
 
 "[" |
 "]" |
 "{" |
 "}" |
 ";" |
-"," return static_cast<TokenType>(*yytext);
+"," return static_cast<token_type>(*yytext);
 
 "word" |
 "dword" |
@@ -104,18 +106,18 @@ typedef Parser::token_type token_type;
 "cstring" |
 "unicode" |
 "ulonglong" {
-  yylval.string_value = string(yytext, yyleng);
-  return type-name;
+  yylval->string_value = new string(yytext, yyleng);
+  return token::tTypeName;
 }
 
-"template" return template-keyword;
-"array" return array-keyword;
-"binary" return binary-keyword;
-"binary_resource" return binary_resource-keyword;
+"template" return token::tTemplateKeyword;
+"array" return token::tArrayKeyword;
+"binary" return token::tBinaryKeyword;
+"binary_resource" return token::tBinaryResourceKeyword;
 
 [:alnum:]+ {
-  yylval.string_value = string(yytext, yyleng);
-  return identifier;
+  yylval->string_value = new string(yytext, yyleng);
+  return token::tIdentifier;
 }
 
 [ \t\r] {
@@ -128,21 +130,21 @@ typedef Parser::token_type token_type;
 }
 
 . {
-  string error = (boost::format("Invalid characher at line %1%: %2%") % yylineno, *yytext).str();
-  yyerror(error);
+  string error = (boost::format("Invalid characher at line %1%: %2%") % yylineno % *yytext).str();
+  YY_FATAL_ERROR(error.data());
 }
 
 %%
 
-Lexer::Lexer(istream *in, ostream *out) : FlexLexer(in, out) {}
+Lexer::Lexer(istream *in, ostream *out) : XFlexLexer(in, out) {}
 
 Lexer::~Lexer() = default;
 
-bool Scanner::debug() {
+bool Lexer::debug() const {
   return yy_flex_debug;
 }
 
-void Scanner::set_debug(bool debug) {
+void Lexer::set_debug(bool debug) {
   yy_flex_debug = debug;
 }
 
@@ -154,17 +156,7 @@ void Scanner::set_debug(bool debug) {
 #undef yylex
 #endif
 
-int FlexLexer::yylex() {
+int XFlexLexer::yylex() {
   Assert(false);
   return 0;
-}
-
-/* When the scanner receives an end-of-file indication from YY_INPUT, it then
-* checks the yywrap() function. If yywrap() returns false (zero), then it is
-* assumed that the function has gone ahead and set up `yyin' to point to
-* another input file, and scanning continues. If it returns true (non-zero),
-* then the scanner terminates, returning 0 to its caller. */
-
-int FlexLexer::yywrap() {
-  return 1;
 }
