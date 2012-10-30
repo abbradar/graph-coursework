@@ -55,21 +55,22 @@ class XNestedData {
 
 class XDataValue {
  public:
-  typedef std::vector<XDataValue> NestedData;
+  union Data;
+
+  typedef std::vector<std::shared_ptr<XDataValue>> NestedData;
+  typedef std::vector<Data> ArrayData;
 
   enum Type {
-    kInteger, kFloat, kString, kNode, kNested
+    kInteger, kFloat, kString, kNode
   };
 
   union Data {
     int int_value;
     float float_value;
     std::string *string_value;
-    std::vector<Data> *array_value;
+    ArrayData *array_value;
     NestedData *nested_value;
   };
-
-  typedef std::vector<Data> ArrayData;
 
   XDataValue(Type type, bool array_type = false);
   XDataValue(const XDataValue &other);
@@ -102,7 +103,7 @@ struct XData {
   XTemplate *template_ptr;
   std::string id;
   GUID guid;
-  std::vector<XDataValue> data;
+  std::vector<std::shared_ptr<XDataValue>> data;
   std::vector<XNestedData> nested_data;
 
   bool Validate(XFile *file);

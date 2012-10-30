@@ -3,6 +3,7 @@
 
 #include <list>
 #include "sdlobj/color.h"
+#include "xparse/xfile.h"
 #include "sceneobject.h"
 
 class Scene {
@@ -24,6 +25,7 @@ class Scene {
  private:
   std::list<SceneObject> objects_;
   sdlobj::Color plane_color_;
+  xparse::XFile xfile_;
 };
 
 #endif // GRAPH_SCENE_H_

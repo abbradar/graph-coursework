@@ -5,13 +5,11 @@
 // the C++ parser expects it to be declared. We can factor both as follows.
 
 #ifndef YY_DECL
-
 #define YY_DECL \
     xparse::Parser::token_type \
-    xparse::Lexer::Lex( \
-        xparse::Parser::semantic_type *yylval, \
-        xparse::Parser::location_type *yylloc \
-    )
+    xparse::Lexer::Lex(xparse::Parser::semantic_type *yylval, \
+                       xparse::Parser::location_type *yylloc, \
+                       xparse::Driver *driver)
 #endif
 
 #ifndef __FLEX_LEXER_H
@@ -44,7 +42,7 @@ class Lexer : public XFlexLexer {
    * the macro declaration YY_DECL above. The generated bison parser then
    * calls this virtual function to fetch new tokens. */
   virtual Parser::token_type Lex(Parser::semantic_type *yylval,
-                                 Parser::location_type *yylloc);
+                                 Parser::location_type *yylloc, Driver *driver);
 
   bool debug() const;
 

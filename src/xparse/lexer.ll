@@ -23,6 +23,10 @@ typedef Parser::token_type token_type;
 /* This disables inclusion of unistd.h, which is not available under Visual C++
  * on Win32. The C++ scanner uses STL streams instead. */
 #define YY_NO_UNISTD_H
+
+/** The following paragraph suffices to track locations accurately. Each time
+ * yylex is invoked, the begin position is moved onto the end position. **/
+#define YY_USER_ACTION yylloc->columns(yyleng);
 %}
 
 /*** Flex Declarations and Options ***/
@@ -42,11 +46,8 @@ typedef Parser::token_type token_type;
 /* change the name of lexer class */
 %option prefix="X"
 
-/** The following paragraph suffices to track locations accurately. Each time
- * yylex is invoked, the begin position is moved onto the end position. **/
-%{
-#define YY_USER_ACTION yylloc->columns(yyleng);
-%}
+/* Start conditions */
+%x BODY
 
 %% /*** Regular Expressions Part ***/
 
@@ -60,8 +61,11 @@ typedef Parser::token_type token_type;
   XHeader *header = new XHeader();
   memcpy(header, yytext, sizeof(XHeader));
   yylval->header = header;
+  BEGIN(BODY);
   return token::tHeader;
 }
+
+<BODY>{
 
 #.* |
 \/\/.* {
@@ -76,12 +80,13 @@ typedef Parser::token_type token_type;
   yylval->int_value = atoi(yytext);
   return token::tIntegerValue;
 }
-\"([^"]|\\\")*\" {
+\"([^\"]|\\\")*\" {
   yylval->string_value = new string(QuotedToString(yytext, yyleng));
   return token::tStringValue;
+
 }
 
-[[:alnum:]]{8}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{12} {
+\<\ *[[:alnum:]]{8}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{4}-[[:alnum:]]{12}\ *\> {
   yylval->guid_value = new GUID(yytext);
   return token::tGUIDValue;
 }
@@ -115,7 +120,7 @@ typedef Parser::token_type token_type;
 "binary" return token::tBinaryKeyword;
 "binary_resource" return token::tBinaryResourceKeyword;
 
-[:alnum:]+ {
+[[:alnum:]]+ {
   yylval->string_value = new string(yytext, yyleng);
   return token::tIdentifier;
 }
@@ -125,13 +130,16 @@ typedef Parser::token_type token_type;
 }
 
 \n {
-  yylloc->lines(yyleng);
+  yylloc->lines(1);
+  yylloc->step();
   // return end-of-line;
 }
 
-. {
-  string error = (boost::format("Invalid characher at line %1%: %2%") % yylineno % *yytext).str();
-  YY_FATAL_ERROR(error.data());
+}
+
+<*>. {
+  string error = (boost::format("Invalid characher at line %1%: %2%") % yylloc->begin.line % *yytext).str();
+  driver->Error(error.data());
 }
 
 %%

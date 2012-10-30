@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 # Additional modules dir
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build")
 
-add_definitions(-std=c++11 -Wall)
+add_definitions(-std=c++11 -Wall -fstack-protector -fPIE)
 
 # Build type
 set(CMAKE_BUILD_TYPE Debug)

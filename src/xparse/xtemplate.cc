@@ -10,7 +10,7 @@ namespace xparse {
 bool XTemplateReference::Resolve(XFile *file) {
   if (!id.empty()) {
     auto i = file->templates().find(id);
-    if (i == file->templates().begin()) return false;
+    if (i == file->templates().end()) return false;
     ptr = i->second.get();
     return true;
   } else {
@@ -24,6 +24,71 @@ bool XTemplateReference::Resolve(XFile *file) {
   }
 }
 
+bool XTemplateMemberReference::Resolve(XTemplate *x_template) {
+  if (id.empty()) return false;
+  bool found = false;
+  for (size_t i = 0; i < x_template->members.size(); ++i) {
+    if (x_template->members[i]->id() == id) {
+      ptr = x_template->members[i].get();
+      pos = i;
+      found = true;
+      break;
+    }
+  }
+  return found;
+}
+
+XTemplateMember::ArraySize::ArraySize(Type type) : type_(type) {
+  switch (type_) {
+    case kStatic:
+      break;
+    case kDynamic:
+      data_.reference = new XTemplateMemberReference();
+      break;
+    default:
+      Assert(false);
+      break;
+  }
+}
+
+XTemplateMember::ArraySize::ArraySize(const ArraySize &other) : type_(kStatic) {
+  memset(&data_, 0, sizeof(Data));
+  operator =(other);
+}
+
+XTemplateMember::ArraySize::~ArraySize() {
+  FreeData();
+}
+
+void XTemplateMember::ArraySize::FreeData() {
+  switch (type_) {
+    case kStatic:
+      break;
+    case kDynamic:
+      delete data_.reference;
+      break;
+    default:
+      Assert(false);
+  }
+}
+
+XTemplateMember::ArraySize &XTemplateMember::ArraySize::operator =(const ArraySize &other) {
+  FreeData();
+  type_ = other.type_;
+  switch (type_) {
+    case kStatic:
+      data_.size = other.data_.size;
+      break;
+    case kDynamic:
+      data_.reference = new XTemplateMemberReference(*(other.data_.reference));
+      break;
+    default:
+      Assert(false);
+  }
+
+  return *this;
+}
+
 XTemplateMember::XTemplateMember(MemberType member_type, BasicType basic_type) {
   member_type_ = member_type;
   basic_type_ = basic_type;
@@ -31,7 +96,8 @@ XTemplateMember::XTemplateMember(MemberType member_type, BasicType basic_type) {
     case kBasic:
       break;
     case kArray:
-      array_size_.reset(new vector<size_t>());
+      array_size_.reset(new vector<ArraySize>());
+      break;
     default:
       throw Exception("Invalid member type");
   }
@@ -48,7 +114,7 @@ XTemplateMember::XTemplateMember(MemberType member_type, BasicType basic_type) {
   }
 }
 
-XTemplateMember::XTemplateMember(const XTemplateMember &other) {
+XTemplateMember::XTemplateMember(const XTemplateMember &other) : member_type_(kBasic), basic_type_(kInteger) {
   operator =(other);
 }
 
@@ -60,7 +126,7 @@ XTemplateMember &XTemplateMember::operator =(const XTemplateMember &other) {
     case kBasic:
       break;
     case kArray:
-      array_size_.reset(new vector<size_t>(*(other.array_size_)));
+      array_size_.reset(new vector<ArraySize>(*(other.array_size_)));
       break;
     default:
       Assert(false);

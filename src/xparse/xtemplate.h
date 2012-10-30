@@ -13,6 +13,7 @@ namespace xparse {
 
 class XFile;
 struct XTemplate;
+struct XTemplateMember;
 
 struct XTemplateReference {
   std::string id;
@@ -22,8 +23,52 @@ struct XTemplateReference {
   bool Resolve(XFile *file);
 };
 
+struct XTemplateMemberReference {
+  std::string id;
+  XTemplateMember *ptr;
+  size_t pos;
+
+  bool Resolve(XTemplate *x_template);
+};
+
 class XTemplateMember {
  public:
+  class ArraySize {
+   public:
+    enum Type {
+      kStatic, kDynamic
+    };
+
+    union Data {
+      size_t size;
+      XTemplateMemberReference *reference;
+    };
+
+    ArraySize(Type type);
+    ArraySize(const ArraySize &other);
+    ~ArraySize();
+
+    ArraySize &operator =(const ArraySize &other);
+
+    inline Type type() const {
+      return type_;
+    }
+
+    inline Data &data() {
+      return data_;
+    }
+
+    inline const Data &data() const {
+      return data_;
+    }
+
+   private:
+    void FreeData();
+
+    Type type_;
+    Data data_;
+  };
+
   enum MemberType {
     kBasic, kArray
   };
@@ -61,11 +106,11 @@ class XTemplateMember {
     return template_reference_.get();
   }
 
-  inline std::vector<size_t> *array_size() {
+  inline std::vector<ArraySize> *array_size() {
     return array_size_.get();
   }
 
-  inline const std::vector<size_t> *array_size() const {
+  inline const std::vector<ArraySize> *array_size() const {
     return array_size_.get();
   }
 
@@ -74,7 +119,7 @@ class XTemplateMember {
   MemberType member_type_;
   BasicType basic_type_;
   std::unique_ptr<XTemplateReference> template_reference_;
-  std::unique_ptr<std::vector<size_t>> array_size_;
+  std::unique_ptr<std::vector<ArraySize>> array_size_;
 };
 
 struct XTemplate {
@@ -84,7 +129,7 @@ struct XTemplate {
   
   std::string id;
   GUID guid;
-  std::vector<XTemplateMember> members;
+  std::vector<std::shared_ptr<XTemplateMember>> members;
   RestrictionType restriction_type;
   std::unique_ptr<std::vector<XTemplateReference>> restrictions;
 };

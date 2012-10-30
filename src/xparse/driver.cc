@@ -9,7 +9,7 @@
 namespace xparse {
 
 Driver::Driver(XFile *context) : context_(context), trace_lexing_(false),
- trace_parsing_(false) { }
+  trace_parsing_(false), error_(false) { }
 
 void Driver::set_trace_lexing(bool trace_lexing) {
   trace_lexing_ = trace_lexing;
@@ -24,18 +24,22 @@ bool Driver::Parse(std::istream &in) {
   lexer.set_debug(trace_lexing_);
   this->lexer = &lexer;
 
-  Parser parser(*this);
+  Parser parser(this);
   parser.set_debug_level(trace_parsing_);
-  return (parser.parse() == 0);
+  error_ = false;
+  if (!parser.parse()) return false;
+  return !error_;
 }
 
 void Driver::Error(const location &loc,
                    const std::string &msg) {
   LogError((boost::format(".x parse error: (%1%) %2%") % loc % msg).str().data());
+  error_ = true;
 }
 
 void Driver::Error(const std::string &msg) {
   LogError((boost::format(".x parse error: %1%") % msg).str().data());
+  error_ = true;
 }
 
 }

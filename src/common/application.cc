@@ -38,7 +38,7 @@ void HandleTerminate() {
   }
   is_terminating = true;
   LogCritical(StackTrace().data());
-  exit(EXIT_FAILURE);
+  abort();
 }
 
 #ifdef __POSIX__
@@ -47,7 +47,7 @@ void HandleTerminate() {
 void HandleSegfault(int sig) {
   LogCritical("Segfault caught");
   PrintStackTrace();
-  exit(EXIT_FAILURE);
+  abort();
 }
 
 #undef InitSignalHandlers

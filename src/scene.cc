@@ -1,4 +1,6 @@
 #include <fstream>
+#include "common/exception.h"
+#include "common/logging.h"
 #include "common/math.h"
 #include "xparse/xfile.h"
 #include "scene.h"
@@ -26,6 +28,17 @@ void Scene::set_plane_color(const Color &plane_color) {
 }
 
 void Scene::Load() {
+  std::ifstream in("templates.x");
+  if (!in || !xfile_.Parse(in)) {
+    throw Exception("Cannot load .x templates.");
+  }
+  in.close();
+  in.open("cube.x");
+  if (!in || !xfile_.Parse(in)) {
+    LogDebug("Cannot load model.");
+  }
+  in.close();
+
   // test object
   PointVector points(test_points, test_points + 8);
   TriangleVector polygons(test_indexes, test_indexes + 12);
@@ -33,8 +46,4 @@ void Scene::Load() {
   SceneObject object(points, polygons, vertex_normals, Position(0, 0, 0));
   object.color() = Color(0, 0xFF, 0);
   objects_.push_back(std::move(object));
-
-  XFile file;
-  std::ifstream in("cube.x");
-  file.Parse(in);
 }

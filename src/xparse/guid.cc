@@ -33,6 +33,7 @@ GUID::GUID(const char *guid) {
   char curr = 0;
   int n = 0;
   char *cout = guid_;
+  if (*guid == '<') do ++guid; while (*guid == ' ');
   for (const char *i = guid; n < kGUIDSize; ++i) {
     curr = HexToInt(*i);
     if (curr == (char)-1) continue;

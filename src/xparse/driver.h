@@ -44,6 +44,7 @@ class Driver {
 
  private:
   friend class Parser;
+  friend class Lexer;
 
   // To demonstrate pure handling of parse errors, instead of
   // simply dumping them on the standard error output, we will pass
@@ -62,6 +63,7 @@ class Driver {
 
   bool trace_lexing_;
   bool trace_parsing_;
+  bool error_;
 };
 
 } // namespace xparse
