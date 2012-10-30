@@ -31,6 +31,18 @@ template Mesh
     [...]
 }
 
+template Matrix4x4
+{
+    < F6F23F45-7686-11cf-8F52-0040333594A3 >
+    array float matrix[16];
+} 
+
+template FrameTransformMatrix
+{
+    < F6F23F41-7686-11cf-8F52-0040333594A3 >
+    Matrix4x4 frameMatrix;
+} 
+
 template MeshNormals
 {
     < F6F23F43-7686-11cf-8F52-0040333594A3 >
@@ -39,3 +51,39 @@ template MeshNormals
     dword nFaceNormals;
     array MeshFace faceNormals[nFaceNormals];
 }
+
+template ColorRGBA
+{
+    < 35FF44E0-6C7C-11cf-8F52-0040333594A3 >
+    float red;
+    float green;
+    float blue;
+    float alpha;
+} 
+
+template ColorRGB
+{
+    < D3E16E81-7835-11cf-8F52-0040333594A3 >
+    float red;
+    float green;
+    float blue;
+} 
+
+template Material
+{
+    < 3D82AB4D-62DA-11CF-AB39-0020AF71E433 >
+    ColorRGBA faceColor;
+    float power;
+    ColorRGB specularColor;
+    ColorRGB emissiveColor;
+    [...]
+} 
+
+template MeshMaterialList
+{
+    < F6F23F42-7686-11CF-8F52-0040333594A3 >
+    dword nMaterials;
+    dword nFaceIndexes;
+    array dword faceIndexes[nFaceIndexes];
+    [Material <3D82AB4D-62DA-11CF-AB39-0020AF71E433>]
+} 
