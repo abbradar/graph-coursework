@@ -2,7 +2,9 @@
 #define GRAPH_SCENEOBJECT_H_
 
 #include <vector>
+#include <string>
 #include <memory>
+#include "xparse/xdata.h"
 #include "sdlobj/color.h"
 #include "matrix4.h"
 #include "point3d.h"
@@ -18,6 +20,12 @@ class SceneObject {
   SceneObject();
   SceneObject(const PointVector &points, const TriangleVector &polygons,
               const PointVector &vertex_normals, const Position &position);
+
+  static SceneObject LoadFromFrame(xparse::XData *frame);
+
+  inline std::string &name() {
+    return name_;
+  }
 
   /** Points vector */
   inline const PointVector &points() const {
@@ -58,6 +66,7 @@ class SceneObject {
   }
 
  private:
+  std::string name_;
   PointVector points_;
   PointVector positioned_points_;
   TriangleVector polygons_;

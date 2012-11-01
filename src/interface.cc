@@ -11,7 +11,10 @@ using namespace std;
 Interface::Interface(float fps) : move_speed_(1), rotation_speed_(1), fps_(fps),
   position_(nullptr), x_(0), y_(0), grab_mouse_(false) {
   set_grab_mouse(false);
+  set_fps(fps_);
 }
+
+Interface::Interface() : Interface(1) {}
 
 void Interface::set_move_speed(myfloat move_speed) {
   move_speed_ = move_speed;

@@ -270,7 +270,7 @@ void Rasterizer::Render() {
   z_buffer_.set_size(surface_->width(), surface_->height());
   z_buffer_.Clear();
   surface_painter_.StartDrawing();
-  for (SceneObject &object : scene_->objects()) {
+  for (auto &object : scene_->objects()) {
     point_buffer_.clear();
     point_buffer_.reserve(object.positioned_points().size());
     for (const Point3D &p : object.positioned_points()) {

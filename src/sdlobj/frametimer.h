@@ -7,6 +7,7 @@ namespace sdlobj {
 
 class FrameTimer {
  public:
+  FrameTimer();
   FrameTimer(const float fps);
 
   inline float fps() {

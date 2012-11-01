@@ -120,7 +120,7 @@ typedef Parser::token_type token_type;
 "binary" return token::tBinaryKeyword;
 "binary_resource" return token::tBinaryResourceKeyword;
 
-[[:alnum:]]+ {
+[[:alnum:]_]+ {
   yylval->string_value = new string(yytext, yyleng);
   return token::tIdentifier;
 }

@@ -1,20 +1,24 @@
-default-font:
-  name: DroidSans.ttf
-  size: 12
-  index: 0
-  color: #FFFFFF
 window:
-  width: 640
-  height: 480
-  bpp: 32
+  font:
+    name: DroidSans.ttf
+    size: 12
+    index: 0
+    color: "#FFFFFF"
+  video-mode:
+    width: 640
+    height: 480
+    bpp: 32
   fps: 60
-  fps-measure-rate: 10
-interface:
+  show-fps-rate: 10
   show-fps: true
-mechanics:
-  move-speed: 120
-  rotation-speed: 0.333333
-  viewer-distance: 1000
+  interface:
+    move-speed: 120
+    rotation-speed: 0.333333
+  rasterizer:
+    viewer-distance: 1000
   projected-height: 200
-models:
-  path: models
+scene:
+  plane-color: "#FFFFFF"
+  templates: templates.x
+  models: models/cube.x
+  root-frame: Root

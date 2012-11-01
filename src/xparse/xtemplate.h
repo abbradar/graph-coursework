@@ -15,6 +15,7 @@ class XFile;
 struct XTemplate;
 struct XTemplateMember;
 
+// TODO: make them classes with necessary protection and stuff
 struct XTemplateReference {
   std::string id;
   GUID guid;

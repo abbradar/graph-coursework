@@ -8,6 +8,7 @@
 
 class Interface : public sdlobj::EventHandler {
  public:
+  Interface();
   Interface(float fps);
 
   void ProcessQuit(const SDL_QuitEvent &);

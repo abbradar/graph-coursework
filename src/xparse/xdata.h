@@ -57,7 +57,7 @@ class XDataValue {
  public:
   union Data;
 
-  typedef std::vector<std::shared_ptr<XDataValue>> NestedData;
+  typedef std::vector<std::shared_ptr<XDataValue>> NodeData;
   typedef std::vector<Data> ArrayData;
 
   enum Type {
@@ -68,8 +68,8 @@ class XDataValue {
     int int_value;
     float float_value;
     std::string *string_value;
+    NodeData *node_value;
     ArrayData *array_value;
-    NestedData *nested_value;
   };
 
   XDataValue(Type type, bool array_type = false);

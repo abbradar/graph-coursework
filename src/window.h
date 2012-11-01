@@ -1,6 +1,8 @@
 #ifndef GRAPH_WINDOW_H_
 #define GRAPH_WINDOW_H_
 
+#include <iostream>
+#include "common/settings.h"
 #include "sdlobj/sdl.h"
 #include "sdlobj/font.h"
 #include "sdlobj/color.h"
@@ -11,9 +13,12 @@
 #include "position.h"
 #include "scene.h"
 
+class WindowSettings;
+
 class Window {
  public:
   Window(int width, int height, int bpp, int fps);
+  Window();
   ~Window();
 
   static const Uint32 kSDLSubsystems;
@@ -69,11 +74,12 @@ class Window {
 
   void set_projected_height(const myfloat projected_height);
 
-  void set_camera_direction(const Point3D &camera_direction);
-
   void SetVideoMode(const int width, const int height, const int bpp);
 
   void Run();
+
+  void LoadSettings(std::istream &in);
+  void SaveSettings(std::ostream &out);
 
  private:
   static const Uint32 kVideoModeFlags;
@@ -86,9 +92,28 @@ class Window {
   Interface *interface_;
   Rasterizer rasterizer_;
   Scene *scene_;
+  Settings settings_;
   unsigned int fps_step_;
   bool show_fps_;
   myfloat projected_height_;
+};
+
+class WindowSettings : public SettingsBlock {
+ public:
+  WindowSettings(Window *window);
+  virtual ~WindowSettings();
+
+  inline Window *window() {
+    return window_;
+  }
+
+  void set_window(Window *window);
+
+  virtual const std::string name();
+  virtual void operator <<(const YAML::Node &node);
+ private:
+  static const char *const kName;
+  Window *window_;
 };
 
 #endif // GRAPH_COURSEWINDOW_H_

@@ -1,9 +1,12 @@
 #include <limits>
+#include "common/exception.h"
+#include "common/debug.h"
 #include "common/math.h"
 #include "matrix4.h"
 #include "sceneobject.h"
 
 using namespace std;
+using namespace xparse;
 
 SceneObject::SceneObject() = default;
 
@@ -12,6 +15,44 @@ SceneObject::SceneObject(const PointVector &points, const TriangleVector &polygo
  : points_(points), polygons_(polygons), vertex_normals_(vertex_normals), position_(position) {
   ComputePolygonNormals();
   UpdatePositioned();
+}
+
+SceneObject SceneObject::LoadFromFrame(XData *frame) {
+  if (frame->template_id != "Frame") {
+    throw Exception("Invalid frame data");
+  }
+  for (auto &mesh_i : frame->nested_data) {
+    Assert(mesh_i.type() == XNestedData::kNode);
+    XData *mesh = mesh_i.data().node;
+    if (mesh->template_id == "Mesh") {
+      PointVector points;
+      points.reserve(mesh->data[0]->data().int_value);
+      for (auto &xvec : *(mesh->data[1]->data().array_value)) {
+        points.push_back(Point3D::LoadFromXVector(*(xvec.node_value)));
+      }
+      TriangleVector triangles;
+      triangles.reserve(mesh->data[2]->data().int_value);
+      for (auto &xpoly : *(mesh->data[3]->data().array_value)) {
+        triangles.push_back(IndexedTriangle::LoadFromXMeshFace(*(xpoly.node_value)));
+      }
+      for (auto &normals_i : mesh->nested_data) {
+        Assert(normals_i.type() == XNestedData::kNode);
+        XData *normals = normals_i.data().node;
+        if (normals->template_id == "MeshNormals") {
+          PointVector normal_points;
+          normal_points.reserve(normals->data[0]->data().int_value);
+          for (auto &xvec : *(normals->data[1]->data().array_value)) {
+            normal_points.push_back(Point3D::LoadFromXVector(*(xvec.node_value)));
+          }
+
+          return SceneObject(points, triangles, normal_points, Position());
+        }
+        throw Exception("Normals data not found");
+      }
+    }
+  }
+
+  throw Exception("Invalid frame data");
 }
 
 void SceneObject::set_model(const PointVector &points, const TriangleVector &polygons,

@@ -35,7 +35,7 @@ class Matrix4 {
   Matrix4 &operator *=(const Matrix4 &other);
 
  private:
-  myfloat* matrix_;
+  myfloat *matrix_;
 
   friend Matrix4 operator +(const Matrix4 &a, const Matrix4 &b);
   friend Matrix4 operator -(const Matrix4 &a, const Matrix4 &b);

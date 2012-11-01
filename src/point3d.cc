@@ -1,9 +1,31 @@
+#include "common/exception.h"
 #include "point3d.h"
+
+using namespace xparse;
 
 Point3D::Point3D() : Point3D(0, 0, 0, 1) {}
 
 Point3D::Point3D(myfloat x_, myfloat y_, myfloat z_, myfloat w_) :
   x(x_), y(y_), z(z_), w(w_) {}
+
+Point3D Point3D::LoadFromXVector(const XDataValue::NodeData &data) {
+  // this should be checked during .x template validation, so it's for debug only
+#if DEBUG_LEVEL == 4
+  if (data.size() != 3) {
+    throw Exception("Invalid Vector data");
+  }
+  for (auto &i : data) {
+    if (i->type() != XDataValue::kFloat) {
+      throw Exception("Invalid Vector data");
+    }
+  }
+#endif
+  Point3D p;
+  p.x = data[0]->data().float_value;
+  p.y = data[1]->data().float_value;
+  p.z = data[2]->data().float_value;
+  return p;
+}
 
 Point3D &Point3D::operator +=(const Point3D &other) {
   x += other.x;

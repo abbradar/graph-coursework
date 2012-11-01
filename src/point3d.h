@@ -3,6 +3,7 @@
 
 struct Point3D;
 
+#include "xparse/xdata.h"
 #include "matrix4.h"
 #include "myfloat.h"
 
@@ -24,6 +25,8 @@ struct Point3D {
 
   static Point3D VectorMul(const Point3D &a, const Point3D &b);
   static myfloat ScalarMul(const Point3D &a, const Point3D &b);
+
+  static Point3D LoadFromXVector(const xparse::XDataValue::NodeData &data);
 
  private:
   friend Point3D operator +(const Point3D &a, const Point3D &b);

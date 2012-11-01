@@ -238,6 +238,7 @@ type : base-type {
   }
 }
 
+// TODO: maybe unify this with non-basic types
 base-type : tTypeName {
   if (*$1 == "word" || *$1 == "dword" || *$1 == "ulonglong" || *$1 == "byte") {
     $$ = XTemplateMember::kInteger;

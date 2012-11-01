@@ -7,6 +7,8 @@ namespace sdlobj {
 
 #define MSECS_IN_SEC 1000
 
+FrameTimer::FrameTimer() : FrameTimer(1) {}
+
 FrameTimer::FrameTimer(float fps) :
  first_tick_(true), measure_fps_(false), time_sum_(0),
  measure_ticks_(1), measured_ticks_(0), measured_fps_(fps_) {

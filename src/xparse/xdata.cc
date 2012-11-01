@@ -1,5 +1,6 @@
 #include "common/exception.h"
 #include "common/debug.h"
+#include "common/logging.h"
 #include "xdata.h"
 
 using namespace std;
@@ -7,23 +8,8 @@ using namespace std;
 namespace xparse {
 
 bool XDataReference::Resolve(XFile *file) {
-  if (!id.empty()) {
-    for (auto &i : file->data_nodes()) {
-      if (i->id == id) {
-        ptr = i.get();
-        return true;
-      }
-    }
-    return false;
-  } else {
-    for (auto &i : file->data_nodes()) {
-      if (i->guid == guid) {
-        ptr = i.get();
-        return true;
-      }
-    }
-    return false;
-  }
+  AssertMsg(false, "Not implemented");
+  return false;
 }
 
 XNestedData::XNestedData(Type type) : type_(type) {
@@ -91,7 +77,7 @@ XDataValue::XDataValue(Type type, bool array_type) : type_(type), array_type_(ar
         data_.string_value = new string();
         break;
       case kNode:
-        data_.nested_value = new NestedData();
+        data_.node_value = new NodeData();
         break;
       default:
         throw Exception("Invalid data type");
@@ -120,7 +106,7 @@ void XDataValue::FreeData() {
         break;
       case kNode:
         for (auto &i : *(data_.array_value)) {
-          delete i.nested_value;
+          delete i.node_value;
         }
         break;
       default:
@@ -137,7 +123,7 @@ void XDataValue::FreeData() {
         delete data_.string_value;
         break;
       case kNode:
-        delete data_.nested_value;
+        delete data_.node_value;
         break;
       default:
         Assert(false);
@@ -170,7 +156,7 @@ XDataValue &XDataValue::operator =(const XDataValue &other) {
         data_.array_value->reserve(other.data_.array_value->size());
         for (auto &i : *(other.data_.array_value)) {
           Data curr;
-          curr.nested_value = new NestedData(*(i.nested_value));
+          curr.node_value = new NodeData(*(i.node_value));
           data_.array_value->push_back(move(curr));
         }
         break;
@@ -189,7 +175,7 @@ XDataValue &XDataValue::operator =(const XDataValue &other) {
         data_.string_value = new string(*(other.data_.string_value));
         break;
       case kNode:
-        data_.nested_value = new NestedData(*(other.data_.nested_value));
+        data_.node_value = new NodeData(*(other.data_.node_value));
       default:
         Assert(false);
     }
@@ -225,8 +211,8 @@ bool ValidateData(const XTemplateMember *member, vector<shared_ptr<XDataValue>>:
       ++in;
       break;
     case XTemplateMember::kNode:
-      out.nested_value = new XDataValue::NestedData();
-      if (!ValidateTemplate(member->template_reference()->ptr, in, end, *(out.nested_value)))
+      out.node_value = new XDataValue::NodeData();
+      if (!ValidateTemplate(member->template_reference()->ptr, in, end, *(out.node_value)))
         return false;
       break;
     default:
@@ -316,6 +302,7 @@ bool XData::Validate(XFile *file) {
             break;
           case XNestedData::kNodeReference:
             // TODO: not supported
+            LogDebug("xparse: references to data is not supported now.");
             return false;
           default:
             Assert(false);

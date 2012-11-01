@@ -2,6 +2,8 @@
 #include "common/logging.h"
 #include "common/debug.h"
 #include "common/exception.h"
+#include "fontsettings.h"
+#include "colorsettings.h"
 #include "window.h"
 
 using namespace std;
@@ -19,7 +21,8 @@ Window::Window(int width, int height, int bpp, int fps) :
  position_(new Position()), interface_(new Interface(fps)), scene_(new Scene()),
  fps_step_(1), show_fps_(true), projected_height_(1) {
   Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
-  SetVideoMode(width, height, bpp);
+  settings_.AddBlock(std::shared_ptr<SettingsBlock>(new WindowSettings(this)));
+  settings_.AddBlock(std::shared_ptr<SettingsBlock>(new SceneSettings(scene_)));
   interface_->set_position(position_);
   frame_timer_.set_measure_fps(true);
 
@@ -27,7 +30,11 @@ Window::Window(int width, int height, int bpp, int fps) :
   rasterizer_.set_camera(position_);
   rasterizer_.set_scene(scene_);
   set_fps(fps);
+
+  SetVideoMode(width, height, bpp);
 }
+
+Window::Window() : Window(640, 480, 32, 60) {}
 
 Window::~Window() {
   for (auto i = Logger::instance().destinations().begin();
@@ -181,4 +188,76 @@ void Window::Run() {
   }
 
   AssertMsg(false, "Sudden exit from event loop!");
+}
+
+void Window::LoadSettings(istream &in) {
+  settings_.LoadSettings(in);
+}
+
+void Window::SaveSettings(ostream &out) {
+  settings_.SaveSettings(out);
+}
+
+WindowSettings::WindowSettings(Window *window) : window_(window) {}
+
+WindowSettings::~WindowSettings() = default;
+
+const char *const WindowSettings::kName = "window";
+
+const std::string WindowSettings::name() {
+  return string(kName);
+}
+
+void WindowSettings::set_window(Window *window) {
+  window_ = window;
+}
+
+void WindowSettings::operator <<(const YAML::Node &node) {
+  {
+    Font font;
+    node["font"] >> font;
+    window_->set_font(font);
+    Color font_color;
+    node["font"]["color"] >> font_color;
+    window_->set_font_color(font_color);
+    float fps;
+    node["fps"] >> fps;
+    window_->set_fps(fps);
+    bool show_fps;
+    node["show-fps"] >> show_fps;
+    window_->set_show_fps(show_fps);
+
+    int show_fps_rate;
+    node["show-fps-rate"] >> show_fps_rate;
+    window_->set_show_fps_rate(show_fps_rate);
+    myfloat projected_height;
+    node["projected-height"] >> projected_height;
+    window_->set_projected_height(projected_height);
+  }
+
+  {
+    const YAML::Node &rasterizer_node = node["rasterizer"];
+    myfloat viewer_distance;
+    rasterizer_node["viewer-distance"] >> viewer_distance;
+    window_->set_viewer_distance(viewer_distance);
+  }
+
+  {
+    const YAML::Node &interface_node = node["interface"];
+    myfloat move_speed;
+    interface_node["move-speed"] >> move_speed;
+    window_->set_move_speed(move_speed);
+    myfloat rotation_speed;
+    interface_node["rotation-speed"] >> rotation_speed;
+    window_->set_rotation_speed(rotation_speed);
+  }
+
+  {
+    const YAML::Node &video_mode_node = node["video-mode"];
+    int width, height, bpp;
+    video_mode_node["width"] >> width;
+    video_mode_node["height"] >> height;
+    video_mode_node["bpp"] >> bpp;
+    window_->SetVideoMode(width, height, bpp);
+  }
 }
