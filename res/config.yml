@@ -20,5 +20,5 @@ window:
 scene:
   plane-color: "#FFFFFF"
   templates: templates.x
-  models: models/cube.x
+  models: models/scene.x
   root-frame: Root

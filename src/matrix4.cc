@@ -1,6 +1,10 @@
 #include <cstring>
 #include <cmath>
+#include "common/exception.h"
+#include "common/debug.h"
 #include "matrix4.h"
+
+using namespace xparse;
 
 const size_t Matrix4::kMatrixWidth = 4;
 const size_t Matrix4::kMatrixHeight = 4;
@@ -62,8 +66,8 @@ Matrix4 Matrix4::RotateY(myfloat a) {
   matrix.at(1, 1) = 1;
   matrix.at(3, 3) = 1;
   matrix.at(0, 0) = cosa;
-  matrix.at(2, 0) = sina;
-  matrix.at(0, 2) = -sina;
+  matrix.at(2, 0) = -sina;
+  matrix.at(0, 2) = sina;
   matrix.at(2, 2) = cosa;
   return matrix;
 }
@@ -87,6 +91,28 @@ Matrix4 Matrix4::Scale(myfloat x, myfloat y, myfloat z) {
   matrix.at(0, 0) = x;
   matrix.at(1, 1) = y;
   matrix.at(2, 2) = z;
+  return matrix;
+}
+
+Matrix4 Matrix4::Identity() {
+  static const myfloat kIdentityMatrix[] = {1,0,0,0,
+                                            0,1,0,0,
+                                            0,0,1,0,
+                                            0,0,0,1};
+  return Matrix4(kIdentityMatrix);
+}
+
+Matrix4 Matrix4::LoadFromXTransformMatrix(xparse::XData *data) {
+  if (data->template_id != "FrameTransformMatrix") {
+    throw Exception("FrameTransformMatrix type expected.");
+  }
+  Matrix4 matrix;
+  XDataValue *matrix_node = (*data->data[0]->data().node_value)[0].get();
+  auto array = matrix_node->data().array_value;
+  Assert(array->size() == kMatrixWidth * kMatrixHeight);
+  for (size_t i = 0; i < kMatrixWidth * kMatrixHeight; ++i) {
+    matrix.data()[i] = (*array)[i].float_value;
+  }
   return matrix;
 }
 

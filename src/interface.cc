@@ -115,7 +115,7 @@ void Interface::Step() {
   if (mul > 0) {
     myfloat len = move_step_ / mul;
     if (forward_back) {
-      position_->z -= forward_back * len * sin(position_->pitch);
+      position_->z += forward_back * len * sin(position_->pitch);
       myfloat prj = forward_back * len * cos(position_->pitch);
       position_->x += prj * cos(position_->yaw);
       position_->y += prj * sin(position_->yaw);
@@ -129,7 +129,7 @@ void Interface::Step() {
       position_->z += up_down * len;
     }
   }
-  position_->pitch -= move_state_.yrel * rotation_k_;
+  position_->pitch += move_state_.yrel * rotation_k_;
   position_->pitch = Trim<myfloat>(position_->pitch, -M_PI_2, M_PI_2);
   position_->yaw += move_state_.xrel * rotation_k_;
   position_->yaw = Circle<myfloat>(position_->yaw, -M_PI, M_PI);

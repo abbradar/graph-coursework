@@ -21,7 +21,7 @@ class SceneObject {
   SceneObject(const PointVector &points, const TriangleVector &polygons,
               const PointVector &vertex_normals, const Position &position);
 
-  static SceneObject LoadFromFrame(xparse::XData *frame);
+  static SceneObject LoadFromFrame(xparse::XData *frame, const Matrix4 &transform);
 
   inline std::string &name() {
     return name_;

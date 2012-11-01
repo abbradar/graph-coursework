@@ -17,9 +17,27 @@ SceneObject::SceneObject(const PointVector &points, const TriangleVector &polygo
   UpdatePositioned();
 }
 
-SceneObject SceneObject::LoadFromFrame(XData *frame) {
+SceneObject SceneObject::LoadFromFrame(XData *frame, const Matrix4 &transform) {
+  static const Point3D camera_direction = Point3D(1, 0, 0);
+
   if (frame->template_id != "Frame") {
     throw Exception("Invalid frame data");
+  }
+
+  Matrix4 frame_transform = transform;
+  Position position;
+  for (auto &transform_i : frame->nested_data) {
+    Assert(transform_i.type() == XNestedData::kNode);
+    XData *transform_node = transform_i.data().node;
+    if (transform_node->template_id == "FrameTransformMatrix") {
+      frame_transform *= Matrix4::LoadFromXTransformMatrix(transform_node);
+      position.x = frame_transform.at(0, 3);
+      frame_transform.at(0, 3) = 0;
+      position.y = frame_transform.at(1, 3);
+      frame_transform.at(1, 3) = 0;
+      position.z = frame_transform.at(2, 3);
+      frame_transform.at(2, 3) = 0;
+    }
   }
   for (auto &mesh_i : frame->nested_data) {
     Assert(mesh_i.type() == XNestedData::kNode);
@@ -28,7 +46,9 @@ SceneObject SceneObject::LoadFromFrame(XData *frame) {
       PointVector points;
       points.reserve(mesh->data[0]->data().int_value);
       for (auto &xvec : *(mesh->data[1]->data().array_value)) {
-        points.push_back(Point3D::LoadFromXVector(*(xvec.node_value)));
+        Point3D point = Point3D::LoadFromXVector(*(xvec.node_value));
+        point = frame_transform * point;
+        points.push_back(point);
       }
       TriangleVector triangles;
       triangles.reserve(mesh->data[2]->data().int_value);
@@ -42,10 +62,17 @@ SceneObject SceneObject::LoadFromFrame(XData *frame) {
           PointVector normal_points;
           normal_points.reserve(normals->data[0]->data().int_value);
           for (auto &xvec : *(normals->data[1]->data().array_value)) {
-            normal_points.push_back(Point3D::LoadFromXVector(*(xvec.node_value)));
+            Point3D point = Point3D::LoadFromXVector(*(xvec.node_value));
+            point = frame_transform * point;
+            normal_points.push_back(point);
           }
 
-          return SceneObject(points, triangles, normal_points, Position());
+          SceneObject object = SceneObject(points, triangles, normal_points, Position());
+          object.set_position(position);
+          object.name() = frame->id;
+          // TODO: remove this
+          object.color() = sdlobj::Color(0, 255, 0);
+          return object;
         }
         throw Exception("Normals data not found");
       }

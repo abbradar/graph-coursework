@@ -4,6 +4,7 @@
 class Matrix4;
 
 #include <cstring>
+#include "xparse/xdata.h"
 #include "point3d.h"
 #include "myfloat.h"
 
@@ -24,11 +25,18 @@ class Matrix4 {
     return matrix_[y * kMatrixWidth + x];
   }
 
+  inline myfloat *data() {
+    return matrix_;
+  }
+
   static Matrix4 Translate(myfloat x, myfloat y, myfloat z);
   static Matrix4 RotateX(myfloat a);
   static Matrix4 RotateY(myfloat a);
   static Matrix4 RotateZ(myfloat a);
   static Matrix4 Scale(myfloat x, myfloat y, myfloat z);
+  static Matrix4 Identity();
+
+  static Matrix4 LoadFromXTransformMatrix(xparse::XData *data);
 
   Matrix4 &operator +=(const Matrix4 &other);
   Matrix4 &operator -=(const Matrix4 &other);

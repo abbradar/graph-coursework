@@ -29,11 +29,21 @@ bool Scene::Load(std::istream &in, const std::string root_frame) {
   }
   if (!root) return false;
 
+  Matrix4 root_transform = Matrix4::Identity();
+  for (auto &transform_i : root->nested_data) {
+    Assert(transform_i.type() == XNestedData::kNode);
+    XData *transform_node = transform_i.data().node;
+    if (transform_node->template_id == "FrameTransformMatrix") {
+      root_transform *= Matrix4::LoadFromXTransformMatrix(transform_node);
+      break;
+    }
+  }
+
   for (auto &i : root->nested_data) {
     Assert(i.type() == XNestedData::kNode);
     XData *node = i.data().node;
     if (node->template_id == "Frame") {
-      SceneObject object = SceneObject::LoadFromFrame(node);
+      SceneObject object = SceneObject::LoadFromFrame(node, root_transform);
       objects_.push_back(object);
     }
   }
@@ -49,10 +59,10 @@ SceneSettings::SceneSettings(Scene *scene) : scene_(scene) {}
 
 SceneSettings::~SceneSettings() = default;
 
-const char *const SceneSettings::kName = "scene";
+const std::string SceneSettings::kName = std::string("scene");
 
 const std::string SceneSettings::name() {
-  return std::string(kName);
+  return kName;
 }
 
 void SceneSettings::set_scene(Scene *scene) {
