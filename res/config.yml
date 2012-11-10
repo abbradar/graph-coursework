@@ -19,6 +19,6 @@ window:
   projected-height: 200
 scene:
   plane-color: "#FFFFFF"
+models:
   templates: templates.x
-  models: models/scene.x
-  root-frame: Root
+  models: models/models.yml

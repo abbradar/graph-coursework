@@ -4,6 +4,7 @@
 #include <memory>
 #include "sdlobj/surface.h"
 #include "sdlobj/surfacepainter.h"
+#include "screenline3d.h"
 #include "scene.h"
 #include "myfloat.h"
 #include "matrix4.h"
@@ -11,6 +12,11 @@
 
 class Rasterizer {
  public:
+  struct TraceResult {
+    std::weak_ptr<SceneObject> scene_object;
+    IndexedTriangle triangle;
+  };
+
   Rasterizer();
 
   void Render();
@@ -45,23 +51,14 @@ class Rasterizer {
 
   void set_scale(const myfloat scale);
 
+  void ClearCache();
+
  private:
-  struct ScreenLine3D {
-    myfloat x;
-    unsigned int y;
-    myfloat z;
-    unsigned int fy;
-    myfloat dx;
-    myfloat dz;
-
-    ScreenLine3D();
-    ScreenLine3D(const Point3D *a, const Point3D *b);
-  };
-
   void DrawTriangle(const IndexedTriangle &source, const PointVector &points, const sdlobj::Color &color);
   void FillTriangle(const IndexedTriangle &source, const Point3D *points, const sdlobj::Color &color);
-  void FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color);
-  void FillLine(const ScreenLine3D *a, const ScreenLine3D *b, const Uint32 color);
+  void FillLines(ScreenLine3D &a, ScreenLine3D &b, const Uint32 color, const unsigned int fy);
+  void FillLine(const unsigned int y, const unsigned int ax, const unsigned int bx,
+                const myfloat az, const myfloat bz, const Uint32 color);
 
   inline void SetPixel(const unsigned int x, const unsigned int y, const myfloat z, const Uint32 color) {
     if (z_buffer_.Check(x, y, z)) {
@@ -73,7 +70,9 @@ class Rasterizer {
   Position *camera_;
   sdlobj::Surface *surface_;
   sdlobj::SurfacePainter surface_painter_;
-  PointVector point_buffer_;
+  PointVector point_cache_;
+  std::vector<bool> point_flag_cache_;
+  TriangleVector triangle_cache_;
   ZBuffer z_buffer_;
   myfloat viewer_distance_;
   myfloat scale_;

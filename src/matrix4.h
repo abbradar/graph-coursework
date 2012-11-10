@@ -5,6 +5,8 @@ class Matrix4;
 
 #include <cstring>
 #include "xparse/xdata.h"
+#include "common/debug.h"
+#include "common/exception.h"
 #include "point3d.h"
 #include "myfloat.h"
 
@@ -21,13 +23,20 @@ class Matrix4 {
 
   Matrix4 &operator =(const Matrix4 &other);
 
-  inline myfloat &at(int x, int y) {
+  inline myfloat &at(size_t x, size_t y) {
+#if DEBUG_LEVEL >= 4
+    if (x > kMatrixWidth || y > kMatrixHeight) {
+      throw Exception("Matrix index is out of bounds.");
+    }
+#endif
     return matrix_[y * kMatrixWidth + x];
   }
 
   inline myfloat *data() {
     return matrix_;
   }
+
+  Matrix4 Transpose();
 
   static Matrix4 Translate(myfloat x, myfloat y, myfloat z);
   static Matrix4 RotateX(myfloat a);

@@ -4,6 +4,7 @@
 #include "rasterizer.h"
 
 //#define WIREFRAME_MODEL
+//#define NO_NORMAL_FACE_CLIPPING
 
 using namespace std;
 using namespace sdlobj;
@@ -164,7 +165,7 @@ void Rasterizer::DrawTriangle(const IndexedTriangle &source, const PointVector &
 }
 
 void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *points, const Color &color) {
-  // we'll just draw wire-frame model for now, without hidden line removal
+  static_assert(IndexedTriangle::kPointsSize == 3, "Polygons (number of points != 3) is not supported");
   Uint32 pixel = surface_->ColorToPixel(color);
 #ifdef WIREFRAME_MODEL
   surface_painter_.DrawLine(points[source.points[0]].x, points[source.points[0]].y,
@@ -174,85 +175,98 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
   surface_painter_.DrawLine(points[source.points[2]].x, points[source.points[2]].y,
       points[source.points[0]].x, points[source.points[0]].y, pixel);
 #else
-  ScreenLine3D lines[IndexedTriangle::kPointsSize];
-  lines[0] = ScreenLine3D(&points[source.points[0]], &points[source.points[1]]);
-  lines[1] = ScreenLine3D(&points[source.points[1]], &points[source.points[2]]);
-  lines[2] = ScreenLine3D(&points[source.points[2]], &points[source.points[0]]);
-  // sort them
-  // this is bubble sort with cheating for kPointsSize = 3
-  for (size_t i = 0; i < IndexedTriangle::kPointsSize - 1; ++i) {
-    if (lines[i].y > lines[i + 1].y) swap(lines[i], lines[i + 1]);
+  const Point3D *points_ptr[IndexedTriangle::kPointsSize];
+  for (size_t i = 0; i < IndexedTriangle::kPointsSize; ++i) {
+    points_ptr[i] = &points[source.points[i]];
   }
-  for (size_t i = 0; i < IndexedTriangle::kPointsSize - 1; ++i) {
-    if (lines[i].y == lines[i].fy) {
-      swap(lines[i], lines[IndexedTriangle::kPointsSize - 1]);
-      break;
+  // sort them
+  for (size_t i = IndexedTriangle::kPointsSize - 1; i > 0; --i) {
+    for (size_t j = 0; j < i; ++j) {
+      if (points_ptr[j]->y > points_ptr[j + 1]->y) swap(points_ptr[j], points_ptr[j + 1]);
     }
   }
-  // fill lines
-  ScreenLine3D *a = &lines[0], *b = &lines[1], *c = &lines[2];
-  if (a->x != b->x) {
-    if (a->x > b->x) swap(a, b);
+
+  if ((unsigned)points_ptr[0]->y == (unsigned)points_ptr[1]->y) {
+    if (points_ptr[0]->x > points_ptr[1]->x) swap(points_ptr[0], points_ptr[1]);
+    ScreenLine3D a(*points_ptr[0], *points_ptr[2]);
+    ScreenLine3D b(*points_ptr[1], *points_ptr[2]);
 #if DEBUG_LEVEL == 4
-    FillLine(a, b, 0xFFFFFF);
-    a->x += a->dx;
-    a->z += a->dz;
-    b->x += b->dx;
-    b->z += b->dz;
-    ++a->y;
+    FillLine(a.y, a.x, b.x, a.z, b.z, 0xFFFFFF);
+    a.x += a.dx;
+    a.z += a.dz;
+    b.x += b.dx;
+    b.z += b.dz;
+    ++a.y;
+    ++b.y;
 #endif
-    FillLines(a, b, pixel);
+    FillLines(a, b, pixel, a.fy);
   } else {
-    if (a->dx > b->dx) swap(a, b);
-    FillLines(a, b, pixel);
-    if (a->fy < b->fy) swap(a, b);
-    if (a->x > c->x) swap(a, c);
-    if (c->y != c->fy) {
-      FillLines(a, c, pixel);
+    ScreenLine3D big(*points_ptr[0], *points_ptr[2]);
+    ScreenLine3D small1(*points_ptr[0], *points_ptr[1]);
+    if (big.dx <= small1.dx) {
+      FillLines(big, small1, pixel, small1.fy);
+
+      if (big.y != big.fy) {
+        ScreenLine3D small2(*points_ptr[1], *points_ptr[2]);
+        FillLines(big, small2, pixel, big.fy);
   #if DEBUG_LEVEL == 4
-    } else {
-      FillLine(a, b, 0xFFFFFF);
+      } else {
+        FillLine(big.y, big.x, small1.x, big.z, small1.z, 0xFFFFFF);
   #endif
+      }
+    } else {
+      FillLines(small1, big, pixel, small1.fy);
+
+      if (big.y != big.fy) {
+        ScreenLine3D small2(*points_ptr[1], *points_ptr[2]);
+        FillLines(small2, big, pixel, big.fy);
+  #if DEBUG_LEVEL == 4
+      } else {
+        FillLine(big.y, small1.x, big.x, small1.z, big.z, 0xFFFFFF);
+  #endif
+      }
     }
   }
 #endif
 }
 
-void Rasterizer::FillLines(ScreenLine3D *a, ScreenLine3D *b, const Uint32 color) {
-  ScreenLine3D *fa = a->fy < b->fy ? a : b;
-  for (; a->y < fa->fy; ++a->y) {
-    FillLine(a, b, color);
+void Rasterizer::FillLines(ScreenLine3D &a, ScreenLine3D &b, const Uint32 color,
+                           const unsigned int fy) {
+  unsigned int y = a.y;
+  for (; y < fy; ++y) {
+    FillLine(y, a.x, b.x, a.z, b.z, color);
 
     // move line points
-    a->x += a->dx;
-    a->z += a->dz;
-    b->x += b->dx;
-    b->z += b->dz;
+    a.x += a.dx;
+    a.z += a.dz;
+    b.x += b.dx;
+    b.z += b.dz;
   }
-  FillLine(a, b, color);
-  b->y = a->y;
+  FillLine(y, a.x, b.x, a.z, b.z, color);
+  a.y = y;
+  b.y = y;
 }
 
-void Rasterizer::FillLine(const ScreenLine3D *a, const ScreenLine3D *b, const Uint32 color) {
-  int ax = (int)a->x, bx = (int)b->x;
-  myfloat z = a->z;
+void Rasterizer::FillLine(const unsigned int y, const unsigned int ax, const unsigned int bx,
+                          const myfloat az, const myfloat bz, const Uint32 color) {
+  myfloat z = az;
 #if DEBUG_LEVEL == 4
-  SetPixel(ax, a->y, z, 0xFFFFFF);
+  SetPixel(ax, y, z, 0xFFFFFF);
 #endif
   if (ax < bx) {
-    myfloat dz = (b->z - a->z) / (b->x - a->x);
+    myfloat dz = (bz - az) / (bx - ax);
 #if DEBUG_LEVEL == 4
     z += dz;
-    for (int x = ax + 1; x < bx; ++x)
+    for (unsigned int x = ax + 1; x < bx; ++x)
 #else
-    for (int x = ax; x <= bx; ++x)
+    for (unsigned int x = ax; x <= bx; ++x)
 #endif
     {
-      SetPixel(x, a->y, z, color);
+      SetPixel(x, y, z, color);
       z += dz;
     }
 #if DEBUG_LEVEL == 4
-  SetPixel(bx, a->y, z, 0xFFFFFF);
+  SetPixel(bx, y, z, 0xFFFFFF);
 #endif
   }
 }
@@ -260,33 +274,57 @@ void Rasterizer::FillLine(const ScreenLine3D *a, const ScreenLine3D *b, const Ui
 void Rasterizer::Render() {
   if (!(scene_ && camera_ && surface_)) throw Exception("Set scene, camera and surface");
 
-  static const myfloat system_transform_m[] = { 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1};
-  static const Matrix4 system_transform = Matrix4(system_transform_m);
+  static const myfloat system_transform_m[] = {0, -1, 0, 0,
+                                               0, 0, -1, 0,
+                                               1, 0, 0, 0,
+                                               0, 0, 0, 1};
+#ifndef NO_NORMAL_FACE_CLIPPING
   static const Point3D camera_direction = Point3D(1, 0, 0);
+#endif
 
-  Matrix4 transform = system_transform * camera_->GetMatrixTo();
+  Matrix4 transform(system_transform_m);
+  transform *= camera_->GetMatrixTo();
+#ifndef NO_NORMAL_FACE_CLIPPING
   Point3D normal = camera_->GetRotateMatrixFrom() * camera_direction;
+#endif
 
   z_buffer_.set_size(surface_->width(), surface_->height());
   z_buffer_.Clear();
   surface_painter_.StartDrawing();
   for (auto &object : scene_->objects()) {
-    point_buffer_.clear();
-    point_buffer_.reserve(object.positioned_points().size());
-    for (const Point3D &p : object.positioned_points()) {
-      Point3D dest = transform * p;
-      myfloat k = viewer_distance_ / (viewer_distance_ + dest.z);
-      dest.x = dest.x * k * scale_ + surface_->width() / 2.0;
-      dest.y = dest.y * k * scale_ + surface_->height() / 2.0;
-      point_buffer_.push_back(dest);
+    int o_size = object->positioned_points().size();
+    point_cache_.resize(o_size);
+    point_flag_cache_.assign(o_size, false);
+    triangle_cache_.clear();
+    triangle_cache_.reserve(object->model()->polygons().size() / 2);
+
+    auto p_i = object->model()->polygons().begin();
+    auto n_i = object->positioned_polygon_normals().begin();
+    for (auto pe = object->model()->polygons().end(); p_i != pe; ++p_i, ++n_i) {
+#ifndef NO_NORMAL_FACE_CLIPPING
+      if (Point3D::ScalarMul(normal, *n_i) <= 0) {
+#endif
+        const IndexedTriangle &p = *p_i;
+        triangle_cache_.push_back(p);
+        for (size_t i = 0; i < IndexedTriangle::kPointsSize; ++i) {
+          int point = p.points[i];
+          if (!point_flag_cache_[point]) {
+            Point3D dest = transform * object->positioned_points()[point];
+            myfloat k = viewer_distance_ / (viewer_distance_ + dest.z);
+            // Perspective transformation
+            dest.x = dest.x * k * scale_ + surface_->width() / 2.0;
+            dest.y = dest.y * k * scale_ + surface_->height() / 2.0;
+            point_cache_[point] = move(dest);
+            point_flag_cache_[point] = true;
+          }
+        }
+#ifndef NO_NORMAL_FACE_CLIPPING
+      }
+#endif
     }
 
-    auto p = object.polygons().begin();
-    auto n = object.positioned_polygon_normals().begin();
-    for (auto pe = object.polygons().end(); p != pe; ++p, ++n) {
-      if (Point3D::ScalarMul(normal, *n) <= 0) {
-        DrawTriangle(*p, point_buffer_, object.color());
-      }
+    for (const IndexedTriangle &pol : triangle_cache_) {
+      DrawTriangle(pol, point_cache_, object->model()->color());
     }
   }
   surface_painter_.FinishDrawing();
@@ -314,21 +352,7 @@ void Rasterizer::set_scale(const myfloat scale) {
   scale_ = scale;
 }
 
-Rasterizer::ScreenLine3D::ScreenLine3D() = default;
-
-Rasterizer::ScreenLine3D::ScreenLine3D(const Point3D *a, const Point3D *b) : dx(0), dz(0) {
-  if (a->y > b->y) swap(a, b);
-  y = (int)a->y;
-  fy = (int)b->y;
-  x = a->x;
-  if (y != fy) {
-    myfloat dy = fy - y; /*b->y - a->y*/
-    dx = (b->x - a->x) / dy;
-    dz = (b->z - a->z) / dy;
-    z = a->z;
-  } else {
-    dx = 0;
-    dz = 0;
-    z = min(a->z, b->z);
-  }
+void Rasterizer::ClearCache() {
+  point_cache_.clear();
+  point_flag_cache_.clear();
 }

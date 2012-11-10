@@ -16,8 +16,8 @@ struct XData;
 
 class XFile {
  public:
-  typedef std::map<std::string, std::unique_ptr<XTemplate>> TemplateMap;
-  typedef std::vector<std::unique_ptr<XData>> NodeVector;
+  typedef std::map<std::string, std::shared_ptr<XTemplate>> TemplateMap;
+  typedef std::vector<std::shared_ptr<XData>> NodeVector;
 
   XFile();
 

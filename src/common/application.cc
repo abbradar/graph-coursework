@@ -78,7 +78,13 @@ int Application::Run(int argc, const char **argv) noexcept {
     LogCritical(s.c_str());
     LogCritical(e.stack_trace());
     Abort();
+  } catch (exception &e) {
+    string s("Unhandled external exception: ");
+    s.append(e.what());
+    LogCritical(s.c_str());
+    Abort();
   }
+
   return EXIT_FAILURE;
 }
 

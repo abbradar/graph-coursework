@@ -12,6 +12,7 @@
 #include "rasterizer.h"
 #include "position.h"
 #include "scene.h"
+#include "models.h"
 
 class WindowSettings;
 
@@ -92,6 +93,7 @@ class Window {
   Interface *interface_;
   Rasterizer rasterizer_;
   Scene *scene_;
+  Models *models_;
   Settings settings_;
   unsigned int fps_step_;
   bool show_fps_;

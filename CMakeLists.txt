@@ -49,10 +49,10 @@ aux_source_directory(src/common COMMON_LIST)
 
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(FLEX_ARGS "-d")
-  set(BISON_ARGS "--debug")
+  set(BISON_ARGS "-tk")
 else()
-  set(FLEX_ARGS "")
-  set(BISON_ARGS "")
+  set(FLEX_ARGS " ")
+  set(BISON_ARGS " ")
 endif()
 
 BISON_TARGET(XParser src/xparse/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser.cc COMPILE_FLAGS ${BISON_ARGS})

@@ -2,20 +2,22 @@
 #define GRAPH_SCENE_H_
 
 #include <iostream>
-#include <map>
+#include <list>
+#include <memory>
 #include <string>
 #include "common/settings.h"
 #include "sdlobj/color.h"
 #include "xparse/xfile.h"
 #include "sceneobject.h"
+#include "models.h"
 
 class Scene {
  public:
-  typedef std::vector<SceneObject> ObjectVector;
+  typedef std::list<std::shared_ptr<SceneObject>> ObjectList;
 
   Scene();
 
-  inline ObjectVector &objects() {
+  inline ObjectList &objects() {
     return objects_;
   }
 
@@ -25,14 +27,12 @@ class Scene {
 
   void set_plane_color(const sdlobj::Color &plane_color);
 
-  bool Load(std::istream &in, const std::string root_frame);
-  //void Save(std::ostream &out);
-  bool LoadTemplates(std::istream &in);
+  void Load(std::istream &in, const Models &models);
+  void Save(std::ostream &out);
 
  private:
-  ObjectVector objects_;
+  ObjectList objects_;
   sdlobj::Color plane_color_;
-  xparse::XFile xfile_;
 };
 
 class SceneSettings : public SettingsBlock {

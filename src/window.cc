@@ -6,6 +6,9 @@
 #include "colorsettings.h"
 #include "window.h"
 
+// DEBUG
+#include <fstream>
+
 using namespace std;
 using namespace sdlobj;
 using namespace logging;
@@ -19,10 +22,11 @@ const Uint32 Window::kSDLSubsystems = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 Window::Window(int width, int height, int bpp, int fps) :
  frame_timer_(fps), window_log_(new WindowLogDestination()),
  position_(new Position()), interface_(new Interface(fps)), scene_(new Scene()),
- fps_step_(1), show_fps_(true), projected_height_(1) {
+ models_(new Models()), fps_step_(1), show_fps_(true), projected_height_(1) {
   Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
   settings_.AddBlock(std::shared_ptr<SettingsBlock>(new WindowSettings(this)));
   settings_.AddBlock(std::shared_ptr<SettingsBlock>(new SceneSettings(scene_)));
+  settings_.AddBlock(std::shared_ptr<SettingsBlock>(new ModelsSettings(models_)));
   interface_->set_position(position_);
   frame_timer_.set_measure_fps(true);
 
@@ -45,6 +49,7 @@ Window::~Window() {
     }
   }
   delete scene_;
+  delete models_;
   delete interface_;
   delete position_;
 }
@@ -139,6 +144,11 @@ void Window::SetVideoMode(const int width, const int height, const int bpp) {
 }
 
 void Window::Run() {
+  // DEBUG
+  ifstream scene("scene.yml");
+  scene_->Load(scene, *models_);
+  scene.close();
+
   Surface fps_r;
   fps_step_ = 0;
 

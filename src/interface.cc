@@ -5,6 +5,8 @@
 #include "common/exception.h"
 #include "interface.h"
 
+//#define NO_MOUSE_GRAB
+
 using namespace sdlobj;
 using namespace std;
 
@@ -149,6 +151,8 @@ void Interface::set_grab_mouse(const bool grab) {
   } else {
     LogDebug("Stopped mouse grabbing");
   }
+#ifndef NO_MOUSE_GRAB
   SDL::instance().set_grab_input(grab_mouse_);
+#endif
   SDL::instance().set_show_cursor(!grab_mouse_);
 }

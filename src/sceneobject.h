@@ -1,43 +1,26 @@
 #ifndef GRAPH_SCENEOBJECT_H_
 #define GRAPH_SCENEOBJECT_H_
 
-#include <vector>
-#include <string>
 #include <memory>
-#include "xparse/xdata.h"
-#include "sdlobj/color.h"
-#include "matrix4.h"
-#include "point3d.h"
+#include <yaml-cpp/yaml.h>
 #include "position.h"
-#include "indexedtriangle.h"
-
-typedef std::vector<Point3D> PointVector;
-typedef std::vector<IndexedTriangle> TriangleVector;
+#include "models.h"
+#include "model.h"
 
 /** Scene object */
 class SceneObject {
  public:
   SceneObject();
-  SceneObject(const PointVector &points, const TriangleVector &polygons,
-              const PointVector &vertex_normals, const Position &position);
+  SceneObject(const std::shared_ptr<Model> &model, const Position &position);
 
-  static SceneObject LoadFromFrame(xparse::XData *frame, const Matrix4 &transform);
-
-  inline std::string &name() {
-    return name_;
-  }
+  static SceneObject LoadFromYaml(const YAML::Node &node, const Models &models);
 
   /** Points vector */
-  inline const PointVector &points() const {
-    return points_;
+  inline const std::shared_ptr<Model> &model() const {
+    return model_;
   }
 
-  inline const TriangleVector &polygons() const {
-    return polygons_;
-  }
-
-  void set_model(const PointVector &points, const TriangleVector &polygons,
-                 const PointVector &vertex_normals);
+  void set_model(const std::shared_ptr<Model> &model);
 
   inline const PointVector &positioned_points() const {
     return positioned_points_;
@@ -47,38 +30,21 @@ class SceneObject {
     return positioned_polygon_normals_;
   }
 
-  inline const PointVector &vertex_normals() const {
-    return vertex_normals_;
-  }
-
-  inline const PointVector &polygon_normals() const {
-    return polygon_normals_;
-  }
-
   inline const Position &position() const {
     return position_;
   }
 
   void set_position(const Position &position);
 
-  inline sdlobj::Color &color() {
-    return color_;
-  }
-
  private:
-  std::string name_;
-  PointVector points_;
+  std::shared_ptr<Model> model_;
   PointVector positioned_points_;
-  TriangleVector polygons_;
-  PointVector vertex_normals_;
-  PointVector polygon_normals_;
   PointVector positioned_polygon_normals_;
   Position position_;
-  sdlobj::Color color_;
 
   void UpdatePositioned();
-  void PopulateTransformed();
-  void ComputePolygonNormals();
 };
+
+void operator <<(YAML::Emitter &emitter, const SceneObject &scene_object);
 
 #endif // GRAPH_SCENEOBJECT_H_

@@ -34,6 +34,16 @@ Matrix4 &Matrix4::operator =(const Matrix4 &other) {
   return *this;
 }
 
+Matrix4 Matrix4::Transpose() {
+  Matrix4 matrix;
+  for (size_t i = 0; i < kMatrixHeight; ++i) {
+    for (size_t j = 0; j < kMatrixWidth; ++j) {
+      matrix.matrix_[j * kMatrixWidth + i] = matrix_[i * kMatrixWidth + j];
+    }
+  }
+  return matrix;
+}
+
 Matrix4 Matrix4::Translate(myfloat x, myfloat y, myfloat z) {
   Matrix4 matrix;
   matrix.at(0, 0) = 1;
@@ -113,7 +123,7 @@ Matrix4 Matrix4::LoadFromXTransformMatrix(xparse::XData *data) {
   for (size_t i = 0; i < kMatrixWidth * kMatrixHeight; ++i) {
     matrix.data()[i] = (*array)[i].float_value;
   }
-  return matrix;
+  return matrix.Transpose();
 }
 
 Matrix4 &Matrix4::operator +=(const Matrix4 &other) {

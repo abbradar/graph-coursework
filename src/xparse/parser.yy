@@ -159,10 +159,10 @@ x-file : tHeader data-list tEndOfFile {
 data-list : template-or-node | template-or-node data-list
 
 template-or-node : template {
-  driver->context()->templates().insert(pair<string, unique_ptr<XTemplate>>
+  driver->context()->templates().insert(pair<string, shared_ptr<XTemplate>>
     ($1->id, unique_ptr<XTemplate>($1)));
 } | data-node {
-  driver->context()->data_nodes().push_back(unique_ptr<XData>($1));
+  driver->context()->data_nodes().push_back(shared_ptr<XData>($1));
 }
 
 template : tTemplateKeyword tIdentifier '{' template-body '}' {
