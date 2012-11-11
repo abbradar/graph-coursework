@@ -11,7 +11,7 @@ namespace sdlobj {
 
 class SDL : public Singleton<SDL> {
  public:
-  void Init(Uint32 flags);
+  void Init(const Uint32 flags);
   void Free();
 
   void SetVideoMode(unsigned int width, unsigned int height);
@@ -59,7 +59,7 @@ class SDL : public Singleton<SDL> {
 
   SDL();
 
-  bool initialized_ = false;
+  bool initialized_;
   Surface surface_;
   std::unique_ptr<EventHandler> event_handler_ = std::unique_ptr<EventHandler>(new EventHandler());
 

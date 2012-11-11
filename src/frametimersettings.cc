@@ -1,5 +1,7 @@
 #include "frametimersettings.h"
 
+namespace settings {
+
 void operator >>(const YAML::Node &node, sdlobj::FrameTimer &frame_timer) {
   float fps;
   node["fps"] >> fps;
@@ -10,4 +12,6 @@ void operator >>(const YAML::Node &node, sdlobj::FrameTimer &frame_timer) {
   int measure_ticks;
   node["measure-ticks"] >> measure_ticks;
   frame_timer.set_measure_ticks(measure_ticks);
+}
+
 }

@@ -2,7 +2,6 @@
 #define GRAPH_INDEXEDTRIANGLE_H_
 
 #include <cstring>
-#include "xparse/xdata.h"
 
 struct IndexedTriangle {
   static constexpr size_t kPointsSize = 3;
@@ -12,8 +11,6 @@ struct IndexedTriangle {
   IndexedTriangle();
   IndexedTriangle(int v1, int v2, int v3);
   IndexedTriangle(int *points);
-
-  static IndexedTriangle LoadFromXMeshFace(const xparse::XDataValue::NodeData &data);
 
   inline void Set(int v1, int v2, int v3) {
     points[0] = v1;

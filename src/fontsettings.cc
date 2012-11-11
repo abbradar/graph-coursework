@@ -1,6 +1,10 @@
+#include <fstream>
 #include "fontsettings.h"
 
+using namespace std;
 using namespace sdlobj;
+
+namespace settings {
 
 void operator >>(const YAML::Node &node, Font &font) {
   std::string font_name;
@@ -10,5 +14,7 @@ void operator >>(const YAML::Node &node, Font &font) {
   int font_index;
   node["index"] >> font_index;
 
-  font = Font(font_name.data(), font_size, font_index);
+  font = Font(unique_ptr<istream>(new ifstream(font_name)), font_size, font_index);
+}
+
 }

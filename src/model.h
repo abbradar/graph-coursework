@@ -1,36 +1,34 @@
 #ifndef GRAPH_MODEL_H_
 #define GRAPH_MODEL_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <istream>
-#include <yaml-cpp/yaml.h>
-#include "xparse/xdata.h"
 #include "sdlobj/color.h"
 #include "point3d.h"
+#include "point2d.h"
+#include "material.h"
 #include "indexedtriangle.h"
 #include "matrix4.h"
 
-typedef std::vector<Point3D> PointVector;
+typedef std::vector<Point3D> Point3DVector;
+typedef std::vector<Point2D> Point2DVector;
 typedef std::vector<IndexedTriangle> TriangleVector;
+typedef std::vector<Material> MaterialVector;
+typedef std::vector<size_t> MaterialIndexVector;
 
 class Model {
  public:
   Model(const std::string &name);
-  Model(const std::string &name, const PointVector &points, const TriangleVector &polygons,
-        const PointVector &vertex_normals);
   ~Model();
-
-  static Model LoadFromFrame(const std::string &name, std::istream &in, const xparse::XFile &templates,
-                             const std::string &root_frame, const std::string &model_frame);
-  static Model LoadFromYaml(const YAML::Node &node, const xparse::XFile &templates);
 
   inline const std::string &name() const {
     return name_;
   }
 
   /** Points vector */
-  inline const PointVector &points() const {
+  inline const Point3DVector &points() const {
     return points_;
   }
 
@@ -38,28 +36,41 @@ class Model {
     return polygons_;
   }
 
-  void set_model(const PointVector &points, const TriangleVector &polygons,
-                 const PointVector &vertex_normals);
+  void set_model(const Point3DVector &points, const TriangleVector &polygons,
+                 const Point3DVector &vertex_normals, const MaterialVector &materials,
+                 const std::shared_ptr<MaterialIndexVector> &material_indexes);
 
-  inline const PointVector &vertex_normals() const {
+  inline const Point3DVector &vertex_normals() const {
     return vertex_normals_;
   }
 
-  inline const PointVector &polygon_normals() const {
+  inline const Point3DVector &polygon_normals() const {
     return polygon_normals_;
   }
 
-  inline sdlobj::Color &color() {
-    return color_;
+  inline const MaterialVector &materials() const {
+    return materials_;
   }
+
+  inline const std::shared_ptr<MaterialIndexVector> &material_indexes() const {
+    return material_indexes_;
+  }
+
+  inline const Point2DVector uv_coords() const {
+    return *uv_coords_;
+  }
+
+  void set_uv_coords(std::shared_ptr<Point2DVector> &uv_coords);
 
  private:
   std::string name_;
-  PointVector points_;
+  Point3DVector points_;
   TriangleVector polygons_;
-  PointVector vertex_normals_;
-  PointVector polygon_normals_;
-  sdlobj::Color color_;
+  Point3DVector vertex_normals_;
+  Point3DVector polygon_normals_;
+  std::shared_ptr<Point2DVector> uv_coords_;
+  MaterialVector materials_;
+  std::shared_ptr<MaterialIndexVector> material_indexes_;
 
   void ComputePolygonNormals();
 };

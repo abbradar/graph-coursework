@@ -59,7 +59,7 @@ SurfacePainter::SurfacePainter(Surface *surface) : SurfacePainter() {
 
 void SurfacePainter::set_surface(Surface *surface) {
   surface_ = surface;
-  surface_struct_ = (SDL_Surface *)surface->surface();
+  surface_struct_ = surface->surface();
   switch (surface_struct_->format->BytesPerPixel) {
    case 1:
     get_pixel_ = &GetPixel1;

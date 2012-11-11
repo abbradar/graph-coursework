@@ -5,7 +5,7 @@
 #include "common/exception.h"
 #include "interface.h"
 
-//#define NO_MOUSE_GRAB
+#define NO_MOUSE_GRAB
 
 using namespace sdlobj;
 using namespace std;

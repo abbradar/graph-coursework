@@ -14,8 +14,6 @@
 #include "scene.h"
 #include "models.h"
 
-class WindowSettings;
-
 class Window {
  public:
   Window(int width, int height, int bpp, int fps);
@@ -23,6 +21,7 @@ class Window {
   ~Window();
 
   static const Uint32 kSDLSubsystems;
+  static const Uint32 kSDLImageSubsystems;
 
   const char *caption();
   void set_caption(const char * name);
@@ -46,6 +45,12 @@ class Window {
 
   int show_fps_rate();
   void set_show_fps_rate(const int show_fps_rate);
+
+  inline const sdlobj::Surface &crosshair() {
+    return crosshair_;
+  }
+
+  void set_crosshair(const sdlobj::Surface &crosshair);
 
   int width();
   int height();
@@ -88,6 +93,7 @@ class Window {
   sdlobj::Font font_;
   sdlobj::Color font_color_;
   sdlobj::FrameTimer frame_timer_;
+  sdlobj::Surface crosshair_;
   WindowLogDestination *window_log_;
   Position *position_;
   Interface *interface_;
@@ -98,24 +104,6 @@ class Window {
   unsigned int fps_step_;
   bool show_fps_;
   myfloat projected_height_;
-};
-
-class WindowSettings : public SettingsBlock {
- public:
-  WindowSettings(Window *window);
-  virtual ~WindowSettings();
-
-  inline Window *window() {
-    return window_;
-  }
-
-  void set_window(Window *window);
-
-  virtual const std::string name();
-  virtual void operator <<(const YAML::Node &node);
- private:
-  static const char *const kName;
-  Window *window_;
 };
 
 #endif // GRAPH_COURSEWINDOW_H_

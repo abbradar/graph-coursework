@@ -4,6 +4,10 @@
 #include <yaml-cpp/yaml.h>
 #include "sdlobj/font.h"
 
+namespace settings {
+
 void operator >>(const YAML::Node &node, sdlobj::Font &font);
+
+}
 
 #endif // GRAPH_FONTSETTINGS_H_

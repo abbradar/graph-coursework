@@ -13,8 +13,6 @@ class SceneObject {
   SceneObject();
   SceneObject(const std::shared_ptr<Model> &model, const Position &position);
 
-  static SceneObject LoadFromYaml(const YAML::Node &node, const Models &models);
-
   /** Points vector */
   inline const std::shared_ptr<Model> &model() const {
     return model_;
@@ -22,11 +20,11 @@ class SceneObject {
 
   void set_model(const std::shared_ptr<Model> &model);
 
-  inline const PointVector &positioned_points() const {
+  inline const Point3DVector &positioned_points() const {
     return positioned_points_;
   }
 
-  inline const PointVector &positioned_polygon_normals() const {
+  inline const Point3DVector &positioned_polygon_normals() const {
     return positioned_polygon_normals_;
   }
 
@@ -38,13 +36,11 @@ class SceneObject {
 
  private:
   std::shared_ptr<Model> model_;
-  PointVector positioned_points_;
-  PointVector positioned_polygon_normals_;
+  Point3DVector positioned_points_;
+  Point3DVector positioned_polygon_normals_;
   Position position_;
 
   void UpdatePositioned();
 };
-
-void operator <<(YAML::Emitter &emitter, const SceneObject &scene_object);
 
 #endif // GRAPH_SCENEOBJECT_H_

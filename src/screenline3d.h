@@ -9,6 +9,18 @@ struct ScreenLine3D {
   ScreenLine3D();
   ScreenLine3D(const Point3D &a, const Point3D &b);
 
+  inline void Advance() {
+    ++y;
+    x += dx;
+    z += dz;
+  }
+
+  inline void Advance(int value) {
+    y += value;
+    x += dx * value;
+    z += dz * value;
+  }
+
   myfloat x;
   unsigned int y;
   myfloat z;

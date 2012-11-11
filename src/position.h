@@ -1,7 +1,6 @@
 #ifndef GRAPH_POSITION_H_
 #define GRAPH_POSITION_H_
 
-#include "yaml-cpp/yaml.h"
 #include "matrix4.h"
 #include "point3d.h"
 #include "myfloat.h"
@@ -22,15 +21,12 @@ struct Position {
   Position();
   Position(myfloat x, myfloat y, myfloat z, myfloat roll = 0, myfloat pitch = 0, myfloat yaw = 0);
 
-  Matrix4 GetMatrixFrom();
-  Matrix4 GetMatrixTo();
-  Matrix4 GetRotateMatrixFrom();
-  Matrix4 GetRotateMatrixTo();
-  Matrix4 GetTranslateMatrixFrom();
-  Matrix4 GetTranslateMatrixTo();
+  Matrix4 GetMatrixFrom() const;
+  Matrix4 GetMatrixTo() const;
+  Matrix4 GetRotateMatrixFrom() const;
+  Matrix4 GetRotateMatrixTo() const;
+  Matrix4 GetTranslateMatrixFrom() const;
+  Matrix4 GetTranslateMatrixTo() const;
 };
-
-void operator >>(const YAML::Node &node, Position &position);
-void operator <<(YAML::Emitter &emitter, const Position &position);
 
 #endif // GRAPH_POSITION_H_

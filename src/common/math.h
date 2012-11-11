@@ -85,4 +85,9 @@ template <class T> inline T QuadraticFunc(const T a, const T b, const T c, const
   return a * Sqr(x) + b * x + c;
 }
 
+template <class T> inline void WideBounds(const T value, T &min, T &max) {
+  if (min > value) min = value;
+  else if (max < value) max = value;
+}
+
 #endif // COMMON_MATH_H_

@@ -1,10 +1,6 @@
 #include <cstring>
 #include <cmath>
-#include "common/exception.h"
-#include "common/debug.h"
 #include "matrix4.h"
-
-using namespace xparse;
 
 const size_t Matrix4::kMatrixWidth = 4;
 const size_t Matrix4::kMatrixHeight = 4;
@@ -110,20 +106,6 @@ Matrix4 Matrix4::Identity() {
                                             0,0,1,0,
                                             0,0,0,1};
   return Matrix4(kIdentityMatrix);
-}
-
-Matrix4 Matrix4::LoadFromXTransformMatrix(xparse::XData *data) {
-  if (data->template_id != "FrameTransformMatrix") {
-    throw Exception("FrameTransformMatrix type expected.");
-  }
-  Matrix4 matrix;
-  XDataValue *matrix_node = (*data->data[0]->data().node_value)[0].get();
-  auto array = matrix_node->data().array_value;
-  Assert(array->size() == kMatrixWidth * kMatrixHeight);
-  for (size_t i = 0; i < kMatrixWidth * kMatrixHeight; ++i) {
-    matrix.data()[i] = (*array)[i].float_value;
-  }
-  return matrix.Transpose();
 }
 
 Matrix4 &Matrix4::operator +=(const Matrix4 &other) {

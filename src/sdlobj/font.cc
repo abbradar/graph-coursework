@@ -1,5 +1,6 @@
 #include "common/exception.h"
 #include "sdlttf.h"
+#include "rwops.h"
 #include "font.h"
 
 using namespace std;
@@ -14,8 +15,9 @@ Font::Font(const Font &other) : font_(other.font_), font_struct_(nullptr) {
   }
 }
 
-Font::Font(const char *file, const unsigned int ptsize, const long index) : font_(new FontWrapper()) {
-  font_->font = TTF_OpenFontIndex(file, ptsize, index);
+Font::Font(std::unique_ptr<istream> &&in, const unsigned int ptsize, const long index) : font_(new FontWrapper()) {
+  SDL_RWops *rwops = RWopsFromInputStream(forward<std::unique_ptr<istream>>(in));
+  font_->font = TTF_OpenFontIndexRW(rwops, 1, ptsize, index);
   if (!font_->font) {
     throw Exception(TTF_GetError());
   }

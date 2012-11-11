@@ -17,6 +17,7 @@ window:
   rasterizer:
     viewer-distance: 1000
   projected-height: 200
+  crosshair: textures/crosshair.png
 scene:
   plane-color: "#FFFFFF"
 models:

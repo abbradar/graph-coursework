@@ -33,6 +33,11 @@ Surface::~Surface() {
   }
 }
 
+SDL_Surface *Surface::surface() {
+  CopyOnWrite();
+  return surface_struct_;
+}
+
 Uint32 Surface::ColorToPixel(const Color &color) {
   return SDL_MapRGB(surface_struct_->format, color.r, color.g, color.b);
 }
@@ -46,6 +51,13 @@ Color Surface::PixelToColor(const Uint32 &pixel) {
 void Surface::set_surface(SDL_Surface *surface) {
   surface_->surface = surface;
   surface_struct_ = surface;
+}
+
+void Surface::CopyOnWrite() {
+  if (!surface_.unique()) {
+    set_surface(SDL_ConvertSurface(surface_struct_,surface_struct_->format,
+                                   surface_struct_->flags));
+  }
 }
 
 void Surface::Blit(const Surface &other, SDL_Rect &rect, short x, short y) {

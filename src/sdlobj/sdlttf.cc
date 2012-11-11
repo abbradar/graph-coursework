@@ -1,3 +1,4 @@
+#include <SDL_ttf.h>
 #include "common/logging.h"
 #include "common/exception.h"
 #include "sdlttf.h"
@@ -17,6 +18,10 @@ void SDLTTF::Init() {
 void SDLTTF::Free() {
   if (!initialized()) return;
   TTF_Quit();
+}
+
+bool SDLTTF::initialized() {
+  return TTF_WasInit() != 0;
 }
 
 SDLTTF::~SDLTTF() {

@@ -38,8 +38,12 @@ class XNestedData {
 
   XNestedData &operator =(const XNestedData &other);
 
-  inline Type type() {
+  inline Type type() const {
     return type_;
+  }
+
+  inline const Data &data() const {
+    return data_;
   }
 
   inline Data &data() {
@@ -78,12 +82,16 @@ class XDataValue {
 
   XDataValue &operator =(const XDataValue &other);
 
-  inline Type type() {
+  inline Type type() const {
     return type_;
   }
 
-  inline bool array_type() {
+  inline bool array_type() const {
     return array_type_;
+  }
+
+  inline const Data &data() const {
+    return data_;
   }
 
   inline Data &data() {

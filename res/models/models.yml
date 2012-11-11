@@ -1,4 +1,4 @@
 - name: Cone
   root-frame: Root
   model-frame: Cone
-  model: models/cone.x
+  model: cone.x

@@ -8,7 +8,7 @@ using namespace std;
 
 namespace sdlobj {
 
-void SDL::Init(Uint32 flags) {
+void SDL::Init(const Uint32 flags) {
   if (initialized()) return;
   if (SDL_Init(flags)) {
     throw Exception(SDL_GetError());
@@ -36,7 +36,7 @@ void SDL::SetVideoMode(unsigned int width, unsigned int height, unsigned int bpp
   }
 }
 
-SDL::SDL() : surface_(nullptr) {}
+SDL::SDL() : initialized_(false), surface_(nullptr) {}
 
 SDL::~SDL() {
   Free();

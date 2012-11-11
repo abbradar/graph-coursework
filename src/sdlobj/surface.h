@@ -24,9 +24,12 @@ public:
 
   ~Surface();
 
-  inline const SDL_Surface *const surface() {
+  inline const SDL_Surface *const surface() const {
     return surface_struct_;
   }
+
+  SDL_Surface *surface();
+
 
   inline unsigned int width() {
     return surface_struct_->w;
@@ -77,6 +80,7 @@ public:
   friend class SDL;
 
   void set_surface(SDL_Surface *surface);
+  void CopyOnWrite();
 
   std::shared_ptr<SurfaceWrapper> surface_;
   SDL_Surface *surface_struct_;

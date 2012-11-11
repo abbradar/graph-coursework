@@ -10,7 +10,8 @@ using namespace std;
 using namespace sdlobj;
 
 Rasterizer::Rasterizer() : scene_(nullptr), camera_(nullptr),
- surface_(nullptr), z_buffer_(0, 0), viewer_distance_(1), scale_(1) {
+ surface_(nullptr), trace_(false), z_buffer_(0, 0), viewer_distance_(1),
+ scale_(1) {
   set_scale(scale_);
 }
 
@@ -136,7 +137,8 @@ template<class T> bool ClipAll(IndexedTriangle *triangles, size_t &triangles_num
   return triangles_num == 1 && triangles[0].points[0] == -1;
 }
 
-void Rasterizer::DrawTriangle(const IndexedTriangle &source, const PointVector &points, const Color &color) {
+void Rasterizer::DrawTriangle(const IndexedTriangle &source, const Point3DVector &points,
+                              const Model &model, const Material &material) {
   IndexedTriangle polygons[kPolygonsSize];
   Point3D points_buf[POINTS_SIZE];
   polygons[0] = IndexedTriangle(0, 1, 2);
@@ -160,13 +162,13 @@ void Rasterizer::DrawTriangle(const IndexedTriangle &source, const PointVector &
   // filling
   for (size_t i = 0; i < polygons_size; ++i) {
     if (polygons[i].points[0] != -1)
-      FillTriangle(polygons[i], points_buf, color);
+      FillTriangle(polygons[i], points_buf, material);
   }
 }
 
-void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *points, const Color &color) {
+void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *points, const Material &material) {
   static_assert(IndexedTriangle::kPointsSize == 3, "Polygons (number of points != 3) is not supported");
-  Uint32 pixel = surface_->ColorToPixel(color);
+  Uint32 pixel = surface_->ColorToPixel(material.color());
 #ifdef WIREFRAME_MODEL
   surface_painter_.DrawLine(points[source.points[0]].x, points[source.points[0]].y,
       points[source.points[1]].x, points[source.points[1]].y, pixel);
@@ -192,12 +194,8 @@ void Rasterizer::FillTriangle(const IndexedTriangle &source, const Point3D *poin
     ScreenLine3D b(*points_ptr[1], *points_ptr[2]);
 #if DEBUG_LEVEL == 4
     FillLine(a.y, a.x, b.x, a.z, b.z, 0xFFFFFF);
-    a.x += a.dx;
-    a.z += a.dz;
-    b.x += b.dx;
-    b.z += b.dz;
-    ++a.y;
-    ++b.y;
+    a.Advance();
+    b.Advance();
 #endif
     FillLines(a, b, pixel, a.fy);
   } else {
@@ -237,14 +235,10 @@ void Rasterizer::FillLines(ScreenLine3D &a, ScreenLine3D &b, const Uint32 color,
     FillLine(y, a.x, b.x, a.z, b.z, color);
 
     // move line points
-    a.x += a.dx;
-    a.z += a.dz;
-    b.x += b.dx;
-    b.z += b.dz;
+    a.Advance();
+    b.Advance();
   }
   FillLine(y, a.x, b.x, a.z, b.z, color);
-  a.y = y;
-  b.y = y;
 }
 
 void Rasterizer::FillLine(const unsigned int y, const unsigned int ax, const unsigned int bx,
@@ -271,7 +265,7 @@ void Rasterizer::FillLine(const unsigned int y, const unsigned int ax, const uns
   }
 }
 
-void Rasterizer::Render() {
+void Rasterizer::FirstPass() {
   if (!(scene_ && camera_ && surface_)) throw Exception("Set scene, camera and surface");
 
   static const myfloat system_transform_m[] = {0, -1, 0, 0,
@@ -288,15 +282,37 @@ void Rasterizer::Render() {
   Point3D normal = camera_->GetRotateMatrixFrom() * camera_direction;
 #endif
 
-  z_buffer_.set_size(surface_->width(), surface_->height());
-  z_buffer_.Clear();
-  surface_painter_.StartDrawing();
+  CacheMap new_cache;
+
   for (auto &object : scene_->objects()) {
+    SceneObject *object_ptr = object.get();
+    CacheMap::iterator hit = new_cache.find(object_ptr);
+    if (hit == new_cache.end()) {
+      CacheMap::iterator old_hit = cache_.find(object_ptr);
+      if (old_hit != cache_.end()) {
+        std::unique_ptr<ObjectCache> ptr;
+        ptr.swap(old_hit->second);
+        hit = new_cache.insert(CacheMapPair(object_ptr, move(ptr))).first;
+      } else {
+        hit = new_cache.insert(CacheMapPair(object_ptr, unique_ptr<ObjectCache>(
+                                              new ObjectCache(object)))).first;
+      }
+    }
+    Point3DVector &points = hit->second->points;
+    TriangleVector &triangles = hit->second->triangles;
+    std::vector<bool> &point_flags = hit->second->point_flags;
+    std::vector<size_t> &material_indexes = hit->second->material_indexes;
     int o_size = object->positioned_points().size();
-    point_cache_.resize(o_size);
-    point_flag_cache_.assign(o_size, false);
-    triangle_cache_.clear();
-    triangle_cache_.reserve(object->model()->polygons().size() / 2);
+    points.resize(o_size);
+    point_flags.assign(o_size, false);
+    triangles.clear();
+    triangles.reserve(object->model()->polygons().size() / 2);
+    material_indexes.clear();
+    MaterialIndexVector::const_iterator m_i;
+    if (object->model()->material_indexes()) {
+      material_indexes.reserve(triangles.size());
+      m_i = object->model()->material_indexes()->begin();
+    }
 
     auto p_i = object->model()->polygons().begin();
     auto n_i = object->positioned_polygon_normals().begin();
@@ -305,17 +321,21 @@ void Rasterizer::Render() {
       if (Point3D::ScalarMul(normal, *n_i) <= 0) {
 #endif
         const IndexedTriangle &p = *p_i;
-        triangle_cache_.push_back(p);
+        triangles.push_back(p);
+        if (object->model()->material_indexes()) {
+          material_indexes.push_back(*m_i);
+          ++m_i;
+        }
         for (size_t i = 0; i < IndexedTriangle::kPointsSize; ++i) {
           int point = p.points[i];
-          if (!point_flag_cache_[point]) {
+          if (!point_flags[point]) {
             Point3D dest = transform * object->positioned_points()[point];
             myfloat k = viewer_distance_ / (viewer_distance_ + dest.z);
             // Perspective transformation
             dest.x = dest.x * k * scale_ + surface_->width() / 2.0;
             dest.y = dest.y * k * scale_ + surface_->height() / 2.0;
-            point_cache_[point] = move(dest);
-            point_flag_cache_[point] = true;
+            points[point] = move(dest);
+            point_flags[point] = true;
           }
         }
 #ifndef NO_NORMAL_FACE_CLIPPING
@@ -323,18 +343,46 @@ void Rasterizer::Render() {
 #endif
     }
 
-    for (const IndexedTriangle &pol : triangle_cache_) {
-      DrawTriangle(pol, point_cache_, object->model()->color());
+    if (trace_) {
+      int result = point_tracer_.TraceNext(triangles, points);
+      if (result != -1) {
+        traced_object_ = object;
+      }
+    }
+  }
+
+  cache_ = std::move(new_cache);
+}
+
+void Rasterizer::SecondPass() {
+  z_buffer_.set_size(surface_->width(), surface_->height());
+  z_buffer_.Clear();
+  if (trace_) {
+    point_tracer_.Reset();
+  }
+  surface_painter_.StartDrawing();
+  for (auto &object : cache_) {
+    std::shared_ptr<SceneObject> model = object.second->object.lock();
+    auto t_i = object.second->triangles.begin();
+    if (model->model()->material_indexes()) {
+      auto m_i = object.second->material_indexes.begin();
+      for (auto t_end = object.second->triangles.end(); t_i != t_end; ++t_i) {
+        DrawTriangle(*t_i, object.second->points, *model->model(), model->model()->materials()[*m_i]);
+      }
+    } else {
+      for (auto t_end = object.second->triangles.end(); t_i != t_end; ++t_i) {
+        DrawTriangle(*t_i, object.second->points, *model->model(), model->model()->materials()[0]);
+      }
     }
   }
   surface_painter_.FinishDrawing();
 }
 
-void Rasterizer::set_scene(Scene *scene) {
+void Rasterizer::set_scene(const Scene *scene) {
   scene_ = scene;
 }
 
-void Rasterizer::set_camera(Position *camera) {
+void Rasterizer::set_camera(const Position *camera) {
   camera_ = camera;
 }
 
@@ -352,7 +400,22 @@ void Rasterizer::set_scale(const myfloat scale) {
   scale_ = scale;
 }
 
-void Rasterizer::ClearCache() {
-  point_cache_.clear();
-  point_flag_cache_.clear();
+void Rasterizer::set_trace(const bool trace) {
+  trace_ = trace;
 }
+
+void Rasterizer::set_view_limit(const myfloat view_limit) {
+  view_limit_ = view_limit;
+}
+
+void Rasterizer::set_trace_point(const unsigned x, const unsigned y) {
+  point_tracer_.set_point(x, y);
+}
+
+void Rasterizer::ClearCache() {
+  cache_.clear();
+}
+
+
+Rasterizer::ObjectCache::ObjectCache(const std::weak_ptr<SceneObject> &object_)
+ : object(object_) {}

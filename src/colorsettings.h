@@ -4,6 +4,10 @@
 #include <yaml-cpp/yaml.h>
 #include "sdlobj/color.h"
 
+namespace settings {
+
 void operator >>(const YAML::Node &node, sdlobj::Color &color);
+
+}
 
 #endif // GRAPH_COLORSETTINGS_H_

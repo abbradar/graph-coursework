@@ -5,6 +5,7 @@
 #include "common/debug.h"
 #include "sdlobj/sdl.h"
 #include "sdlobj/sdlttf.h"
+#include "sdlobj/sdlimage.h"
 #include "window.h"
 #include "coursework.h"
 
@@ -29,6 +30,7 @@ int CourseWork::Run(int argc, const char **argv) {
 
   SDL::instance().Init(Window::kSDLSubsystems);
   SDLTTF::instance().Init();
+  SDLImage::instance().Init(Window::kSDLImageSubsystems);
 
   Window *window = new Window();
 

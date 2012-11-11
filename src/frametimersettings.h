@@ -4,6 +4,10 @@
 #include <yaml-cpp/node.h>
 #include "sdlobj/frametimer.h"
 
+namespace settings {
+
 void operator >>(const YAML::Node &node, sdlobj::FrameTimer &frame_timer);
+
+}
 
 #endif // GRAPH_FRAMETIMERSETTINGS_H_

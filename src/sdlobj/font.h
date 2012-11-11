@@ -1,6 +1,7 @@
 #ifndef SDLOBJ_FONT_H_
 #define SDLOBJ_FONT_H_
 
+#include <istream>
 #include <memory>
 #include <SDL_ttf.h>
 #include "surface.h"
@@ -12,7 +13,7 @@ class Font {
 public:
   Font();
 
-  Font(const char *file, const unsigned int ptsize, const long index = 0);
+  Font(std::unique_ptr<std::istream> &&in, const unsigned int ptsize, const long index = 0);
 
   Font(TTF_Font *font);
   Font(const Font &other);
