@@ -11,9 +11,6 @@
 #include "scenesettings.h"
 #include "window.h"
 
-// DEBUG
-#include <fstream>
-
 using namespace std;
 using namespace sdlobj;
 using namespace logging;
@@ -27,23 +24,34 @@ const Uint32 Window::kSDLSubsystems = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 const Uint32 Window::kSDLImageSubsystems = IMG_INIT_PNG;
 
 Window::Window(int width, int height, int bpp, int fps) :
- frame_timer_(fps), window_log_(new WindowLogDestination()),
- position_(new Position()), interface_(new Interface(fps)), scene_(new Scene()),
- models_(new Models()), fps_step_(1), show_fps_(true), projected_height_(1) {
-  Logger::instance().destinations().push_back(Logger::DestinationPointer(window_log_));
+ frame_timer_(fps), context_(new Context(this)),
+ log_control_destination_(new LogControlDestination()) {
+  logging::Logger::instance().destinations().push_back(log_control_destination_);
   settings_.AddBlock(std::shared_ptr<SettingsBlock>(new WindowSettings(this)));
-  settings_.AddBlock(std::shared_ptr<SettingsBlock>(new ModelsSettings(models_)));
-  settings_.AddBlock(std::shared_ptr<SettingsBlock>(new SceneSettings(scene_)));
-  interface_->set_position(position_);
+  settings_.AddBlock(std::shared_ptr<SettingsBlock>(new ModelsSettings(&context_->models)));
   frame_timer_.set_measure_fps(true);
 
-  SDL::instance().event_handler().reset(interface_);
-  rasterizer_.set_camera(position_);
-  rasterizer_.set_scene(scene_);
-  rasterizer_.set_trace(true);
   set_fps(fps);
 
   SetVideoMode(width, height, bpp);
+
+  fps_label_ = make_shared<FPSLabel>(context_);
+  rasterizer_ = make_shared<Rasterizer>(context_);
+  position_handler_ = make_shared<PositionHandler>(context_);
+  log_control_ = make_shared<LogControl>();
+  position_label_ = make_shared<PositionLabel>(context_);
+  pointer_drawer_ = make_shared<PointerDrawer>(context_);
+  mouse_position_label_ = make_shared<MousePositionLabel>(context_);
+
+  log_control_destination_->set_log_control(log_control_);
+
+  RegisterWorker(static_pointer_cast<ConveyorWorker>(log_control_));
+  RegisterWorker(static_pointer_cast<ConveyorWorker>(fps_label_));
+  RegisterWorker(static_pointer_cast<ConveyorWorker>(position_handler_));
+  RegisterWorker(static_pointer_cast<ConveyorWorker>(rasterizer_));
+  RegisterWorker(static_pointer_cast<ConveyorWorker>(position_label_));
+  RegisterWorker(static_pointer_cast<ConveyorWorker>(pointer_drawer_));
+  RegisterWorker(static_pointer_cast<ConveyorWorker>(mouse_position_label_));
 }
 
 Window::Window() : Window(640, 480, 32, 60) {}
@@ -51,15 +59,184 @@ Window::Window() : Window(640, 480, 32, 60) {}
 Window::~Window() {
   for (auto i = Logger::instance().destinations().begin();
        i != Logger::instance().destinations().end(); ++i) {
-    if (i->get() == window_log_) {
+    if (*i == log_control_destination_) {
       Logger::instance().destinations().erase(i);
       break;
     }
   }
-  delete scene_;
-  delete models_;
-  delete interface_;
-  delete position_;
+}
+
+struct ActiveCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessActive(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessActive(const SDL_ActiveEvent &event) {
+  ProcessEvent<SDL_ActiveEvent, ActiveCaller>(event);
+}
+
+struct KeyDownCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessKeyDown(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessKeyDown(const SDL_KeyboardEvent &event) {
+  ProcessEvent<SDL_KeyboardEvent, KeyDownCaller>(event);
+}
+
+struct KeyUpCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessKeyUp(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessKeyUp(const SDL_KeyboardEvent &event) {
+  ProcessEvent<SDL_KeyboardEvent, KeyUpCaller>(event);
+}
+
+struct MouseMotionCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessMouseMotion(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
+  cursor_x_ = event.x;
+  cursor_y_ = event.y;
+  ProcessEvent<SDL_MouseMotionEvent, MouseMotionCaller>(event);
+}
+
+struct MouseButtonDownCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessMouseButtonDown(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessMouseButtonDown(const SDL_MouseButtonEvent &event) {
+  ProcessEvent<SDL_MouseButtonEvent, MouseButtonDownCaller>(event);
+}
+
+struct MouseButtonUpCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessMouseButtonUp(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessMouseButtonUp(const SDL_MouseButtonEvent &event) {
+  ProcessEvent<SDL_MouseButtonEvent, MouseButtonUpCaller>(event);
+}
+
+struct JoyAxisCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessJoyAxis(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessJoyAxis(const SDL_JoyAxisEvent &event) {
+  ProcessEvent<SDL_JoyAxisEvent, JoyAxisCaller>(event);
+}
+
+struct JoyBallCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessJoyBall(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessJoyBall(const SDL_JoyBallEvent &event) {
+  ProcessEvent<SDL_JoyBallEvent, JoyBallCaller>(event);
+}
+
+struct JoyHatCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessJoyHat(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessJoyHat(const SDL_JoyHatEvent &event) {
+  ProcessEvent<SDL_JoyHatEvent, JoyHatCaller>(event);
+}
+
+struct JoyButtonDownCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessJoyButtonDown(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessJoyButtonDown(const SDL_JoyButtonEvent &event) {
+  ProcessEvent<SDL_JoyButtonEvent, JoyButtonDownCaller>(event);
+}
+
+struct JoyButtonUpCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessJoyButtonUp(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessJoyButtonUp(const SDL_JoyButtonEvent &event) {
+  ProcessEvent<SDL_JoyButtonEvent, JoyButtonUpCaller>(event);
+}
+
+struct ResizeCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessResize(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessResize(const SDL_ResizeEvent &event) {
+  SetVideoMode(event.h, event.w, bpp());
+  ProcessEvent<SDL_ResizeEvent, ResizeCaller>(event);
+}
+
+struct ExposeCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessExpose(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessExpose(const SDL_ExposeEvent &event) {
+  ProcessEvent<SDL_ExposeEvent, ExposeCaller>(event);
+}
+
+struct QuitCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessQuit(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessQuit(const SDL_QuitEvent &event) {
+  ProcessEvent<SDL_QuitEvent, QuitCaller>(event);
+  LogDebug("Exit event received; exiting...");
+  exit(EXIT_SUCCESS);
+}
+
+struct UserCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessUser(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessUser(const SDL_UserEvent &event) {
+  ProcessEvent<SDL_UserEvent, UserCaller>(event);
+}
+
+struct SysWMCaller {
+  template <class... Args> static bool Call(EventWorker *receiver, Args &&... args) {
+    return receiver->ProcessSysWM(std::forward<Args>(args)...);
+  }
+};
+
+void Window::ProcessSysWM(const SDL_SysWMEvent &event) {
+  ProcessEvent<SDL_SysWMEvent, SysWMCaller>(event);
+}
+
+template<class Event, class Handler> void Window::ProcessEvent(const Event &event) {
+  for (auto &i: workers_) {
+    if (i->event_worker()) {
+      if (Handler::Call(i->event_worker(), event)) break;
+    }
+  }
 }
 
 const char *Window::caption() {
@@ -73,12 +250,26 @@ void Window::set_caption(const char * name) {
 
 void Window::set_font(const Font &font) {
   font_ = font;
-  window_log_->set_font(font_);
+  fps_label_->set_font(font_);
+  log_control_->set_font(font_);
+  position_label_->set_font(font_);
+  mouse_position_label_->set_font(font_);
 }
 
 void Window::set_font_color(const Color &font_color) {
   font_color_ = font_color;
-  window_log_->set_color(font_color_);
+  fps_label_->set_font_color(font_color_);
+  log_control_->set_font_color(font_color_);
+  position_label_->set_font_color(font_color_);
+  mouse_position_label_->set_font_color(font_color_);
+}
+
+void Window::set_back_color(const Color &back_color) {
+  back_color_ = back_color;
+  fps_label_->set_back_color(back_color_);
+  log_control_->set_back_color(back_color_);
+  position_label_->set_back_color(back_color_);
+  mouse_position_label_->set_back_color(back_color_);
 }
 
 float Window::fps() {
@@ -89,12 +280,16 @@ void Window::set_fps(float fps) {
   frame_timer_.set_fps(fps);
 }
 
+float Window::measured_fps() {
+  return frame_timer_.measured_fps();
+}
+
 bool Window::show_fps() {
-  return show_fps_;
+  return fps_label_->show();
 }
 
 void Window::set_show_fps(bool show_fps) {
-  show_fps_ = show_fps;
+  fps_label_->set_show(show_fps);
 }
 
 int Window::show_fps_rate() {
@@ -103,10 +298,23 @@ int Window::show_fps_rate() {
 
 void Window::set_show_fps_rate(int show_fps_rate) {
   frame_timer_.set_measure_ticks(show_fps_rate);
+  fps_label_->set_fps_step(show_fps_rate);
 }
 
-void Window::set_crosshair(const Surface &crosshair) {
-  crosshair_ = crosshair;
+bool Window::grab_input() {
+  return SDL::instance().grab_input();
+}
+
+void Window::set_grab_input(const bool grab_input) {
+  SDL::instance().set_grab_input(grab_input);
+}
+
+const sdlobj::Surface &Window::pointer() {
+  return pointer_drawer_->pointer();
+}
+
+void Window::set_pointer(const Surface &pointer) {
+  pointer_drawer_->set_pointer(pointer);
 }
 
 int Window::width() {
@@ -122,33 +330,35 @@ int Window::bpp() {
 }
 
 myfloat Window::viewer_distance() {
-  return rasterizer_.viewer_distance();
+  return rasterizer_->viewer_distance();
 }
 
 void Window::set_viewer_distance(const myfloat viewer_distance) {
-  rasterizer_.set_viewer_distance(viewer_distance);
+  rasterizer_->set_viewer_distance(viewer_distance);
 }
 
 myfloat Window::move_speed() {
-  return interface_->move_speed();
+  return position_handler_->move_speed();
 }
 
 void Window::set_move_speed(const myfloat move_speed) {
-  interface_->set_move_speed(move_speed);
+  position_handler_->set_move_speed(move_speed);
 }
 
 myfloat Window::rotation_speed() {
-  return interface_->rotation_speed();
+  return position_handler_->rotation_speed();
 }
 
 void Window::set_rotation_speed(const myfloat rotation_speed) {
-  interface_->set_rotation_speed(rotation_speed);
+  position_handler_->set_rotation_speed(rotation_speed);
 }
 
-void Window::set_projected_height(const myfloat projected_height) {
-  if (projected_height <= 0)
-    throw Exception("Projected height should be > 0");
-  projected_height_ = projected_height;
+myfloat Window::scale() {
+  return rasterizer_->scale();
+}
+
+void Window::set_scale(const myfloat scale) {
+  rasterizer_->set_scale(scale);
 }
 
 void Window::SetVideoMode(const int width, const int height, const int bpp) {
@@ -156,67 +366,44 @@ void Window::SetVideoMode(const int width, const int height, const int bpp) {
 }
 
 void Window::Run() {
-  // DEBUG
-  ifstream scene("scene.yml");
-  LoadScene(*scene_, scene, *models_);
-  scene.close();
-
-  Surface fps_r;
-  fps_step_ = 0;
-
   LogDebug("Starting event loop");
 
   while (frame_timer_.WaitFrame()) { // event loop
+    workers_.splice(workers_.begin(), new_workers_);
+    for (auto &i : remove_workers_) {
+      for (auto j = workers_.begin(); j != workers_.end(); ++j) {
+        if (j->get() == i) {
+          j = workers_.erase(j);
+        }
+      }
+    }
+    remove_workers_.clear();
+
     // This can produce situation when loop will work infinitely
     // when events will add up faster than be produced,
     // but this is bad anyway, so let's try to deal with them all.
     while (SDL::instance().PollEvent()); // this is explicit exit point (we can receive quit event here)
-    interface_->Step();
+
+    fps_label_->set_position(0, width() - fps_label_->preferred_width());
+
     Surface &screen = SDL::instance().surface();
-    screen.Fill(0x000000);
+    screen.Fill(screen.ColorToPixel(back_color_));
+    rasterizer_->Prepare();
 
-    rasterizer_.set_surface(&screen);
-    rasterizer_.set_scale(screen.height() / projected_height_);
-    rasterizer_.set_trace_point(screen.width() / 2, screen.height() / 2);
-    rasterizer_.FirstPass();
-    std::shared_ptr<SceneObject> traced = rasterizer_.traced_object().lock();
-    rasterizer_.SecondPass();
-
-    screen.Blit(crosshair_, (screen.width() - crosshair_.width()) / 2,
-                (screen.height() - crosshair_.height()) / 2);
-
-    Surface log = window_log_->Render();
-    screen.Blit(log, 2, 0);
-
-    // TODO make set_show_position and stuff
-    string position_str = (boost::format("Position: x: %1%, y: %2%, z: %3%, pitch: %4%, yaw: %5%")
-                  % position_->x % position_->y
-                  % position_->z % position_->pitch
-                  % position_->yaw).str();
-    Surface position_r = font_.RenderUTF8_Solid(position_str.data(), font_color_);
-    position_r.SetColorKey(0, 0);
-    screen.Blit(position_r, 2, screen.height() - font_.line_skip());
-
-    if (fps_step_ == 0) {
-      myfloat measured_fps = frame_timer_.measured_fps();
-      interface_->set_fps(measured_fps);
-      if (show_fps_) {
-        string fps_str = (boost::format("%.1f fps") % measured_fps).str();
-        fps_r = font_.RenderUTF8_Solid(fps_str.data(), font_color_);
+    for (auto &i: workers_) {
+      if (i->pre_render_worker()) {
+        i->pre_render_worker()->PreRenderStep();
       }
     }
-    ++fps_step_;
-    if (fps_step_ == frame_timer_.measure_ticks()) fps_step_ = 0;
-    if (show_fps_) {
-      screen.Blit(fps_r, screen.width() - fps_r.width() - 2,
-                  screen.height() - font_.line_skip());
+    for (auto i = workers_.rbegin(); i != workers_.rend(); ++i) {
+      if ((*i)->render_worker()) {
+        (*i)->render_worker()->Paint(screen);
+      }
     }
-
-    if (!interface_->grab_mouse()) {
-      string mouse_str = (boost::format("x: %1%, y: %2%") % interface_->x() % interface_->y()).str();
-      Surface mouse_r = font_.RenderUTF8_Solid(mouse_str.data(), font_color_);
-      screen.Blit(mouse_r, screen.width() - mouse_r.width() - 2,
-                  screen.height() - 2 * font_.line_skip());
+    for (auto &i: workers_) {
+      if (i->post_render_worker()) {
+        i->post_render_worker()->PostRenderStep();
+      }
     }
 
     SDL::instance().Flip();
@@ -225,10 +412,26 @@ void Window::Run() {
   AssertMsg(false, "Sudden exit from event loop!");
 }
 
+void Window::RegisterWorker(const std::shared_ptr<ConveyorWorker> &worker) {
+  new_workers_.push_front(worker);
+}
+
+void Window::UnregisterWorker(const ConveyorWorker *worker) {
+  remove_workers_.push_back(worker);
+}
+
 void Window::LoadSettings(istream &in) {
   settings_.LoadSettings(in);
 }
 
 void Window::SaveSettings(ostream &out) {
   settings_.SaveSettings(out);
+}
+
+bool Window::show_cursor() {
+  return SDL::instance().show_cursor();
+}
+
+void Window::set_show_cursor(const bool show_cursor) {
+  SDL::instance().set_show_cursor(show_cursor);
 }

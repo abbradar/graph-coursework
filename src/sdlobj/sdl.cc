@@ -36,7 +36,7 @@ void SDL::SetVideoMode(unsigned int width, unsigned int height, unsigned int bpp
   }
 }
 
-SDL::SDL() : initialized_(false), surface_(nullptr) {}
+SDL::SDL() : initialized_(false), surface_(nullptr), event_handler_(make_shared<EventHandler>()) {}
 
 SDL::~SDL() {
   Free();

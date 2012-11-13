@@ -12,25 +12,17 @@ Model::Model(const string &name) : name_(name) {}
 Model::~Model() = default;
 
 void Model::set_model(const Point3DVector &points, const TriangleVector &polygons,
-                      const Point3DVector &vertex_normals, const MaterialVector &materials,
-                      const std::shared_ptr<MaterialIndexVector> &material_indexes) {
+                      const Point3DVector &vertex_normals, const MaterialVector &materials) {
   if (points.size() != vertex_normals.size()) {
     throw Exception("Points and vertex normals numbers mismatch");
   }
-  if (material_indexes) {
-    if (polygons.size() != material_indexes->size()) {
-      throw Exception("Points and material indexes numbers mismatch");
-    }
-  } else {
-    if (materials.size() != 1) {
-      throw Exception("There should be only one Material if without indexes");
-    }
+  if (polygons.size() != materials.size()) {
+    throw Exception("Points and materials numbers mismatch");
   }
   points_ = points;
   polygons_ = polygons;
   vertex_normals_ = vertex_normals;
   materials_ = materials;
-  material_indexes_ = material_indexes;
   ComputePolygonNormals();
 }
 

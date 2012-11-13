@@ -8,7 +8,7 @@ namespace xparse {
 
 IndexedTriangle LoadFromMeshFace(const XDataValue::NodeData &data) {
   // this should be checked during .x template validation, so it's for debug only
-#if DEBUG_LEVEL == 4
+#if DEBUG_LEVEL >= 4
   if (data.empty()) {
     throw Exception("Invalid MeshFace data");
   }

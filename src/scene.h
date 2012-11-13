@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include "sdlobj/color.h"
+#include "position.h"
 #include "sceneobject.h"
 
 class Scene {
@@ -21,15 +22,13 @@ class Scene {
     return objects_;
   }
 
-  inline sdlobj::Color &plane_color() {
-    return plane_color_;
+  inline const std::shared_ptr<Position> &position() const {
+    return position_;
   }
-
-  void set_plane_color(const sdlobj::Color &plane_color);
 
  private:
   ObjectList objects_;
-  sdlobj::Color plane_color_;
+  std::shared_ptr<Position> position_;
 };
 
 #endif // GRAPH_SCENE_H_

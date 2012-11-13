@@ -22,6 +22,8 @@ public:
           const Uint32 Rmask, const Uint32 Gmask, const Uint32 Bmask, const Uint32 Amask);
   Surface(const Surface &other);
 
+  Surface &operator =(const Surface &other);
+
   ~Surface();
 
   inline const SDL_Surface *const surface() const {
@@ -51,22 +53,26 @@ public:
     SDL_UnlockSurface(surface_struct_);
   }
 
-  void SetAlpha(Uint32 flags, Uint8 alpha);
+  bool SetAlpha(const Uint32 flags, const Uint8 alpha);
 
   /** Sets transparent pixel for the surface
    * @param flags set SDL_SRCCOLORKEY to enable transparent pixel, SDL_RLEAXXEL for RLE acceleration
    */
-  void SetColorKey(Uint32 flags, Uint32 key);
+  bool SetColorKey(const Uint32 flags, const Uint32 key);
 
-  void Blit(const Surface &other, SDL_Rect &rect, short x = 0, short y = 0);
-  void Blit(const Surface &other, short x = 0, short y = 0);
+  bool Blit(const Surface &other, const SDL_Rect &rect, const unsigned short x = 0, const unsigned short y = 0);
+  bool Blit(const Surface &other, const unsigned short o_x, const unsigned short o_y, const unsigned short o_w,
+            const unsigned short o_h, const unsigned short x = 0, const unsigned short y = 0);
+  bool Blit(const Surface &other, const unsigned short x = 0, const unsigned short y = 0);
 
-  void FillRect(SDL_Rect &dstrect, Uint32 pixel);
-  void Fill(Uint32 pixel);
+  bool FillRect(const SDL_Rect &dstrect, const Uint32 pixel);
+  bool FillRect(const unsigned short x, const unsigned short y, const unsigned short w,
+                const unsigned short h, const Uint32 pixel);
+  bool Fill(const Uint32 pixel);
 
   Uint32 ColorToPixel(const sdlobj::Color &color);
 
-  sdlobj::Color PixelToColor(const Uint32 &pixel);
+  sdlobj::Color PixelToColor(const Uint32 pixel);
 
  private:
   struct SurfaceWrapper {

@@ -15,8 +15,7 @@
 typedef std::vector<Point3D> Point3DVector;
 typedef std::vector<Point2D> Point2DVector;
 typedef std::vector<IndexedTriangle> TriangleVector;
-typedef std::vector<Material> MaterialVector;
-typedef std::vector<size_t> MaterialIndexVector;
+typedef std::vector<std::shared_ptr<Material>> MaterialVector;
 
 class Model {
  public:
@@ -37,8 +36,8 @@ class Model {
   }
 
   void set_model(const Point3DVector &points, const TriangleVector &polygons,
-                 const Point3DVector &vertex_normals, const MaterialVector &materials,
-                 const std::shared_ptr<MaterialIndexVector> &material_indexes);
+                 const Point3DVector &vertex_normals,
+                 const MaterialVector &material_indexes);
 
   inline const Point3DVector &vertex_normals() const {
     return vertex_normals_;
@@ -48,16 +47,12 @@ class Model {
     return polygon_normals_;
   }
 
-  inline const MaterialVector &materials() const {
+  inline MaterialVector &materials() {
     return materials_;
   }
 
-  inline const std::shared_ptr<MaterialIndexVector> &material_indexes() const {
-    return material_indexes_;
-  }
-
-  inline const Point2DVector uv_coords() const {
-    return *uv_coords_;
+  inline const std::shared_ptr<Point2DVector> &uv_coords() const {
+    return uv_coords_;
   }
 
   void set_uv_coords(std::shared_ptr<Point2DVector> &uv_coords);
@@ -68,9 +63,8 @@ class Model {
   TriangleVector polygons_;
   Point3DVector vertex_normals_;
   Point3DVector polygon_normals_;
-  std::shared_ptr<Point2DVector> uv_coords_;
   MaterialVector materials_;
-  std::shared_ptr<MaterialIndexVector> material_indexes_;
+  std::shared_ptr<Point2DVector> uv_coords_;
 
   void ComputePolygonNormals();
 };

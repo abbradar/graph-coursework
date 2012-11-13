@@ -29,10 +29,10 @@ void WindowSettings::operator <<(const YAML::Node &node) {
     Font font;
     node["font"] >> font;
     window_->set_font(font);
-    string crosshair_name;
-    node["crosshair"] >> crosshair_name;
-    Surface crosshair = SDLImage::Load(unique_ptr<istream>(new ifstream(crosshair_name)));
-    window_->set_crosshair(crosshair);
+    string pointer_name;
+    node["pointer"] >> pointer_name;
+    Surface pointer = SDLImage::Load(unique_ptr<istream>(new ifstream(pointer_name)));
+    window_->set_pointer(pointer);
     Color font_color;
     node["font"]["color"] >> font_color;
     window_->set_font_color(font_color);
@@ -46,9 +46,9 @@ void WindowSettings::operator <<(const YAML::Node &node) {
     int show_fps_rate;
     node["show-fps-rate"] >> show_fps_rate;
     window_->set_show_fps_rate(show_fps_rate);
-    myfloat projected_height;
-    node["projected-height"] >> projected_height;
-    window_->set_projected_height(projected_height);
+    myfloat scale;
+    node["scale"] >> scale;
+    window_->set_scale(scale);
   }
 
   {

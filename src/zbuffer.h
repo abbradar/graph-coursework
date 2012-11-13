@@ -2,6 +2,7 @@
 #define GRAPH_ZBUFFER_H_
 
 #include <cstring>
+#include "common/debug.h"
 #include "myfloat.h"
 
 class ZBuffer {
@@ -23,6 +24,9 @@ class ZBuffer {
   void Clear();
 
   inline bool Check(const unsigned int x, const unsigned int y, const myfloat z) {
+#if DEBUG_LEVEL >= 4
+    Assert(x < width_ && y < height_);
+#endif
     myfloat *p = z_buffer_ + y * width_ + x;
     if (*p < z) {
       return false;
@@ -32,7 +36,10 @@ class ZBuffer {
     }
   }
 
-  inline myfloat &at(const unsigned int x, const unsigned int y) {
+  inline myfloat &At(const unsigned int x, const unsigned int y) {
+#if DEBUG_LEVEL >= 4
+    Assert(x < width_ && y < height_);
+#endif
     return z_buffer_[y * width_ + x];
   }
 

@@ -8,7 +8,7 @@ namespace xparse {
 
 Point2D LoadFromCoords2D(const xparse::XDataValue::NodeData &data) {
   // this should be checked during .x template validation, so it's for debug only
-#if DEBUG_LEVEL == 4
+#if DEBUG_LEVEL >= 4
   if (data.size() != 2) {
     throw Exception("Invalid Coords2d data");
   }

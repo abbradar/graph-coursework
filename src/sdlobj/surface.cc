@@ -4,10 +4,12 @@ namespace sdlobj {
 
 Surface::Surface() : surface_(), surface_struct_(nullptr) {}
 Surface::Surface(SDL_Surface *surface) : surface_(new SurfaceWrapper(surface)), surface_struct_(surface_->surface) {}
-Surface::Surface(const Surface &other) : surface_(other.surface_), surface_struct_(nullptr) {
-  if (surface_) {
-    surface_struct_ = surface_->surface;
-  }
+Surface::Surface(const Surface &other) : surface_(other.surface_), surface_struct_(other.surface_struct_) {}
+
+Surface &Surface::operator =(const Surface &other) {
+  surface_ = other.surface_;
+  surface_struct_ = other.surface_struct_;
+  return *this;
 }
 
 Surface::Surface(const unsigned int width, const unsigned int height, const Uint32 flags, const unsigned int bpp,
@@ -42,7 +44,7 @@ Uint32 Surface::ColorToPixel(const Color &color) {
   return SDL_MapRGB(surface_struct_->format, color.r, color.g, color.b);
 }
 
-Color Surface::PixelToColor(const Uint32 &pixel) {
+Color Surface::PixelToColor(const Uint32 pixel) {
   Color a;
   SDL_GetRGB(pixel, surface_struct_->format, &a.r, &a.g, &a.b);
   return a;
@@ -60,30 +62,42 @@ void Surface::CopyOnWrite() {
   }
 }
 
-void Surface::Blit(const Surface &other, SDL_Rect &rect, short x, short y) {
-  SDL_Rect a = { .x = x, .y = y };
-  SDL_BlitSurface(other.surface_struct_, &rect, surface_struct_, &a);
+bool Surface::Blit(const Surface &other, const SDL_Rect &rect, const unsigned short x, const unsigned short y) {
+  SDL_Rect a = { .x = (short)x, .y = (short)y };
+  return SDL_BlitSurface(other.surface_struct_, (SDL_Rect *)&rect, surface_struct_, &a) == 0;
 }
 
-void Surface::Blit(const Surface &other, short x, short y) {
-  SDL_Rect a = { .x = x, .y = y };
-  SDL_BlitSurface(other.surface_struct_, nullptr, surface_struct_, &a);
+bool Surface::Blit(const Surface &other, const unsigned short o_x, const unsigned short o_y,
+                   const unsigned short o_w, const unsigned short o_h, const unsigned short x, const unsigned short y) {
+  SDL_Rect a = { .x = (short)o_x, .y = (short)o_y, .w = o_w, .h = o_h };
+  return Blit(other, a, x, y);
 }
 
-void Surface::FillRect(SDL_Rect &dstrect, Uint32 pixel) {
-  SDL_FillRect(surface_struct_, &dstrect, pixel);
+bool Surface::Blit(const Surface &other, const unsigned short x, const unsigned short y) {
+  SDL_Rect a = { .x = (short)x, .y = (short)y };
+  return SDL_BlitSurface(other.surface_struct_, nullptr, surface_struct_, &a) == 0;
 }
 
-void Surface::Fill(Uint32 pixel) {
-  SDL_FillRect(surface_struct_, nullptr, pixel);
+bool Surface::FillRect(const SDL_Rect &dstrect, const Uint32 pixel) {
+  return SDL_FillRect(surface_struct_, (SDL_Rect *)&dstrect, pixel) == 0;
 }
 
-void Surface::SetAlpha(Uint32 flags, Uint8 alpha) {
-  SDL_SetAlpha(surface_struct_, flags, alpha);
+bool Surface::FillRect(const unsigned short x, const unsigned short y, const unsigned short w,
+                       const unsigned short h, const Uint32 pixel) {
+  SDL_Rect a = { .x = (short)x, .y = (short)y, .w = w, .h = h };
+  return FillRect(a, pixel);
 }
 
-void Surface::SetColorKey(Uint32 flags, Uint32 key) {
-  SDL_SetColorKey(surface_struct_, flags, key);
+bool Surface::Fill(const Uint32 pixel) {
+  return SDL_FillRect(surface_struct_, nullptr, pixel) == 0;
+}
+
+bool Surface::SetAlpha(const Uint32 flags, const Uint8 alpha) {
+  return SDL_SetAlpha(surface_struct_, flags, alpha) == 0;
+}
+
+bool Surface::SetColorKey(const Uint32 flags, const Uint32 key) {
+  return SDL_SetColorKey(surface_struct_, flags, key) == 0;
 }
 
 Surface::SurfaceWrapper::SurfaceWrapper() : surface(nullptr) {}

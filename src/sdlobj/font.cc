@@ -9,10 +9,12 @@ namespace sdlobj {
 
 Font::Font() : font_(), font_struct_(nullptr) {}
 Font::Font(TTF_Font *font) : font_(new FontWrapper(font)), font_struct_(font_->font) {}
-Font::Font(const Font &other) : font_(other.font_), font_struct_(nullptr) {
-  if (font_) {
-    font_struct_ = font_->font;
-  }
+Font::Font(const Font &other) : font_(other.font_), font_struct_(other.font_struct_ ) {}
+
+Font &Font::operator =(const Font &other) {
+  font_ = other.font_;
+  font_struct_ = other.font_struct_;
+  return *this;
 }
 
 Font::Font(std::unique_ptr<istream> &&in, const unsigned int ptsize, const long index) : font_(new FontWrapper()) {
@@ -30,23 +32,41 @@ Font::~Font() {
   }
 }
 
-Surface Font::RenderUTF8_Solid(const char *text, Color fg) {
-  return Surface(TTF_RenderUTF8_Solid(font_struct_, text, fg));
+Surface Font::RenderUTF8_Solid(const char *text, Color fg) const {
+  SDL_Surface * surface = TTF_RenderUTF8_Solid(font_struct_, text, fg);
+  if (!surface) {
+    throw Exception(TTF_GetError());
+  }
+  return Surface(surface);
 }
 
-Surface Font::RenderUTF8_Shaded(const char *text, Color fg, Color bg) {
-  return Surface(TTF_RenderUTF8_Shaded(font_struct_, text, fg, bg));
+Surface Font::RenderUTF8_Shaded(const char *text, Color fg, Color bg) const {
+  SDL_Surface * surface = TTF_RenderUTF8_Shaded(font_struct_, text, fg, bg);
+  if (!surface) {
+    throw Exception(TTF_GetError());
+  }
+  return Surface(surface);
 }
 
-Surface Font::RenderUTF8_Blended(const char *text, Color fg) {
-  return Surface(TTF_RenderUTF8_Blended(font_struct_, text, fg));
+Surface Font::RenderUTF8_Blended(const char *text, Color fg) const {
+  SDL_Surface * surface = TTF_RenderUTF8_Blended(font_struct_, text, fg);
+  if (!surface) {
+    throw Exception(TTF_GetError());
+  }
+  return Surface(surface);
 }
 
-unsigned int Font::height() {
+void Font::SizeUTF8(const char *text, unsigned *w, unsigned *h) const {
+  if (TTF_SizeUTF8(font_struct_, text, (int *)w, (int *)h) != 0) {
+    throw Exception(TTF_GetError());
+  }
+}
+
+unsigned int Font::height() const {
   return TTF_FontHeight(font_struct_);
 }
 
-unsigned int Font::line_skip() {
+unsigned int Font::line_skip() const {
   return TTF_FontLineSkip(font_struct_);
 }
 

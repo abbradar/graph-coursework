@@ -36,7 +36,7 @@ class Logger : public Singleton<Logger> {
     virtual void WriteLog(const LogMessageLevel, const char *) = 0;
   };
 
-  typedef std::unique_ptr<LogDestination> DestinationPointer;
+  typedef std::shared_ptr<LogDestination> DestinationPointer;
   typedef std::vector<DestinationPointer> DestinationVector;
   typedef boost::posix_time::time_facet TimeFacet;
 

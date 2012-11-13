@@ -18,18 +18,21 @@ public:
   Font(TTF_Font *font);
   Font(const Font &other);
 
+  Font &operator =(const Font &other);
+
   ~Font();
 
   inline const TTF_Font *const font() {
     return font_struct_;
   }
 
-  Surface RenderUTF8_Solid(const char *text, sdlobj::Color fg);
-  Surface RenderUTF8_Shaded(const char *text, sdlobj::Color fg, sdlobj::Color bg);
-  Surface RenderUTF8_Blended(const char *text, sdlobj::Color fg);
+  Surface RenderUTF8_Solid(const char *text, sdlobj::Color fg) const;
+  Surface RenderUTF8_Shaded(const char *text, sdlobj::Color fg, sdlobj::Color bg) const;
+  Surface RenderUTF8_Blended(const char *text, sdlobj::Color fg) const;
+  void SizeUTF8(const char *text, unsigned *w, unsigned *h) const;
 
-  unsigned int height();
-  unsigned int line_skip();
+  unsigned int height() const;
+  unsigned int line_skip() const;
 
  private:
   struct FontWrapper {

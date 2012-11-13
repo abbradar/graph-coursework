@@ -18,7 +18,7 @@ endif()
 
 # Debug levels
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  add_definitions(-DDEBUG_LEVEL=4 -O0 -rdynamic)
+  add_definitions(-DDEBUG_LEVEL=3 -O0 -rdynamic)
 else()
   add_definitions(-DDEBUG_LEVEL=1 -O3)
 endif()

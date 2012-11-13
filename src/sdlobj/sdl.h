@@ -44,7 +44,7 @@ class SDL : public Singleton<SDL> {
 
   void set_icon(Surface &surface);
 
-  inline std::unique_ptr<EventHandler> &event_handler() {
+  inline std::shared_ptr<EventHandler> &event_handler() {
     return event_handler_;
   }
 
@@ -61,7 +61,7 @@ class SDL : public Singleton<SDL> {
 
   bool initialized_;
   Surface surface_;
-  std::unique_ptr<EventHandler> event_handler_ = std::unique_ptr<EventHandler>(new EventHandler());
+  std::shared_ptr<EventHandler> event_handler_;
 
   void ProcessEvent(const SDL_Event &event);
 };

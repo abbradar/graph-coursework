@@ -7,7 +7,7 @@ namespace xparse {
 
 string QuotedToString(const char *str, size_t size) {
   stringstream ss;
-  for (size_t i = 1; i < size - 1;) {
+  for (size_t i = 1; i < size - 1; ++i) {
     if (str[i] == '\\') {
       ++i;
       switch (str[i]) {

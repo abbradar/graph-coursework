@@ -22,7 +22,7 @@ CourseWork::~CourseWork() = default;
 
 int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().set_name(kProgramName);
-#if DEBUG_LEVEL == 4
+#if DEBUG_LEVEL >= 4
   Logger::instance().set_level(logging::kDebug);
 #else
   Logger::instance().set_level(logging::kWarning);

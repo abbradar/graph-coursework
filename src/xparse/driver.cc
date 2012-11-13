@@ -25,7 +25,7 @@ bool Driver::Parse(std::istream &in) {
   this->lexer = &lexer;
 
   Parser parser(this);
-#if DEBUG_LEVEL == 4
+#if DEBUG_LEVEL >= 4
   parser.set_debug_level(trace_parsing_);
 #endif
   error_ = false;

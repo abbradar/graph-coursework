@@ -14,7 +14,7 @@ namespace xparse {
 
 Material LoadFromMaterial(const XData *data) {
   // this should be checked during .x template validation, so it's for debug only
-#if DEBUG_LEVEL == 4
+#if DEBUG_LEVEL >= 4
   if (data->template_id != "Material") {
     throw Exception("Invalid Material node");
   }

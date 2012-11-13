@@ -13,5 +13,6 @@ CMakeLists\.txt\.user.*
 CMakeCache\.txt$
 Makefile$
 CMakeFiles$
+CTestTestfile\.cmake$
 cmake_install\.cmake$
 ^build/build$

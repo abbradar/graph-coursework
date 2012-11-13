@@ -123,26 +123,31 @@ Model LoadModel(istream &in, const string &name, const XFile &templates,
   if (!material_list) throw Exception("MeshMaterialList not found");
 
   MaterialVector materials;
-  shared_ptr<MaterialIndexVector> material_indexes;
   materials.reserve(material_list->data[0]->data().int_value);
-  size_t mindexes_size = material_list->data[1]->data().int_value;
-  if (mindexes_size >= triangles.size()) {
-    material_indexes = make_shared<MaterialIndexVector>();
-    for (auto &material : *(material_list->data[2]->data().array_value)) {
-      material_indexes->push_back(material.int_value);
-    }
-  }
-
   for (auto &materials_i : material_list->nested_data) {
     Assert(materials_i.type() == XNestedData::kNode);
     XData *material = materials_i.data().node;
     if (material->template_id == "Material") {
-      materials.push_back(LoadFromMaterial(material));
+      materials.push_back(make_shared<Material>(LoadFromMaterial(material)));
+    }
+  }
+  if (materials.size() == 0) throw Exception("Material not found");
+
+  MaterialVector material_indexes;
+  material_indexes.reserve(triangles.size());
+  size_t mi_size = material_list->data[1]->data().int_value;
+  if (mi_size < triangles.size()) {
+    for (size_t i = 0; i < triangles.size(); ++i) {
+      material_indexes.push_back(materials[0]);
+    }
+  } else {
+    for (auto &material : *(material_list->data[2]->data().array_value)) {
+      material_indexes.push_back(materials[material.int_value]);
     }
   }
 
   Model object = Model(name);
-  object.set_model(points, triangles, normal_points, materials, material_indexes);
+  object.set_model(points, triangles, normal_points, material_indexes);
 
   XData *texture_coords = nullptr;
   for (auto &uv_i : mesh->nested_data) {

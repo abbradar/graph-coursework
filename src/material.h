@@ -8,6 +8,7 @@
 class Material {
  public:
   Material();
+  Material(const Material &other);
 
   inline const sdlobj::Color &color() const {
     return color_;
