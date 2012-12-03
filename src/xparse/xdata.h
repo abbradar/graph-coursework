@@ -10,7 +10,7 @@
 namespace xparse {
 
 class XFile;
-class XTemplate;
+struct XTemplate;
 struct XData;
 
 struct XDataReference {

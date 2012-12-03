@@ -15,7 +15,7 @@ void LogControlDestination::set_log_control(const std::shared_ptr<LogControl> &l
 
 void LogControlDestination::WriteLog(const logging::LogMessageLevel level, const char *line) {
   if (log_control_) {
-    string str = (boost::format("({1}) {2}") % LevelName(level)[0] % line).str();
+    string str = (boost::format("[%1%] %2%") % LevelName(level)[0] % line).str();
     log_control_->AddItem(str);
   }
 }

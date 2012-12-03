@@ -44,6 +44,8 @@ class SDL : public Singleton<SDL> {
 
   void set_icon(Surface &surface);
 
+  void WarpMouse(const unsigned short x, const unsigned short y);
+
   inline std::shared_ptr<EventHandler> &event_handler() {
     return event_handler_;
   }

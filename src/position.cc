@@ -1,5 +1,7 @@
 #include "position.h"
 
+const Point3D Position::kCameraDirection = Point3D(1, 0, 0);
+
 Position::Position() : Position(0, 0, 0, 0, 0, 0) {}
 
 Position::Position(myfloat x_, myfloat y_, myfloat z_, myfloat roll_, myfloat pitch_, myfloat yaw_)
@@ -37,4 +39,8 @@ Matrix4 Position::GetTranslateMatrixFrom() const {
 
 Matrix4 Position::GetTranslateMatrixTo() const {
   return Matrix4::Translate(-x, -y, -z);
+}
+
+Point3D Position::GetPoint3D() const {
+  return Point3D(x, y, z);
 }

@@ -38,7 +38,7 @@ unsigned LogControl::preferred_width() {
 }
 
 unsigned LogControl::preferred_height() {
-  return font_.line_skip() * max_items();
+  return font().line_skip() * max_items();
 }
 
 void LogControl::ClearRendered() {
@@ -50,21 +50,24 @@ void LogControl::ClearRendered() {
 }
 
 void LogControl::Repaint(sdlobj::Surface &surface) {
-  Uint32 back_p = surface.ColorToPixel(back_color_);
+  Uint32 back_p = surface.ColorToPixel(back_color());
   surface.Fill(back_p);
   unsigned curr_y = 0;
-  unsigned line_skip = font_.line_skip();
+  unsigned line_skip = font().line_skip();
   for (auto i = buffer_.rbegin(); i != buffer_.rend(); ++i) {
     if (!i->surface) {
-      i->surface = new Surface(font_.RenderUTF8_Blended(i->message.data(), font_color_));
+      i->surface = new Surface(font().RenderUTF8_Blended(i->message.data(), font_color()));
     }
     surface.Blit(*i->surface, 0, curr_y);
     curr_y += line_skip;
   }
 }
 
-LogControl::LogMessage::LogMessage(const std::string &message_) : message(message_) {}
+LogControl::LogMessage::LogMessage(const std::string &message_) : message(message_),
+  surface(nullptr) {}
 
 LogControl::LogMessage::~LogMessage() {
-  delete surface;
+  if (surface) {
+    delete surface;
+  }
 }

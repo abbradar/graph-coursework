@@ -18,7 +18,7 @@ endif()
 
 # Debug levels
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  add_definitions(-DDEBUG_LEVEL=3 -O0 -rdynamic)
+  add_definitions(-DDEBUG_LEVEL=3 -O0)
 else()
   add_definitions(-DDEBUG_LEVEL=1 -O3)
 endif()
@@ -34,8 +34,11 @@ find_package(Boost REQUIRED COMPONENTS system filesystem)
 include_directories(${Boost_INCLUDE_DIR})
 find_package(YamlCpp REQUIRED)
 include_directories(${YAMLCPP_INCLUDE_DIR})
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 
-link_libraries(${SDL_LIBRARY} ${SDLIMAGE_LIBRARY} ${SDLTTF_LIBRARY} ${Boost_LIBRARIES} ${YAMLCPP_LIBRARY})
+link_libraries(${SDL_LIBRARY} ${SDLIMAGE_LIBRARY} ${SDLTTF_LIBRARY}
+  ${Boost_LIBRARIES} ${YAMLCPP_LIBRARY} ${EIGEN3_LIBRARY})
 
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)

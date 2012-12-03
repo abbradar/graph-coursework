@@ -33,15 +33,15 @@ public:
   SDL_Surface *surface();
 
 
-  inline unsigned int width() {
+  inline unsigned int width() const {
     return surface_struct_->w;
   }
 
-  inline unsigned int height() {
+  inline unsigned int height() const {
     return surface_struct_->h;
   }
 
-  inline unsigned int bpp() {
+  inline unsigned int bpp() const {
     return surface_struct_->format->BitsPerPixel;
   }
 
@@ -70,9 +70,9 @@ public:
                 const unsigned short h, const Uint32 pixel);
   bool Fill(const Uint32 pixel);
 
-  Uint32 ColorToPixel(const sdlobj::Color &color);
+  Uint32 ColorToPixel(const sdlobj::Color &color) const;
 
-  sdlobj::Color PixelToColor(const Uint32 pixel);
+  sdlobj::Color PixelToColor(const Uint32 pixel) const;
 
  private:
   struct SurfaceWrapper {

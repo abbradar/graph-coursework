@@ -11,6 +11,8 @@
 #include "scenesettings.h"
 #include "window.h"
 
+#define NO_GRAB_INPUT
+
 using namespace std;
 using namespace sdlobj;
 using namespace logging;
@@ -24,34 +26,39 @@ const Uint32 Window::kSDLSubsystems = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 const Uint32 Window::kSDLImageSubsystems = IMG_INIT_PNG;
 
 Window::Window(int width, int height, int bpp, int fps) :
- frame_timer_(fps), context_(new Context(this)),
- log_control_destination_(new LogControlDestination()) {
+ cursor_x_(0), cursor_y_(0), grab_input_(false), frame_timer_(fps),
+ context_(new Context(this)), log_control_destination_(new LogControlDestination()) {
   logging::Logger::instance().destinations().push_back(log_control_destination_);
   settings_.AddBlock(std::shared_ptr<SettingsBlock>(new WindowSettings(this)));
   settings_.AddBlock(std::shared_ptr<SettingsBlock>(new ModelsSettings(&context_->models)));
   frame_timer_.set_measure_fps(true);
 
   set_fps(fps);
-
   SetVideoMode(width, height, bpp);
 
   fps_label_ = make_shared<FPSLabel>(context_);
   rasterizer_ = make_shared<Rasterizer>(context_);
+  context_tracer_ = make_shared<ContextTracer>(context_);
   position_handler_ = make_shared<PositionHandler>(context_);
   log_control_ = make_shared<LogControl>();
   position_label_ = make_shared<PositionLabel>(context_);
   pointer_drawer_ = make_shared<PointerDrawer>(context_);
   mouse_position_label_ = make_shared<MousePositionLabel>(context_);
 
+  log_control_->set_max_items(5);
   log_control_destination_->set_log_control(log_control_);
 
+  context_tracer_->material().set_color(sdlobj::Color(0, 255, 0));
+
+  RegisterWorker(static_pointer_cast<ConveyorWorker>(rasterizer_));
+  RegisterWorker(static_pointer_cast<ConveyorWorker>(context_tracer_));
   RegisterWorker(static_pointer_cast<ConveyorWorker>(log_control_));
   RegisterWorker(static_pointer_cast<ConveyorWorker>(fps_label_));
   RegisterWorker(static_pointer_cast<ConveyorWorker>(position_handler_));
-  RegisterWorker(static_pointer_cast<ConveyorWorker>(rasterizer_));
   RegisterWorker(static_pointer_cast<ConveyorWorker>(position_label_));
-  RegisterWorker(static_pointer_cast<ConveyorWorker>(pointer_drawer_));
   RegisterWorker(static_pointer_cast<ConveyorWorker>(mouse_position_label_));
+
+  SDL::instance().set_show_cursor(false);
 }
 
 Window::Window() : Window(640, 480, 32, 60) {}
@@ -103,8 +110,10 @@ struct MouseMotionCaller {
 };
 
 void Window::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
-  cursor_x_ = event.x;
-  cursor_y_ = event.y;
+  if (!grab_input_) {
+    cursor_x_ = event.x;
+    cursor_y_ = event.y;
+  }
   ProcessEvent<SDL_MouseMotionEvent, MouseMotionCaller>(event);
 }
 
@@ -185,7 +194,11 @@ struct ResizeCaller {
 };
 
 void Window::ProcessResize(const SDL_ResizeEvent &event) {
-  SetVideoMode(event.h, event.w, bpp());
+  SetVideoMode(event.w, event.h, bpp());
+  if (grab_input_) {
+    cursor_x_ = event.w / 2;
+    cursor_y_ = event.h / 2;
+  }
   ProcessEvent<SDL_ResizeEvent, ResizeCaller>(event);
 }
 
@@ -301,12 +314,19 @@ void Window::set_show_fps_rate(int show_fps_rate) {
   fps_label_->set_fps_step(show_fps_rate);
 }
 
-bool Window::grab_input() {
-  return SDL::instance().grab_input();
-}
-
 void Window::set_grab_input(const bool grab_input) {
-  SDL::instance().set_grab_input(grab_input);
+  if (grab_input != grab_input_) {
+    grab_input_ = grab_input;
+#ifndef NO_GRAB_INPUT
+    SDL::instance().set_grab_input(grab_input_);
+#endif
+    if (grab_input) {
+      cursor_x_ = width() / 2;
+      cursor_y_ = height() / 2;
+    } else {
+      SDL::instance().WarpMouse(cursor_x_, cursor_y_);
+    }
+  }
 }
 
 const sdlobj::Surface &Window::pointer() {
@@ -317,24 +337,16 @@ void Window::set_pointer(const Surface &pointer) {
   pointer_drawer_->set_pointer(pointer);
 }
 
-int Window::width() {
+unsigned Window::width() {
   return SDL::instance().surface().width();
 }
 
-int Window::height() {
+unsigned Window::height() {
   return SDL::instance().surface().height();
 }
 
-int Window::bpp() {
+unsigned Window::bpp() {
   return SDL::instance().surface().bpp();
-}
-
-myfloat Window::viewer_distance() {
-  return rasterizer_->viewer_distance();
-}
-
-void Window::set_viewer_distance(const myfloat viewer_distance) {
-  rasterizer_->set_viewer_distance(viewer_distance);
 }
 
 myfloat Window::move_speed() {
@@ -353,19 +365,19 @@ void Window::set_rotation_speed(const myfloat rotation_speed) {
   position_handler_->set_rotation_speed(rotation_speed);
 }
 
-myfloat Window::scale() {
-  return rasterizer_->scale();
-}
-
-void Window::set_scale(const myfloat scale) {
-  rasterizer_->set_scale(scale);
-}
-
 void Window::SetVideoMode(const int width, const int height, const int bpp) {
   SDL::instance().SetVideoMode(width, height, bpp, kVideoModeFlags);
 }
 
+// DEBUG
+#include <fstream>
+
 void Window::Run() {
+  // DEBUG
+  ifstream fs("scene.yml");
+  LoadScene(context_->scene, fs, context_->models);
+  fs.close();
+
   LogDebug("Starting event loop");
 
   while (frame_timer_.WaitFrame()) { // event loop
@@ -383,23 +395,34 @@ void Window::Run() {
     // when events will add up faster than be produced,
     // but this is bad anyway, so let's try to deal with them all.
     while (SDL::instance().PollEvent()); // this is explicit exit point (we can receive quit event here)
-
-    fps_label_->set_position(0, width() - fps_label_->preferred_width());
+    for (auto &i: workers_) {
+      if (i->event_worker()) {
+        i->event_worker()->EventStep();
+      }
+    }
 
     Surface &screen = SDL::instance().surface();
     screen.Fill(screen.ColorToPixel(back_color_));
-    rasterizer_->Prepare();
 
-    for (auto &i: workers_) {
-      if (i->pre_render_worker()) {
-        i->pre_render_worker()->PreRenderStep();
+    fps_label_->set_position(width() - fps_label_->preferred_width(), 0);
+    position_label_->set_position(0, height() - position_label_->preferred_height());
+    mouse_position_label_->set_position(width() - mouse_position_label_->preferred_width(),
+                                        height() - mouse_position_label_->preferred_height());
+    log_control_->set_size(width(), log_control_->preferred_height());
+
+    for (auto i = workers_.rbegin(); i != workers_.rend(); ++i) {
+      if ((*i)->pre_render_worker()) {
+        (*i)->pre_render_worker()->PreRenderStep();
       }
     }
     for (auto i = workers_.rbegin(); i != workers_.rend(); ++i) {
       if ((*i)->render_worker()) {
-        (*i)->render_worker()->Paint(screen);
+        if ((*i)->render_worker()->show()) {
+          (*i)->render_worker()->Paint(screen);
+        }
       }
     }
+    pointer_drawer_->Paint(screen);
     for (auto &i: workers_) {
       if (i->post_render_worker()) {
         i->post_render_worker()->PostRenderStep();

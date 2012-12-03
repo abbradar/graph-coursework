@@ -20,7 +20,7 @@
 // end paste
 
 template <class T> inline char Sign(const T val) {
-    return (char)((T(0) < val) - (val < T(0)));
+  return (char)((T(0) < val) - (val < T(0)));
 }
 
 template <class T> T Trim(const T val, const T min, const T max) {
@@ -87,7 +87,11 @@ template <class T> inline T QuadraticFunc(const T a, const T b, const T c, const
 
 template <class T> inline void WideBounds(const T value, T &min, T &max) {
   if (min > value) min = value;
-  else if (max < value) max = value;
+  if (max < value) max = value;
+}
+
+template <class T> inline bool InBounds(const T value, const T min, const T max) {
+  return value >= min && value <= max;
 }
 
 #endif // COMMON_MATH_H_

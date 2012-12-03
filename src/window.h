@@ -13,6 +13,7 @@
 #include "context.h"
 #include "conveyorworker.h"
 #include "rasterizer.h"
+#include "contexttracer.h"
 #include "fpslabel.h"
 #include "logcontroldestination.h"
 #include "pointerdrawer.h"
@@ -25,6 +26,7 @@ class MousePositionLabel;
 class PositionHandler;
 class PointerDrawer;
 class Rasterizer;
+class ContextTracer;
 class FPSLabel;
 
 class Window : public sdlobj::EventHandler {
@@ -85,15 +87,22 @@ class Window : public sdlobj::EventHandler {
   int show_fps_rate();
   void set_show_fps_rate(const int show_fps_rate);
 
-  bool grab_input();
+  inline bool grab_input() {
+    return grab_input_;
+  }
+
+  inline const std::shared_ptr<Context> &context() const {
+    return context_;
+  }
+
   void set_grab_input(const bool grab_input);
 
   bool show_cursor();
   void set_show_cursor(const bool show_cursor);
 
-  int width();
-  int height();
-  int bpp();
+  unsigned width();
+  unsigned height();
+  unsigned bpp();
 
   inline unsigned cursor_x() {
     return cursor_x_;
@@ -103,21 +112,14 @@ class Window : public sdlobj::EventHandler {
     return cursor_y_;
   }
 
-  myfloat viewer_distance();
-  void set_viewer_distance(const myfloat viewer_distance);
-
   myfloat move_speed();
   void set_move_speed(const myfloat move_speed);
 
   myfloat rotation_speed();
   void set_rotation_speed(const myfloat rotation_speed);
 
-  myfloat scale();
-
   const sdlobj::Surface &pointer();
   void set_pointer(const sdlobj::Surface &pointer);
-
-  void set_scale(const myfloat scale);
 
   void SetVideoMode(const int width, const int height, const int bpp);
 
@@ -136,6 +138,7 @@ class Window : public sdlobj::EventHandler {
 
   unsigned cursor_x_;
   unsigned cursor_y_;
+  bool grab_input_;
   sdlobj::Font font_;
   sdlobj::Color font_color_;
   sdlobj::Color back_color_;
@@ -143,6 +146,7 @@ class Window : public sdlobj::EventHandler {
   std::shared_ptr<Context> context_;
   std::shared_ptr<FPSLabel> fps_label_;
   std::shared_ptr<Rasterizer> rasterizer_;
+  std::shared_ptr<ContextTracer> context_tracer_;
   std::shared_ptr<PositionHandler> position_handler_;
   std::shared_ptr<LogControl> log_control_;
   std::shared_ptr<LogControlDestination> log_control_destination_;

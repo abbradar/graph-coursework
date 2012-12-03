@@ -13,10 +13,12 @@ void CachedDrawer::set_position(const unsigned x, const unsigned y) {
 }
 
 void CachedDrawer::set_size(const unsigned width, const unsigned height) {
-  width_ = width;
-  height_ = height;
-  surface_ = Surface(width_, height_);
-  Invalidate();
+  if (width_ != width || height_ != height) {
+    width_ = width;
+    height_ = height;
+    surface_ = Surface(width_, height_);
+    Invalidate();
+  }
 }
 
 unsigned CachedDrawer::preferred_width() {

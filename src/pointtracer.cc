@@ -1,9 +1,51 @@
 #include <limits>
 #include "common/math.h"
-#include "screenline3d.h"
+#include "triangletraverser.h"
 #include "pointtracer.h"
 
 using namespace std;
+
+template <class Integral = myfloat> class PointTraceTraverser : public Traversable<Integral>, virtual public ZTraversable<Integral> {
+ public:
+  typedef typename ZTraversable<Integral>::DataType DataType;
+  typedef typename ZTraversable<Integral>::HorizontalTraversable ZTraversableHorizontal;
+  typedef typename Traversable<Integral>::template HorizontalTraversable<myfloat> TraversableHorizontal;
+
+  class HorizontalTraversable : public TraversableHorizontal, virtual public ZTraversableHorizontal {
+   public:
+
+    inline HorizontalTraversable(const ScreenLine<Integral> &la, const PointTraceTraverser &a,
+                                 const ScreenLine<Integral> &lb, const PointTraceTraverser &b) :
+      ZTraversableHorizontal(la, a, lb, b) {}
+
+    virtual inline bool Process(myfloat *zp, const Integral, const Integral) {
+      if (this->z() < *zp && this->z() >= 0) {
+        *zp = this->z();
+        return true;
+      }
+      return false;
+    }
+
+    inline void Advance() {
+      ZTraversableHorizontal::Advance();
+    }
+
+    inline void Advance(const Integral value) {
+      ZTraversableHorizontal::Advance(value);
+    }
+  };
+
+  inline PointTraceTraverser(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) :
+    ZTraversable<Integral>(line, a, b) {}
+
+  inline void Advance() {
+    ZTraversable<Integral>::Advance();
+  }
+
+  inline void Advance(const Integral value) {
+    ZTraversable<Integral>::Advance(value);
+  }
+};
 
 PointTracer::PointTracer() : z_(std::numeric_limits<myfloat>::max()), x_(-1), y_(-1) {}
 
@@ -11,72 +53,15 @@ void PointTracer::Reset() {
   z_ = std::numeric_limits<myfloat>::max();
 }
 
-int PointTracer::TraceNext(const TriangleVector &triangles, const Point3DVector &points) {
-  int result = -1;
-  for (size_t triangle_i = 0; triangle_i < triangles.size(); ++triangle_i) {
-    const IndexedTriangle &triangle = triangles[triangle_i];
-    const Point3D *points_ptr[IndexedTriangle::kPointsSize];
-    for (size_t i = 0; i < IndexedTriangle::kPointsSize; ++i) {
-      points_ptr[i] = &points[triangle.points[i]];
-    }
-    // sort them
-    for (size_t i = IndexedTriangle::kPointsSize - 1; i > 0; --i) {
-      for (size_t j = 0; j < i; ++j) {
-        if (points_ptr[j]->y > points_ptr[j + 1]->y) swap(points_ptr[j], points_ptr[j + 1]);
-      }
-    }
-    // find x edges
-    myfloat xmin = std::numeric_limits<myfloat>::max(),
-            xmax = -std::numeric_limits<myfloat>::max();
-    for (size_t i = IndexedTriangle::kPointsSize - 1; i > 0; --i) {
-      WideBounds(points_ptr[i]->x, xmin, xmax);
-    }
-    // clip by triangle bounds
-    if (x_ < xmin || x_ > xmax || y_ < points_ptr[0]->y
-        || y_ > points_ptr[2]->y) continue;
-
-    if ((unsigned)points_ptr[0]->y == (unsigned)points_ptr[1]->y) {
-      if (points_ptr[0]->x > points_ptr[1]->x) swap(points_ptr[0], points_ptr[1]);
-      ScreenLine3D a = ScreenLine3D(*points_ptr[0], *points_ptr[2]);
-      ScreenLine3D b = ScreenLine3D(*points_ptr[1], *points_ptr[2]);
-      if (TraceLines(a, b)) return result;
-    } else {
-      ScreenLine3D big(*points_ptr[0], *points_ptr[2]);
-      ScreenLine3D small1(*points_ptr[0], *points_ptr[1]);
-      if (big.dx <= small1.dx) {
-        if (y_ <= small1.fy) {
-          if (TraceLines(big, small1)) result = triangle_i;
-        } else {
-          ScreenLine3D small2(*points_ptr[1], *points_ptr[2]);
-          if (TraceLines(big, small2)) result = triangle_i;
-        }
-      } else {
-        if (y_ <= small1.fy) {
-          if (TraceLines(small1, big)) result = triangle_i;
-        } else {
-          ScreenLine3D small2(*points_ptr[1], *points_ptr[2]);
-          if (TraceLines(small2, big)) result = triangle_i;
-        }
-      }
-    }
-  }
-  return result;
+bool PointTracer::TraceNext(const IndexedTriangle &triangle, const Point3DVector &points) {
+  return TriangleTraverser<PointTraceTraverser<>>::OnePoint(&z_, x_, y_,
+                                                   points[triangle.points[0]], points[triangle.points[0]].z,
+                                                   points[triangle.points[1]], points[triangle.points[1]].z,
+                                                   points[triangle.points[2]], points[triangle.points[2]].z);
 }
 
 void PointTracer::set_point(unsigned int x, unsigned int y) {
   x_ = x;
   y_ = y;
   Reset();
-}
-
-bool PointTracer::TraceLines(ScreenLine3D &a, ScreenLine3D &b) {
-  a.Advance(y_ - a.y);
-  b.Advance(y_ - b.y);
-  if (x_ < a.x || x_ > b.x) return false;
-  myfloat z = (b.z - a.z) / (b.x - a.x) * (x_ - a.x);
-  if (z < z_) {
-    z_ = z;
-    return true;
-  }
-  return false;
 }

@@ -4,9 +4,11 @@
 #include <vector>
 #include <string>
 #include "textcontrol.h"
+#include "eventworker.h"
 #include "cacheddrawer.h"
 
-class ListControl : public TextControl, public CachedDrawer {
+class ListControl : public TextControl, public CachedDrawer,
+  public EventWorker {
  public:
   enum Style {
     kSimple, kEnumerated
@@ -35,17 +37,19 @@ class ListControl : public TextControl, public CachedDrawer {
   unsigned preferred_height();
   unsigned preferred_width();
 
-  virtual void MouseButton(const SDL_MouseButtonEvent &event);
-
-  virtual void OnSelected();
+  virtual bool ProcessMouseMotion(const SDL_MouseMotionEvent &event);
+  virtual bool ProcessMouseButtonDown(const SDL_MouseButtonEvent &event);
 
  protected:
   virtual void Repaint(sdlobj::Surface &surface);
+
+  virtual void OnSelected();
 
  private:
   Style style_;
   std::vector<std::string> items_;
   int selected_;
+  int active_;
 };
 
 #endif // GRAPH_LISTCONTROL_H_

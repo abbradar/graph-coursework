@@ -40,11 +40,11 @@ SDL_Surface *Surface::surface() {
   return surface_struct_;
 }
 
-Uint32 Surface::ColorToPixel(const Color &color) {
+Uint32 Surface::ColorToPixel(const Color &color) const {
   return SDL_MapRGB(surface_struct_->format, color.r, color.g, color.b);
 }
 
-Color Surface::PixelToColor(const Uint32 pixel) {
+Color Surface::PixelToColor(const Uint32 pixel) const {
   Color a;
   SDL_GetRGB(pixel, surface_struct_->format, &a.r, &a.g, &a.b);
   return a;

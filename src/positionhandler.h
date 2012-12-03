@@ -4,7 +4,7 @@
 #include "context.h"
 #include "eventworker.h"
 
-class PositionHandler : public EventWorker, public ContextUser {
+class PositionHandler : public EventWorker, public PreRenderWorker, public ContextUser {
  public:
   PositionHandler(const std::shared_ptr<Context> &context);
 
@@ -14,6 +14,7 @@ class PositionHandler : public EventWorker, public ContextUser {
   virtual bool ProcessResize(const SDL_ResizeEvent &event);
 
   virtual void EventStep();
+  virtual void PreRenderStep();
 
   /** Speed of movement */
   inline myfloat move_speed() {
@@ -30,6 +31,11 @@ class PositionHandler : public EventWorker, public ContextUser {
   void set_rotation_speed(const myfloat rotation_speed);
 
  private:
+  enum PreRenderAction {
+    kNone = 0,
+    kTransform = 1
+  };
+
   struct MoveState {
     char forward = 0;
     char back = 0;
@@ -45,6 +51,8 @@ class PositionHandler : public EventWorker, public ContextUser {
   myfloat rotation_speed_;
   myfloat move_step_;
   myfloat rotation_k_;
+
+  int action_;
 
   MoveState move_state_;
 };

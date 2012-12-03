@@ -22,7 +22,7 @@ CourseWork::~CourseWork() = default;
 
 int CourseWork::Run(int argc, const char **argv) {
   Logger::instance().set_name(kProgramName);
-#if DEBUG_LEVEL >= 4
+#if DEBUG_LEVEL >= 3
   Logger::instance().set_level(logging::kDebug);
 #else
   Logger::instance().set_level(logging::kWarning);
@@ -32,20 +32,19 @@ int CourseWork::Run(int argc, const char **argv) {
   SDLTTF::instance().Init();
   SDLImage::instance().Init(Window::kSDLImageSubsystems);
 
-  Window *window = new Window();
+  shared_ptr<Window> window = make_shared<Window>();
 
   ifstream settings(kSettingsFileName);
   window->LoadSettings(settings);
   settings.close();
+  SDL::instance().event_handler() = window;
   LogNotice("Initialization complete");
 
   // we'll never return from this one
   window->Run();
+
   Assert(false);
-
-  delete window;
-
-  return EXIT_SUCCESS;
+  return EXIT_FAILURE;
 }
 
 void CourseWork::Terminate(int exit_code) noexcept {

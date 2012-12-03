@@ -1,7 +1,9 @@
+#include <sstream>
 #include "sdlobj/surfacepainter.h"
 #include "texteditcontrol.h"
 
 using namespace sdlobj;
+using namespace std;
 
 TextEditControl::TextEditControl() : cursor_(0) {}
 
@@ -11,6 +13,18 @@ void TextEditControl::set_cursor(const unsigned cursor) {
     else cursor_ = cursor;
     Invalidate();
   }
+}
+
+void TextEditControl::set_caption(const std::string &caption) {
+  caption_ = caption;
+  Invalidate();
+}
+
+unsigned TextEditControl::preferred_width() {
+  unsigned my_width = CachedLabelControl::preferred_width();
+  unsigned c_width;
+  font().SizeUTF8(caption_.data(), &c_width, 0);
+  return my_width + c_width;
 }
 
 void TextEditControl::OnEntered() {}
@@ -69,10 +83,18 @@ void TextEditControl::set_label(const std::string &label) {
 }
 
 void TextEditControl::Repaint(sdlobj::Surface &surface) {
-  Surface rendered = font().RenderUTF8_Blended(label().data(), font_color());
-  surface.Blit(rendered);
   unsigned cw;
-  font().SizeUTF8(label().substr(0, cursor_).data(), &cw, nullptr);
+  if (!caption_.empty()) {
+    stringstream str;
+    str << caption_ << ": " << label().substr(0, cursor_);
+    font().SizeUTF8(str.str().data(), &cw, nullptr);
+    str << label().substr(cursor_);
+    surface = font().RenderUTF8_Blended(str.str().data(), font_color());
+  } else {
+    font().SizeUTF8(label().substr(0, cursor_).data(), &cw, nullptr);
+    surface = font().RenderUTF8_Blended(label().data(), font_color());
+  }
+
   SurfacePainter painter(&surface);
   painter.StartDrawing();
   painter.DrawLine(cw, 0, cw, font().line_skip(), surface.ColorToPixel(font_color()));

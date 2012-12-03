@@ -8,7 +8,11 @@ using namespace std;
 namespace sdlobj {
 
 SurfacePainter::SurfacePainter() : surface_(nullptr), surface_struct_(nullptr),
- get_pixel_(nullptr), set_pixel_(nullptr) {}
+ drawing_(false), get_pixel_(nullptr), set_pixel_(nullptr) {}
+
+SurfacePainter::~SurfacePainter() {
+  if (drawing_) FinishDrawing();
+}
 
 void SetPixel1(Uint8 *p, const Uint32 pixel) {
   *p = pixel;

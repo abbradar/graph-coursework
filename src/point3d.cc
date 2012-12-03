@@ -1,9 +1,5 @@
+#include "common/math.h"
 #include "point3d.h"
-
-Point3D::Point3D() : Point3D(0, 0, 0, 1) {}
-
-Point3D::Point3D(myfloat x_, myfloat y_, myfloat z_, myfloat w_) :
-  x(x_), y(y_), z(z_), w(w_) {}
 
 Point3D &Point3D::operator +=(const Point3D &other) {
   x += other.x;
@@ -41,6 +37,14 @@ Point3D Point3D::VectorMul(const Point3D &a, const Point3D &b) {
 
 myfloat Point3D::ScalarMul(const Point3D &a, const Point3D &b) {
   return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+myfloat Point3D::Distance(const Point3D &a, const Point3D &b) {
+  return sqrt(DistanceSqr(a, b));
+}
+
+myfloat Point3D::DistanceSqr(const Point3D &a, const Point3D &b) {
+  return Sqr(a.x - b.x) + Sqr(a.y - b.y) + Sqr(a.z - b.z);
 }
 
 Point3D operator +(const Point3D &a, const Point3D &b) {

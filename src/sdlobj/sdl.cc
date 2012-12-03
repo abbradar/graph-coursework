@@ -112,6 +112,10 @@ void SDL::set_icon(Surface &surface) {
   SDL_WM_SetIcon(surface.surface_->surface, nullptr);
 }
 
+void SDL::WarpMouse(const unsigned short x, const unsigned short y) {
+  SDL_WarpMouse(x, y);
+}
+
 void SDL::ProcessEvent(const SDL_Event &event)
 {
   switch (event.type) {

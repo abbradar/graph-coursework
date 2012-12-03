@@ -6,11 +6,12 @@
 using namespace sdlobj;
 using namespace std;
 
-ListControl::ListControl() : style_(kSimple), selected_(-1) {}
+ListControl::ListControl() : style_(kSimple), selected_(-1), active_(-1) {}
 
 void ListControl::set_items(const std::vector<string> &items) {
   items_ = items;
   selected_ = -1;
+  active_ = -1;
   Invalidate();
 }
 
@@ -32,7 +33,7 @@ void ListControl::Repaint(Surface &surface) {
       default:
         Assert(false);
     }
-    if ((int)i == selected_) {
+    if ((int)i == active_) {
       Surface rendered = font().RenderUTF8_Blended(str.data(), back_color());
       surface.FillRect(0, curr_y, width(), line_skip, font_p);
       surface.Blit(rendered, 0, curr_y);
@@ -44,10 +45,11 @@ void ListControl::Repaint(Surface &surface) {
   }
 }
 
-void ListControl::MouseButton(const SDL_MouseButtonEvent &event) {
-  unsigned line_skip = font().line_skip();
-
-  set_selected(event.y / line_skip);
+bool ListControl::ProcessMouseButtonDown(const SDL_MouseButtonEvent &event) {
+  if (active_ != -1) {
+    set_selected(active_);
+    return true;
+  } else return false;
 }
 
 void ListControl::OnSelected() {}
@@ -62,7 +64,6 @@ void ListControl::set_style(const Style style) {
 void ListControl::set_selected(const int selected) {
   if (selected_ != selected) {
     selected_ = selected;
-    Invalidate();
     OnSelected();
   }
 }
@@ -91,4 +92,19 @@ unsigned ListControl::preferred_width() {
     if (w > max) max = w;
   }
   return max;
+}
+
+bool ListControl::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
+  int new_active;
+  if (InBounds((unsigned)event.x, x(), x() + width()) &&
+      InBounds((unsigned)event.y, y(), y() + height())) {
+    new_active = (event.y - y()) / font().line_skip();
+  } else {
+    new_active = -1;
+  }
+  if (new_active != active_) {
+    active_ = new_active;
+    Invalidate();
+  }
+  return true;
 }

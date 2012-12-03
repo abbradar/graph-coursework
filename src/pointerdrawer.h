@@ -5,7 +5,7 @@
 #include "renderworker.h"
 #include "context.h"
 
-class PointerDrawer : public RenderWorker, public ContextUser {
+class PointerDrawer : public ContextUser {
  public:
   PointerDrawer(const std::shared_ptr<Context> &context);
 

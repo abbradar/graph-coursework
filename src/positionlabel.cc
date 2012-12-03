@@ -5,18 +5,17 @@ using namespace sdlobj;
 using namespace std;
 
 PositionLabel::PositionLabel(const std::shared_ptr<Context> &context) :
-  ContextUser(context) {}
-
-void PositionLabel::Paint(sdlobj::Surface &surface) {
-  string position_str = (boost::format("Position: x: %1%, y: %2%, z: %3%, pitch: %4%, yaw: %5%")
-                % context()->position.x % context()->position.y
-                % context()->position.z % context()->position.pitch
-                % context()->position.yaw).str();
-  Surface rendered = font().RenderUTF8_Solid(position_str.data(), font_color());
-  surface.Blit(rendered, x_, y_);
+ ContextUser(context) {
+  set_label((boost::format("Position: x: %1%, y: %2%, z: %3%, pitch: %4%, yaw: %5%")
+               % context->camera.x % context->camera.y
+               % context->camera.z % context->camera.pitch
+               % context->camera.yaw).str());
 }
 
-void PositionLabel::set_position(const unsigned x, const unsigned y) {
-  x_ = x;
-  y_ = y;
+void PositionLabel::Paint(sdlobj::Surface &surface) {
+  set_label((boost::format("Position: x: %1%, y: %2%, z: %3%, pitch: %4%, yaw: %5%")
+                % context()->camera.x % context()->camera.y
+                % context()->camera.z % context()->camera.pitch
+                % context()->camera.yaw).str());
+  FastLabelControl::Paint(surface);
 }

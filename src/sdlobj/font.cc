@@ -33,32 +33,49 @@ Font::~Font() {
 }
 
 Surface Font::RenderUTF8_Solid(const char *text, Color fg) const {
-  SDL_Surface * surface = TTF_RenderUTF8_Solid(font_struct_, text, fg);
-  if (!surface) {
-    throw Exception(TTF_GetError());
+  if (text[0] != '\0') {
+    SDL_Surface * surface = TTF_RenderUTF8_Solid(font_struct_, text, fg);
+    if (!surface) {
+      throw Exception(TTF_GetError());
+    }
+    return Surface(surface);
+  } else {
+    return Surface(0, 0);
   }
-  return Surface(surface);
 }
 
 Surface Font::RenderUTF8_Shaded(const char *text, Color fg, Color bg) const {
-  SDL_Surface * surface = TTF_RenderUTF8_Shaded(font_struct_, text, fg, bg);
-  if (!surface) {
-    throw Exception(TTF_GetError());
+  if (text[0] != '\0') {
+    SDL_Surface * surface = TTF_RenderUTF8_Shaded(font_struct_, text, fg, bg);
+    if (!surface) {
+      throw Exception(TTF_GetError());
+    }
+    return Surface(surface);
+  } else {
+    return Surface(0, 0);
   }
-  return Surface(surface);
 }
 
 Surface Font::RenderUTF8_Blended(const char *text, Color fg) const {
-  SDL_Surface * surface = TTF_RenderUTF8_Blended(font_struct_, text, fg);
-  if (!surface) {
-    throw Exception(TTF_GetError());
+  if (text[0] != '\0') {
+    SDL_Surface * surface = TTF_RenderUTF8_Blended(font_struct_, text, fg);
+    if (!surface) {
+      throw Exception(TTF_GetError());
+    }
+    return Surface(surface);
+  } else {
+    return Surface(0, 0);
   }
-  return Surface(surface);
 }
 
 void Font::SizeUTF8(const char *text, unsigned *w, unsigned *h) const {
-  if (TTF_SizeUTF8(font_struct_, text, (int *)w, (int *)h) != 0) {
-    throw Exception(TTF_GetError());
+  if (text[0] != '\0') {
+    if (TTF_SizeUTF8(font_struct_, text, (int *)w, (int *)h) != 0) {
+      throw Exception(TTF_GetError());
+    }
+  } else {
+    if (w) *w = 0;
+    if (h) *h = 0;
   }
 }
 

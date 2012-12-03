@@ -13,7 +13,7 @@ namespace xparse {
 
 class XFile;
 struct XTemplate;
-struct XTemplateMember;
+class XTemplateMember;
 
 // TODO: make them classes with necessary protection and stuff
 struct XTemplateReference {

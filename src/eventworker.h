@@ -28,7 +28,7 @@ class EventWorker : virtual public ConveyorWorker {
 
   virtual void EventStep();
 
-  EventWorker *event_worker();
+  virtual EventWorker *event_worker();
 };
 
 #endif // GRAPH_EVENTRECEIVER_H_

@@ -32,14 +32,15 @@ Logger::LogDestination::~LogDestination() = default;
 
 Logger::Logger() noexcept : write_to_stderr_(true), level_(kNotice),
  name_(NULL), time_facet_(new TimeFacet("%x %X")) {
-  name_ = strdup("");
+  name_ = (char *)calloc(1, sizeof(char));
+  name_[0] = '\0';
   time_format_.imbue(locale(time_format_.getloc(), time_facet_));
 }
 
 Logger::~Logger() {
   // boost bug; should not destroy this
   //delete time_facet_;
-  delete[] name_;
+  free(name_);
 }
 
 void Logger::Log(LogMessageLevel level, const char * msg) noexcept {
@@ -55,9 +56,10 @@ void Logger::Log(LogMessageLevel level, const char * msg) noexcept {
   for (auto i = destinations_.begin(); i != destinations_.end(); ++i) {
     try {
       (*i)->WriteLog(level, msg);
-    } catch (exception& e) {
+    } catch (exception &e) {
       destinations_.erase(i);
       if (destinations_.empty()) set_write_to_stderr(true);
+      LogCritical((boost::format("Exception while logging: %1%") % e.what()).str().data());
       throw e;
     }
   }
@@ -72,7 +74,7 @@ void Logger::set_write_to_stderr(const bool write_to_stderr) noexcept {
 }
 
 void Logger::set_name(const char *name) noexcept {
-  delete[] name_;
+  free(name_);
   name_ = strdup(name);
 }
 

@@ -43,6 +43,12 @@ class ZBuffer {
     return z_buffer_[y * width_ + x];
   }
 
+  void FillLine(const unsigned int y, const myfloat z) {
+    for (myfloat *i = z_buffer_ + y * width_; i < z_buffer_ + (y + 1) * width_; ++i) {
+      *i = z;
+    }
+  }
+
  private:
   unsigned int width_;
   unsigned int height_;

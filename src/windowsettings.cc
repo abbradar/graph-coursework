@@ -2,6 +2,7 @@
 #include "sdlobj/sdlimage.h"
 #include "fontsettings.h"
 #include "colorsettings.h"
+#include "camerasettings.h"
 #include "frametimersettings.h"
 #include "windowsettings.h"
 
@@ -46,18 +47,10 @@ void WindowSettings::operator <<(const YAML::Node &node) {
     int show_fps_rate;
     node["show-fps-rate"] >> show_fps_rate;
     window_->set_show_fps_rate(show_fps_rate);
-    myfloat scale;
-    node["scale"] >> scale;
-    window_->set_scale(scale);
   }
 
-  {
-    const YAML::Node &rasterizer_node = node["rasterizer"];
-    myfloat viewer_distance;
-    rasterizer_node["viewer-distance"] >> viewer_distance;
-    window_->set_viewer_distance(viewer_distance);
-  }
-
+  node["camera"] >> window_->context()->camera;
+  
   {
     const YAML::Node &interface_node = node["interface"];
     myfloat move_speed;

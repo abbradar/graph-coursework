@@ -12,7 +12,6 @@ void CachedLabelControl::set_font(const sdlobj::Font &font) {
   Invalidate();
 }
 
-
 unsigned CachedLabelControl::preferred_height() {
   return LabelControl::preferred_height();
 }

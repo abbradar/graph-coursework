@@ -1,0 +1,12 @@
+-g
+-I/usr/include/SDL
+-Isrc
+-Ibuild/build
+--std=c++11
+-Wall
+-fstack-protector
+-fPIE
+-O0
+-rdynamic
+-DDEBUG_LEVEL=3
+-D__POSIX__

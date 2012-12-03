@@ -2,7 +2,7 @@
 #define GRAPH_POINTTRACER_H_
 
 #include "model.h"
-#include "screenline3d.h"
+#include "triangletraverser.h"
 #include "myfloat.h"
 
 class PointTracer {
@@ -10,7 +10,7 @@ class PointTracer {
   PointTracer();
 
   void Reset();
-  int TraceNext(const TriangleVector &triangles, const Point3DVector &points);
+  bool TraceNext(const IndexedTriangle &triangle, const Point3DVector &points);
 
   inline unsigned int x() {
     return x_;
@@ -27,8 +27,6 @@ class PointTracer {
   void set_point(unsigned int x, unsigned int y);
 
  private:
-  bool TraceLines(ScreenLine3D &a, ScreenLine3D &b);
-
   myfloat z_;
   unsigned int x_, y_;
 };

@@ -1,8 +1,6 @@
+#include "common/math.h"
+#include "common/debug.h"
 #include "point2d.h"
-
-Point2D::Point2D() : Point2D(0, 0) {}
-
-Point2D::Point2D(myfloat x_, myfloat y_) : x(x_), y(y_) {}
 
 Point2D &Point2D::operator +=(const Point2D &other) {
   x += other.x;
@@ -26,4 +24,34 @@ Point2D operator -(const Point2D &a, const Point2D &b) {
   Point2D r(a);
   r -= b;
   return r;
+}
+
+myfloat Point2D::DistanceSqr(const Point2D &a, const Point2D &b) {
+  return Sqr(a.x - b.x) + Sqr(a.y - b.y);
+}
+
+myfloat Point2D::Distance(const Point2D &a, const Point2D &b) {
+  return sqrt(DistanceSqr(a, b));
+}
+
+myfloat Point2D::Angle(const Point2D &other) const {
+  return other.Angle() - Angle();
+}
+
+myfloat Point2D::Angle() const {
+  if (x == 0 && y == 0) return 0;
+  myfloat angle = asin(y / Length());
+  if (x < 0) {
+    angle = M_PI - angle;
+  } else if (angle < 0) {
+    angle += M_PI + M_PI;
+  }
+  return angle;
+}
+
+myfloat Point2D::Length() const {
+  return sqrt(LengthSqr());
+}
+myfloat Point2D::LengthSqr() const{
+  return Sqr(x) + Sqr(y);
 }

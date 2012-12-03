@@ -24,16 +24,14 @@ void SceneObject::UpdatePositioned() {
   Matrix4 rotate_transform = position_.GetRotateMatrixFrom();
   Matrix4 transform = position_.GetTranslateMatrixFrom() * rotate_transform;
   // points
-  positioned_points_.clear();
-  positioned_points_.reserve(model_->points().size());
-  for (const auto &i : model_->points()) {
-    positioned_points_.push_back(transform * i);
+  positioned_points_.resize(model_->points().size());
+  for (size_t i = 0; i < positioned_points_.size(); ++i) {
+    positioned_points_[i] = transform * model_->points()[i];
   }
 
   // polygon normals
-  positioned_polygon_normals_.clear();
-  positioned_polygon_normals_.reserve(model_->polygon_normals().size());
-  for (const auto &i : model_->polygon_normals()) {
-    positioned_polygon_normals_.push_back(rotate_transform * i);
+  positioned_polygon_normals_.resize(model_->polygon_normals().size());
+  for (size_t i = 0; i < positioned_polygon_normals_.size(); ++i) {
+    positioned_polygon_normals_[i] = rotate_transform * model_->polygon_normals()[i];
   }
 }

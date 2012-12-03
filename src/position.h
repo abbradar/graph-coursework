@@ -11,6 +11,8 @@
  * roll - [-Pi/2; Pi/2], pitch - [-Pi; Pi], yaw - [-Pi/2; Pi/2]
  */
 struct Position {
+  static const Point3D kCameraDirection;
+
   myfloat x = 0;
   myfloat y = 0;
   myfloat z = 0;
@@ -27,6 +29,7 @@ struct Position {
   Matrix4 GetRotateMatrixTo() const;
   Matrix4 GetTranslateMatrixFrom() const;
   Matrix4 GetTranslateMatrixTo() const;
+  Point3D GetPoint3D() const;
 };
 
 #endif // GRAPH_POSITION_H_
