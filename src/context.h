@@ -7,12 +7,10 @@
 #include "scene.h"
 #include "models.h"
 #include "camera.h"
-#include "quadraticpolynom.h"
 
 class Window;
 
 typedef std::map<size_t, std::shared_ptr<Material>> MaterialOverlayMap;
-typedef std::vector<Surface2D> Surface2DVector;
 
 struct TransformedObject {
   TransformedObject(const std::weak_ptr<SceneObject> &object);
@@ -22,7 +20,6 @@ struct TransformedObject {
   std::vector<bool> point_flags;
   std::vector<size_t> triangle_indexes;
   std::unique_ptr<MaterialOverlayMap> material_overlay;
-  std::unique_ptr<Surface2DVector> texture_surfaces;
 };
 
 typedef std::map<SceneObject *, std::unique_ptr<TransformedObject>> TransformedObjectMap;

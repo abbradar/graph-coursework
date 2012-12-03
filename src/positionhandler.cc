@@ -37,12 +37,26 @@ bool PositionHandler::ProcessKeyDown(const SDL_KeyboardEvent &event) {
     case SDLK_LCTRL:
       move_state_.down = -1;
       break;
-    case SDLK_t: {
+    case SDLK_KP8:
+      move_state_.cam_up = 1;
+      break;
+    case SDLK_KP2:
+      move_state_.cam_down = -1;
+      break;
+    case SDLK_KP4:
+      move_state_.cam_left = 1;
+      break;
+    case SDLK_KP6:
+      move_state_.cam_right = -1;
+      break;
+    case SDLK_t:
       action_ |= kTransform;
-    break;
-    }
+      break;
+    case SDLK_l:
+      action_ |= kWeld;
+      break;
     case SDLK_g:
-      context()->window->set_grab_input(!context()->window->grab_input());
+      action_ |= kGrabInput;
       break;
     default:
       return false;
@@ -64,11 +78,32 @@ bool PositionHandler::ProcessKeyUp(const SDL_KeyboardEvent &event) {
     case SDLK_a:
       move_state_.left = 0;
       break;
+    case SDLK_KP8:
+      move_state_.cam_up = 0;
+      break;
+    case SDLK_KP2:
+      move_state_.cam_down = 0;
+      break;
+    case SDLK_KP4:
+      move_state_.cam_left = 0;
+      break;
+    case SDLK_KP6:
+      move_state_.cam_right = 0;
+      break;
     case SDLK_SPACE:
       move_state_.up = 0;
       break;
     case SDLK_LCTRL:
       move_state_.down = 0;
+      break;
+    case SDLK_t:
+      action_ &= !kTransform;
+      break;
+    case SDLK_l:
+      action_ &= !kWeld;
+      break;
+    case SDLK_g:
+      action_ &= !kGrabInput;
       break;
     default:
       return false;
@@ -116,14 +151,20 @@ void PositionHandler::EventStep() {
       camera.z += up_down * len;
     }
   }
+
   if (context()->window->grab_input()) {
     camera.pitch += move_state_.yrel * rotation_k_;
-    camera.pitch = Trim<myfloat>(camera.pitch, -M_PI_2, M_PI_2);
     camera.yaw += move_state_.xrel * rotation_k_;
-    camera.yaw = Circle<myfloat>(camera.yaw, -M_PI, M_PI);
   }
   move_state_.xrel = 0;
   move_state_.yrel = 0;
+
+  char cam_left_right = move_state_.cam_left + move_state_.cam_right;
+  char cam_up_down = move_state_.cam_up + move_state_.cam_down;
+  camera.pitch += cam_up_down * rotation_k_ * 10;
+  camera.yaw += cam_left_right * rotation_k_ * 10;
+  camera.pitch = Trim<myfloat>(camera.pitch, -M_PI_2, M_PI_2);
+  camera.yaw = Circle<myfloat>(camera.yaw, -M_PI, M_PI);
 }
 
 void PositionHandler::PreRenderStep() {
@@ -134,6 +175,9 @@ void PositionHandler::PreRenderStep() {
       ti->set_rotation_speed(rotation_speed_);
       context()->window->RegisterWorker(ti);
     }
+  }
+  if (action_ & kGrabInput) {
+    context()->window->set_grab_input(!context()->window->grab_input());
   }
   action_ = kNone;
 }

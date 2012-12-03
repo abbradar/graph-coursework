@@ -1,13 +1,13 @@
-#ifndef GRAPH_MOVETRANSFORM_H_
-#define GRAPH_MOVETRANSFORM_H_
+#ifndef GRAPH_WELDTRANSFORM_H_
+#define GRAPH_WELDTRANSFORM_H_
 
 #include "point3d.h"
 #include "eventworker.h"
 #include "context.h"
 
-class MoveTransform : public EventWorker, public ContextUser, public PostRenderWorker {
+class WeldTransform : public EventWorker, public ContextUser, public PostRenderWorker {
  public:
-  MoveTransform(const std::shared_ptr<Context> &context,
+  WeldTransform(const std::shared_ptr<Context> &context,
                 const std::shared_ptr<SceneObject> &object);
 
   bool ProcessMouseMotion(const SDL_MouseMotionEvent &event);
@@ -34,4 +34,4 @@ class MoveTransform : public EventWorker, public ContextUser, public PostRenderW
   myfloat rotation_speed_;
 };
 
-#endif // GRAPH_MOVETRANSFORM_H_
+#endif // GRAPH_WELDTRANSFORM_H_

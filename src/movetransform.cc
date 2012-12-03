@@ -3,8 +3,8 @@
 #include "movetransform.h"
 
 const Point3D MoveTransform::kP0 = Point3D(0, 0, 0);
-const Point3D MoveTransform::kP1 = Point3D(0, 0, 1);
-const Point3D MoveTransform::kP2 = Point3D(1, 0, 0);
+const Point3D MoveTransform::kP1 = Point3D(1, 0, 0);
+const Point3D MoveTransform::kP2 = Point3D(0, 1, 0);
 
 MoveTransform::MoveTransform(const std::shared_ptr<Context> &context, const std::shared_ptr<SceneObject> &object) :
  ContextUser(context), xrel_(0), yrel_(0), object_(object), wait_finish_(false), finish_(false),
@@ -15,7 +15,7 @@ MoveTransform::MoveTransform(const std::shared_ptr<Context> &context, const std:
   old_position_ = lock->position();
   //distance_ = old_position_->z;
 
-  Matrix4 obj_transform = context->camera.GetMatrixTo() * lock->position().GetMatrixFrom();
+  Matrix4 obj_transform = context->camera.GetMatrixTo() * old_position_.GetMatrixFrom();
   p0_ = obj_transform * kP0;
   p1_ = obj_transform * kP1;
   p2_ = obj_transform * kP2;
@@ -141,14 +141,37 @@ void MoveTransform::PostRenderStep() {
     new_position.x = n_p0.x;
     new_position.y = n_p0.y;
     new_position.z = n_p0.z;
-    new_position.roll = Point2D(n_p1.y - n_p0.y, n_p1.z - n_p0.z).Angle() - M_PI_2;
-    new_position.roll = Circle<myfloat>(new_position.roll, 0, M_PI + M_PI);
-    new_position.pitch = Point2D(n_p1.x - n_p0.x, n_p1.z - n_p0.z).Angle() - M_PI_2;
+    n_p1 -= n_p0;
+    n_p2 -= n_p0;
+    /*Matrix4 tr_transform = new_position.GetTranslateMatrixTo();
+    n_p1 = tr_transform * n_p1;
+    n_p2 = tr_transform * n_p2;*/
+    new_position.yaw = Point2D(n_p1.x, n_p1.y).Angle();
+    Matrix4 z_transform = Matrix4::RotateZ(-new_position.yaw);
+    n_p1 = z_transform * n_p1;
+    n_p2 = z_transform * n_p2;
+    new_position.pitch = Point2D(n_p1.x, n_p1.z).Angle();
+    /*if (new_position.yaw > M_PI_2 && new_position.yaw < M_PI + M_PI_2) {
+      new_position.pitch = -new_position.pitch;
+    }*/
+    Matrix4 y_transform = Matrix4::RotateY(-new_position.pitch);
+    //n_p1 = y_transform * n_p1;
+    n_p2 = y_transform * n_p2;
+    //n_p2 = new_position.GetRotateMatrixTo() * n_p2;
+    new_position.roll = Point2D(n_p2.y, n_p2.z).Angle();
+    /*Matrix4 x_transform = Matrix4::RotateX(-new_position.roll);
+    n_p1 = x_transform * n_p1;
+    n_p2 = x_transform * n_p2;*/
+    /*new_position.roll = Point2D(n_p1.y, n_p1.z).Angle() - M_PI_2;
+    new_position.roll = Circle<myfloat>(new_position.roll, 0, 2 * M_PI);
+    new_position.pitch = Point2D(n_p1.x, n_p1.z).Angle() - M_PI_2;
+    new_position.pitch = Circle<myfloat>(new_position.pitch, 0, 2 * M_PI);
     if (new_position.roll > M_PI_2 && new_position.roll < M_PI + M_PI_2) {
       new_position.pitch = -new_position.pitch;
     }
-    Point3D n_tp2 = new_position.GetMatrixTo() * n_p2;
-    new_position.yaw = Point2D(n_tp2.x, n_tp2.y).Angle();
+    n_p2 = new_position.GetRotateMatrixTo() * n_p2;
+    new_position.yaw = Point2D(n_p2.x, n_p2.y).Angle();*/
+
     object_.lock()->set_position(new_position);
   }
 

@@ -436,7 +436,7 @@ template <class Integral = unsigned> struct RasterizerTexturedTraversable : publ
       Point2D uv = this->GetUV();
       Uint32 t_pixel = context->texture->GetPixel(uv.x, uv.y);
       sdlobj::Color color = context->material->texture()->PixelToColor(t_pixel);
-      color = this->ProcessCsolor(context, color, x, y);
+      color = this->ProcessColor(context, color, x, y);
       Uint32 pixel = context->surface->ColorToPixel(color);
       this->SetPixel(context, x, y, this->z(), pixel);
       return true;
@@ -605,17 +605,6 @@ template <bool kTextures> void Rasterizer::TransformObject(const std::shared_ptr
   point_flags.assign(o_size, false);
   triangle_indexes.clear();
   triangle_indexes.reserve(model->polygons().size() / 2);
-  Point2DVector *textures;
-  std::unique_ptr<Surface2DVector> *texture_surfaces;
-  if (kTextures) {
-    textures = model->uv_coords().get();
-    texture_surfaces = &hit->second->texture_surfaces;
-    if (!(*texture_surfaces)) {
-      texture_surfaces->reset(new Surface2DVector());
-    }
-    (*texture_surfaces)->clear();
-    (*texture_surfaces)->reserve(triangle_indexes.size());
-  }
 
   auto p_i = model->polygons().begin();
   auto n_i = object->positioned_polygon_normals().begin();
@@ -636,11 +625,6 @@ template <bool kTextures> void Rasterizer::TransformObject(const std::shared_ptr
           points[indexes[i]] = move(dest);
           point_flags[indexes[i]] = true;
         }
-      }
-      if (kTextures) {
-        (*texture_surfaces)->emplace_back(points[indexes[0]], (*textures)[indexes[0]],
-                                          points[indexes[1]], (*textures)[indexes[1]],
-                                          points[indexes[2]], (*textures)[indexes[2]]);
       }
 #ifndef NO_NORMAL_FACE_CLIPPING
     }

@@ -38,13 +38,14 @@ myfloat Point2D::Angle(const Point2D &other) const {
   return other.Angle() - Angle();
 }
 
+/** Returns angle; 0 <= angle <= 2 * pi **/
 myfloat Point2D::Angle() const {
   if (x == 0 && y == 0) return 0;
   myfloat angle = asin(y / Length());
   if (x < 0) {
     angle = M_PI - angle;
   } else if (angle < 0) {
-    angle += M_PI + M_PI;
+    angle += 2 * M_PI;
   }
   return angle;
 }

@@ -33,7 +33,9 @@ class PositionHandler : public EventWorker, public PreRenderWorker, public Conte
  private:
   enum PreRenderAction {
     kNone = 0,
-    kTransform = 1
+    kGrabInput = 0b1,
+    kTransform = 0b10,
+    kWeld = 0b100
   };
 
   struct MoveState {
@@ -43,6 +45,10 @@ class PositionHandler : public EventWorker, public PreRenderWorker, public Conte
     char right = 0;
     char up = 0;
     char down = 0;
+    char cam_up = 0;
+    char cam_down = 0;
+    char cam_left = 0;
+    char cam_right = 0;
     int xrel = 0;
     int yrel = 0;
   };
