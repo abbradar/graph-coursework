@@ -6,7 +6,6 @@
 #include "surface.h"
 
 #if DEBUG_LEVEL >= 4
-#include <stdexcept>
 #include <boost/format.hpp>
 #endif
 
@@ -48,7 +47,7 @@ class SurfacePainter {
   inline Uint32 GetPixel(const unsigned int x, const unsigned int y) const {
 #if DEBUG_LEVEL >= 4
     if (x >= (unsigned int)surface_struct_->w || y >= (unsigned int)surface_struct_->h) {
-      AssertMsg(false, (boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str());
+      AssertMsg(false, (boost::format("Coordinates out of bounds: %1%,%2%") % x % y).str().data());
     }
 #endif
     Uint8 *p = (Uint8 *)surface_struct_->pixels + y * surface_struct_->pitch
@@ -61,7 +60,7 @@ class SurfacePainter {
   inline void SetPixel(const unsigned int x, const unsigned int y, const Uint32 pixel) {
 #if DEBUG_LEVEL >= 4
     if (x >= (unsigned int)surface_struct_->w || y >= (unsigned int)surface_struct_->h) {
-      AssertMsg(false. (boost::format("Coordinates out of bounds: %1%, %2%") % x % y).str());
+      AssertMsg(false. (boost::format("Coordinates out of bounds: %1%, %2%") % x % y).str().data());
     }
 #endif
     Uint8 *p = (Uint8 *)surface_struct_->pixels + y * surface_struct_->pitch

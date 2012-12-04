@@ -51,6 +51,9 @@ class Matrix4 {
   Matrix4 &operator -=(const Matrix4 &other);
   Matrix4 &operator *=(const Matrix4 &other);
 
+  void ToRotate(myfloat &roll, myfloat &pitch, myfloat &yaw);
+  void ToTranslate(myfloat &x, myfloat &y, myfloat &z);
+
  private:
   myfloat *matrix_;
 

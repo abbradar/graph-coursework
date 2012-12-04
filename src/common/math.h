@@ -94,4 +94,10 @@ template <class T> inline bool InBounds(const T value, const T min, const T max)
   return value >= min && value <= max;
 }
 
+template <class T> inline T Angle(const T sin, const T cos) {
+  T angle = asin(sin);
+  if (cos < 0) angle = M_PI - angle;
+  return angle;
+}
+
 #endif // COMMON_MATH_H_

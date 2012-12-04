@@ -93,7 +93,7 @@ template <class Integral> class Traversable {
 
 template <class Integral> class ZTraversable {
  public:
-  typedef Integral DataType;
+  typedef myfloat DataType;
 
   class HorizontalTraversable {
    public:
@@ -101,13 +101,12 @@ template <class Integral> class ZTraversable {
                                  const ScreenLine<Integral> &lb, const ZTraversable<Integral> &b) {
       static_assert(std::is_arithmetic<Integral>::value, "Template type should be arithmetic.");
 
-      Integral dx = (Integral)lb.x() - (Integral)la.x();
+      myfloat dx = (Integral)lb.x() - (Integral)la.x();
       if (dx != 0) {
-        z_ = std::min(a.z(), b.z());
-        dz_ = 0;
-      } else {
         z_ = a.z();
         dz_ = (b.z() - z_) / dx;
+      } else {
+        z_ = std::min(a.z(), b.z());
       }
     }
 
@@ -137,10 +136,10 @@ template <class Integral> class ZTraversable {
   inline ZTraversable(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) {
     static_assert(std::is_arithmetic<Integral>::value, "Template type should be arithmetic.");
 
-    Integral dx = (Integral)line.fy() - (Integral)line.y();
-    if (dx != 0) {
+    myfloat dy = line.fy() - line.y();
+    if (dy != 0) {
       z_ = a;
-      dz_ = (b - a) / dx;
+      dz_ = (b - a) / dy;
     } else {
       z_ = std::min(a, b);
     }
@@ -195,7 +194,10 @@ template <class T> class TriangleTraverser {
     }
 
     if ((IntegralType)points_ptr[0]->y == (IntegralType)points_ptr[1]->y) {
-      if (points_ptr[0]->x > points_ptr[1]->x) std::swap(points_ptr[0], points_ptr[1]);
+      if (points_ptr[0]->x > points_ptr[1]->x) {
+        std::swap(points_ptr[0], points_ptr[1]);
+        std::swap(data_ptr[0], data_ptr[1]);
+      }
       big = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[2]);
       tbig = T(big, *data_ptr[0], *data_ptr[2]);
       small1 = ScreenLine<IntegralType>(*points_ptr[1], *points_ptr[2]);
@@ -277,7 +279,10 @@ template <class T> class TriangleTraverser {
     SortPoints(points_ptr, data_ptr);
     
     if ((IntegralType)points_ptr[0]->y == (IntegralType)points_ptr[1]->y) {
-      if (points_ptr[0]->x > points_ptr[1]->x) std::swap(points_ptr[0], points_ptr[1]);
+      if (points_ptr[0]->x > points_ptr[1]->x) {
+        std::swap(points_ptr[0], points_ptr[1]);
+        std::swap(data_ptr[0], data_ptr[1]);
+      }
       ScreenLine<IntegralType> a(*points_ptr[0], *points_ptr[2]);
       T ta(a, *data_ptr[0], *data_ptr[2]);
       ScreenLine<IntegralType> b(*points_ptr[1], *points_ptr[2]);
@@ -312,11 +317,13 @@ template <class T> class TriangleTraverser {
                        const Point2D &a, const DataType &da,
                        const Point2D &b, const DataType &db,
                        const Point2D &c, const DataType &dc) {
+    if (da < 0 && db < 0 && dc < 0) return false;
+
     const Point2D *points_ptr[kLinesNum];
     points_ptr[0] = &a; points_ptr[1] = &b, points_ptr[2] = &c;
     const DataType *data_ptr[kLinesNum];
     data_ptr[0] = &da; data_ptr[1] = &db, data_ptr[2] = &dc;
-    
+
     SortPoints(points_ptr, data_ptr);
 
     // find x edges
@@ -330,7 +337,10 @@ template <class T> class TriangleTraverser {
         || y > points_ptr[2]->y) return false;
 
     if ((IntegralType)points_ptr[0]->y == (IntegralType)points_ptr[1]->y) {
-      if (points_ptr[0]->x > points_ptr[1]->x) std::swap(points_ptr[0], points_ptr[1]);
+      if (points_ptr[0]->x > points_ptr[1]->x) {
+        std::swap(points_ptr[0], points_ptr[1]);
+        std::swap(data_ptr[0], data_ptr[1]);
+      }
       ScreenLine<IntegralType> a(*points_ptr[0], *points_ptr[2]);
       T ta = T(a, *data_ptr[0], *data_ptr[2]);
       ScreenLine<IntegralType> b(*points_ptr[1], *points_ptr[2]);
@@ -377,10 +387,11 @@ template <class T> class TriangleTraverser {
   static bool PointLines(ScreenLine<IntegralType> &a, T &ta,
                          ScreenLine<IntegralType> &b, T &tb,
                          const IntegralType x, const IntegralType y, ContextType *context) {
-    a.Advance(y - a.y());
-    ta.Advance(y - a.y());
-    b.Advance(y - b.y());
-    tb.Advance(y - b.y());
+    myfloat dy = y - a.y();
+    a.Advance(dy);
+    ta.Advance(dy);
+    b.Advance(dy);
+    tb.Advance(dy);
     if (x < a.x() || x > b.x()) return false;
     auto tr = HorizontalTraversable(a, ta, b, tb);
     tr.Advance(x - a.x());
@@ -408,10 +419,11 @@ template <class T> class TriangleTraverser {
     if (a.x() <= b.x()) {
       auto tr = HorizontalTraversable(a, ta, b, tb);
       IntegralType y = a.y();
-      for (IntegralType x = a.x(); x <= b.x(); ++x) {
+      for (IntegralType x = a.x(); x < (IntegralType)b.x(); ++x) {
         tr.Process(context, x, y);
         tr.Advance();
       }
+      tr.Process(context, b.x(), y);
     }
   }
 

@@ -9,7 +9,7 @@ template <class Integral = myfloat> class PointTraceTraverser : public Traversab
  public:
   typedef typename ZTraversable<Integral>::DataType DataType;
   typedef typename ZTraversable<Integral>::HorizontalTraversable ZTraversableHorizontal;
-  typedef typename Traversable<Integral>::template HorizontalTraversable<myfloat> TraversableHorizontal;
+  typedef typename Traversable<Integral>::template HorizontalTraversable<Integral> TraversableHorizontal;
 
   class HorizontalTraversable : public TraversableHorizontal, virtual public ZTraversableHorizontal {
    public:

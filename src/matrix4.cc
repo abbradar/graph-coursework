@@ -1,5 +1,5 @@
 #include <cstring>
-#include <cmath>
+#include "common/math.h"
 #include "matrix4.h"
 
 const size_t Matrix4::kMatrixWidth = 4;
@@ -125,6 +125,35 @@ Matrix4 &Matrix4::operator -=(const Matrix4 &other) {
 Matrix4 &Matrix4::operator *=(const Matrix4 &other) {
   *this = *this * other;
   return *this;
+}
+
+void Matrix4::ToRotate(myfloat &roll, myfloat &pitch, myfloat &yaw) {
+  myfloat siny = -at(0, 2);
+  // there goes assumption than cos(y) >= 0:
+  if (siny >= 1) return;
+  myfloat cosy = sqrt(1 - Sqr(siny));
+  myfloat sinx = at(1, 2) / cosy;
+  myfloat cosx = at(2, 2) / cosy;
+  myfloat cosz = at(0, 0) / cosy;
+  myfloat sinz = at(0, 1) / cosy;
+  // now let's check if our assumption was correct
+  myfloat check1 = cosx * cosz + sinx * siny * sinz;
+  if (abs(check1 - at(1,1)) > 0.1) {
+    cosy = -cosy;
+    sinx = -sinx;
+    cosx = -cosx;
+    cosz = -cosz;
+    sinz = -sinz;
+  }
+  roll = Angle(sinx, cosx);
+  pitch = Angle(siny, cosy);
+  yaw = Angle(sinz, cosz);
+}
+
+void Matrix4::ToTranslate(myfloat &x, myfloat &y, myfloat &z) {
+  x = at(3, 0);
+  y = at(3, 1);
+  z = at(3, 2);
 }
 
 Matrix4 operator +(const Matrix4 &a, const Matrix4 &b) {

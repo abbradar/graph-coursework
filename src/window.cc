@@ -11,7 +11,7 @@
 #include "scenesettings.h"
 #include "window.h"
 
-//#define NO_GRAB_INPUT
+#define NO_GRAB_INPUT
 
 using namespace std;
 using namespace sdlobj;

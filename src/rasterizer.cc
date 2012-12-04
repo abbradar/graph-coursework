@@ -1,10 +1,10 @@
 #include "common/math.h"
 #include "common/debug.h"
 #include "common/exception.h"
+#include "triangletraverser.h"
 #include "rasterizer.h"
 
-//#define WIREFRAME_MODEL
-//#define NO_NORMAL_FACE_CLIPPING
+#define NO_NORMAL_FACE_CLIPPING
 #define NO_LIGHTING
 
 using namespace std;
@@ -269,7 +269,7 @@ template <class Integral = myfloat> class UVCoordsTraversable : virtual public T
 
   inline UVCoordsTraversable(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) :
       ZTraversable<Integral>(line, a.z, b.z) {
-    myfloat iz = 1 / a.z;
+    myfloat iz = 1 / this->z();
     uv_z_.x = a.uv.x * iz;
     uv_z_.y = a.uv.y * iz;
     myfloat dy = line.fy() - line.y();
@@ -433,7 +433,9 @@ template <class Integral = unsigned> struct RasterizerTexturedTraversable : publ
       UVTraversableHorizontal(a, da, b, db) {}
 
     virtual inline bool Process(TraversableContext *context, const Integral x, const Integral y) {
-      Point2D uv = this->GetUV();
+      Point2D uv;// = this->GetUV();
+      uv.x = 0;
+      uv.y = 0;
       Uint32 t_pixel = context->texture->GetPixel(uv.x, uv.y);
       sdlobj::Color color = context->material->texture()->PixelToColor(t_pixel);
       color = this->ProcessColor(context, color, x, y);
@@ -529,15 +531,15 @@ template <bool kTextures> void DrawTriangle(const size_t tri_i, const Transforme
   if (kTextures) {
     for (size_t i = 0; i < IndexedTriangle::kPointsSize; ++i) {
       data[i].uv = (*object.model()->uv_coords())[tri.points[i]];
-      data[i].uv.x *= (context->texture->surface()->width() - 1);
-      data[i].uv.y *= (context->texture->surface()->height() - 1);
+      data[i].uv.x *= context->texture->surface()->width() - 1;
+      data[i].uv.y *= context->texture->surface()->height() - 1;
     }
     if (points_size > 3) {
       TriangleTraverser<UVCoordsTraversable<myfloat>> traverser(points_buf[0], data[0],
                                                        points_buf[1], data[1],
                                                        points_buf[2], data[2]);
 #ifndef NO_LIGHTING
-      for (size_t i = 3; i < points_size; ++i) {
+      for (size_t i = IndexedTriangle::kPointsSize; i < points_size; ++i) {
         if (normal_found[i]) {
           traverser.Point(&data[i].uv, points_buf[i].x, points_buf[i].y);
         }

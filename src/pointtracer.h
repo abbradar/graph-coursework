@@ -2,7 +2,6 @@
 #define GRAPH_POINTTRACER_H_
 
 #include "model.h"
-#include "triangletraverser.h"
 #include "myfloat.h"
 
 class PointTracer {

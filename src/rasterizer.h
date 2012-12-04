@@ -5,7 +5,6 @@
 #include <map>
 #include "sdlobj/surface.h"
 #include "sdlobj/surfacepainter.h"
-#include "triangletraverser.h"
 #include "scene.h"
 #include "myfloat.h"
 #include "matrix4.h"

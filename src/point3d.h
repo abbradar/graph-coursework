@@ -23,6 +23,8 @@ struct Point3D {
   Point3D &operator -=(const Point3D &other);
   Point3D &operator *=(const Matrix4 &matrix);
 
+  Point3D Inverse() const;
+
   template <class T> Point3D &operator *=(const T num) {
     x *= num;
     y *= num;
@@ -31,12 +33,18 @@ struct Point3D {
     return *this;
   }
 
+  inline operator bool() const {
+    return x == 0 && y == 0 && z == 0;
+  }
+
   void WeightNormalize();
 
   static Point3D VectorMul(const Point3D &a, const Point3D &b);
   static myfloat ScalarMul(const Point3D &a, const Point3D &b);
   static myfloat Distance(const Point3D &a, const Point3D &b);
   static myfloat DistanceSqr(const Point3D &a, const Point3D &b);
+
+  void AxisToEuler(const myfloat angle, myfloat &roll, myfloat &pitch, myfloat &yaw);
 
  private:
   friend Point3D operator +(const Point3D &a, const Point3D &b);

@@ -1,5 +1,6 @@
 #include "common/math.h"
 #include "movetransform.h"
+#include "weldtransform.h"
 #include "positionhandler.h"
 
 using namespace std;
@@ -96,7 +97,7 @@ bool PositionHandler::ProcessKeyUp(const SDL_KeyboardEvent &event) {
     case SDLK_LCTRL:
       move_state_.down = 0;
       break;
-    case SDLK_t:
+    /*case SDLK_t:
       action_ &= !kTransform;
       break;
     case SDLK_l:
@@ -104,7 +105,7 @@ bool PositionHandler::ProcessKeyUp(const SDL_KeyboardEvent &event) {
       break;
     case SDLK_g:
       action_ &= !kGrabInput;
-      break;
+      break;*/
     default:
       return false;
   }
@@ -169,9 +170,15 @@ void PositionHandler::EventStep() {
 
 void PositionHandler::PreRenderStep() {
   if (action_ & kTransform) {
-    std::shared_ptr<SceneObject> object = context()->traced_object.lock()->object.lock();
-    if (object) {
-      auto ti = make_shared<MoveTransform>(context(), object);
+    if (context()->traced_object.lock()->object.lock()) {
+      auto ti = make_shared<MoveTransform>(context());
+      ti->set_rotation_speed(rotation_speed_);
+      context()->window->RegisterWorker(ti);
+    }
+  }
+  if (action_ & kWeld) {
+    if (context()->traced_object.lock()->object.lock()) {
+      auto ti = make_shared<WeldTransform>(context());
       ti->set_rotation_speed(rotation_speed_);
       context()->window->RegisterWorker(ti);
     }

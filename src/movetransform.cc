@@ -1,3 +1,4 @@
+#include "common/exception.h"
 #include "common/math.h"
 #include "point2d.h"
 #include "movetransform.h"
@@ -5,15 +6,26 @@
 const Point3D MoveTransform::kP0 = Point3D(0, 0, 0);
 const Point3D MoveTransform::kP1 = Point3D(1, 0, 0);
 const Point3D MoveTransform::kP2 = Point3D(0, 1, 0);
+const Point3D MoveTransform::kP3 = Point3D(0, 0, 1);
 
-MoveTransform::MoveTransform(const std::shared_ptr<Context> &context, const std::shared_ptr<SceneObject> &object) :
- ContextUser(context), xrel_(0), yrel_(0), object_(object), wait_finish_(false), finish_(false),
-  rotate_(false), rotation_speed_(1) {
+MoveTransform::MoveTransform(const std::shared_ptr<Context> &context) :
+ ContextUser(context), xrel_(0), yrel_(0), wait_finish_(false), finish_(false),
+  rotate_(false), z_rotate_(false), rotation_speed_(1) {
   context->window->set_grab_input(true);
+  auto traced = context->traced_object.lock();
+  object_ = traced->object;
   auto lock = object_.lock();
+  if (!lock) {
+    throw Exception("Move transform should be created with traced object in context.");
+  }
 
   old_position_ = lock->position();
-  //distance_ = old_position_->z;
+  tp_.x = traced->x;
+  tp_.y = traced->y;
+  tp_.z = traced->z;
+  context->camera.ReversePerspectiveTransform(tp_);
+  tp_ = Point3D(tp_.z, -tp_.x, -tp_.y);
+  tp_ = old_position_.GetMatrixTo() * context->camera.GetMatrixFrom() * tp_;
 
   Matrix4 obj_transform = context->camera.GetMatrixTo() * old_position_.GetMatrixFrom();
   p0_ = obj_transform * kP0;
@@ -22,7 +34,7 @@ MoveTransform::MoveTransform(const std::shared_ptr<Context> &context, const std:
 }
 
 bool MoveTransform::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
-  if (!rotate_) return false;
+  if (!(rotate_ || z_rotate_)) return false;
   xrel_ -= event.xrel;
   yrel_ -= event.yrel;
   return true;
@@ -53,9 +65,10 @@ bool MoveTransform::ProcessKeyDown(const SDL_KeyboardEvent &event) {
       wait_finish_ = true;
       break;
     case SDLK_r:
-      xrel_ = 0;
-      yrel_ = 0;
       rotate_ = true;
+      return true;
+    case SDLK_z:
+      z_rotate_ = true;
       return true;
     case SDLK_g:
       return true;
@@ -69,6 +82,9 @@ bool MoveTransform::ProcessKeyUp(const SDL_KeyboardEvent &event) {
   switch (event.keysym.sym) {
     case SDLK_r:
       rotate_ = false;
+      return true;
+    case SDLK_z:
+      z_rotate_ = false;
       return true;
     default:
       break;
@@ -84,55 +100,41 @@ void MoveTransform::PostRenderStep() {
     context()->window->UnregisterWorker(this);
     return;
   }
-  /*static const Point3D p0 = Point3D(0, 0, 0);
-  static const Point3D p1 = Point3D(1, 0, 0);
-  static const Point3D p2 = Point3D(0, 1, 0);
 
-  Position &my_new_position = context()->position;
-  Position &obj_old_position = object_->position();
+  if (z_rotate_ || rotate_) {
+    myfloat rotation_k_ = M_PI_2 / (context()->window->height() * rotation_speed_);
 
-  Matrix4 transform = obj_old_position.GetMatrixTo() * my_old_position_.GetMatrixFrom() *
-      Matrix4::RotateZ(my_new_position.yaw - my_old_position_.yaw) *
-      Matrix4::RotateY(my_new_position.pitch - my_old_position_.pitch) *
-      Matrix4::Translate(my_new_position.x - my_old_position_.x,
-                         my_new_position.y - my_old_position_.y,
-                         my_new_position.z - my_old_position_.z) *
-      my_old_position_.GetMatrixTo() * obj_old_position.GetMatrixFrom();
-  Point3D tp0 = transform * p0,
-      tp1 = transform * p2,
-      tp2 = transform * p2;
-  Position new_position;
-  new_position.x = obj_old_position.x + tp0.x;
-  new_position.y = obj_old_position.y + tp0.y;
-  new_position.z = obj_old_position.z + tp0.z;
-  tp1 -= tp0; tp2 -= tp0;
+    Point3D axis;
+    myfloat dist = sqrt(Sqr(xrel_) + Sqr(yrel_));
+    if (dist != 0) {
+      if (z_rotate_) {
+        axis.x = 1;
+      } else {
+        axis.z = -xrel_ / dist;
+        axis.y = yrel_ / dist;
+      }
+      myfloat angle = dist * rotation_k_;
 
-  myfloat z_la = tp1.y / Point3D::Distance(tp0, tp1);
-  myfloat z_a = asin(z_la);
-  if (tp1.x < 0) {
-    z_a = M_PI - z_a;
-  }
-  new_position.yaw = Circle(z_a + obj_old_position.yaw, -M_PI_2, M_PI_2);*/
+      Position new_position(lock->position());
+      Point3D u = new_position.GetRotateMatrixTo() * context()->camera.GetRotateMatrixFrom() * axis;
 
-  // move part
-  if (rotate_) {
-    /*myfloat rotation_k_ = M_PI_2 / (context()->window->height() * rotation_speed_);
-    Position obj_old_position = object_->position();
-    obj_old_position.pitch += yrel_ * rotation_k_;
-    obj_old_position.pitch = Circle<myfloat>(obj_old_position.pitch, -M_PI_2, M_PI_2);
-    obj_old_position.yaw += xrel_ * rotation_k_;
-    obj_old_position.yaw = Circle<myfloat>(obj_old_position.yaw, -M_PI, M_PI);
-    object_->set_position(obj_old_position);
+      myfloat roll, pitch, yaw;
+      u.AxisToEuler(angle, roll, pitch, yaw);
+      Matrix4 matrix = Matrix4::Translate(tp_.x, tp_.y, tp_.z) * Matrix4::RotateX(roll) *
+          Matrix4::RotateY(pitch) * Matrix4::RotateZ(yaw) * Matrix4::Translate(-tp_.x, -tp_.y, -tp_.z);
+      //matrix.ToRotate(roll, pitch, yaw);
+      myfloat tx, ty, tz;
+      matrix.ToTranslate(tx, ty, tz);
+      new_position.x += tx;
+      new_position.y += ty;
+      new_position.z += tz;
+      new_position.roll += roll;
+      new_position.pitch += pitch;
+      new_position.yaw += yaw;
 
-    yrel_ = 0;
-    xrel_ = 0;*/
+      lock->set_position(new_position);
+    }
   } else {
-    /*Point3D new_position = Point3D(distance_, 0, 0);
-    new_position = context()->position.GetMatrixFrom() * new_position;
-    object_->set_position(Position(new_position.x, new_position.y, new_position.z,
-                                   object_->position().roll, object_->position().pitch,
-                                   object_->position().yaw));*/
-
     Matrix4 from_camera = context()->camera.GetMatrixFrom();
     Point3D n_p0 = from_camera * p0_,
             n_p1 = from_camera * p1_,
@@ -172,13 +174,16 @@ void MoveTransform::PostRenderStep() {
     n_p2 = new_position.GetRotateMatrixTo() * n_p2;
     new_position.yaw = Point2D(n_p2.x, n_p2.y).Angle();*/
 
-    object_.lock()->set_position(new_position);
+    lock->set_position(new_position);
   }
 
   if (wait_finish_) {
     context()->window->UnregisterWorker(this);
     finish_ = true;
   }
+
+  xrel_ = 0;
+  yrel_ = 0;
 }
 
 void MoveTransform::set_rotation_speed(const myfloat rotation_speed) {

@@ -7,8 +7,7 @@
 
 class MoveTransform : public EventWorker, public ContextUser, public PostRenderWorker {
  public:
-  MoveTransform(const std::shared_ptr<Context> &context,
-                const std::shared_ptr<SceneObject> &object);
+  MoveTransform(const std::shared_ptr<Context> &context);
 
   bool ProcessMouseMotion(const SDL_MouseMotionEvent &event);
   bool ProcessMouseButtonDown(const SDL_MouseButtonEvent &event);
@@ -24,12 +23,13 @@ class MoveTransform : public EventWorker, public ContextUser, public PostRenderW
   void set_rotation_speed(const myfloat rotation_speed);
 
  private:
-  static const Point3D kP0, kP1, kP2;
+  static const Point3D kP0, kP1, kP2, kP3;
   Point3D p0_, p1_, p2_;
+  Point3D tp_;
 
   int xrel_, yrel_;
   std::weak_ptr<SceneObject> object_;
-  bool wait_finish_, finish_, rotate_;
+  bool wait_finish_, finish_, rotate_, z_rotate_;
   Position old_position_;
   myfloat rotation_speed_;
 };
