@@ -24,11 +24,11 @@ void ContextTracer::PreRenderStep() {
     }
   }
   traced_object_->object = traced;
-  traced_object_->triangle_index = index;
-  traced_object_->x = tracer_.x();
-  traced_object_->y = tracer_.y();
-  traced_object_->z = tracer_.z();
   if (traced) {
+    traced_object_->triangle_index = index;
+    traced_object_->x = tracer_.x();
+    traced_object_->y = tracer_.y();
+    traced_object_->z = tracer_.z();
     auto cache = objects->find(traced.get());
     MaterialOverlayMap *overlay = new MaterialOverlayMap();
     overlay->insert(pair<size_t, std::shared_ptr<Material>>(index, material_));

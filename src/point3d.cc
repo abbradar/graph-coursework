@@ -51,10 +51,11 @@ void Point3D::AxisToEuler(const myfloat angle, myfloat &roll, myfloat &pitch, my
   myfloat cosa = cos(angle);
   myfloat rcosa = 1 - cosa;
   myfloat sina = sin(angle);
-  myfloat siny = -z * x * rcosa - y * sina;
+  myfloat siny = -z * x * rcosa + y * sina;
   // there goes assumption than cos(y) >= 0:
   if (siny >= 1) return;
   myfloat cosy = sqrt(1 - Sqr(siny));
+
   myfloat sinx = (z * y * rcosa + x * sina) / cosy;
   myfloat cosx = (cosa + z * z * rcosa) / cosy;
   myfloat cosz = (cosa + x * x * rcosa) / cosy;

@@ -107,6 +107,46 @@ bool WeldTransform::ProcessKeyDown(const SDL_KeyboardEvent &event) {
     case SDLK_g:
       if (rotate_)
         return true;
+    case SDLK_KP8:
+      move_state_.cam_up = 1;
+      if (rotate_)
+        return true;
+      break;
+    case SDLK_KP2:
+      move_state_.cam_down = -1;
+      if (rotate_)
+        return true;
+      break;
+    case SDLK_KP4:
+      move_state_.cam_left = 1;
+      if (rotate_)
+        return true;
+      break;
+    case SDLK_KP6:
+      move_state_.cam_right = -1;
+      if (rotate_)
+        return true;
+      break;
+    default:
+      break;
+  }
+  return false;
+}
+
+bool WeldTransform::ProcessKeyUp(const SDL_KeyboardEvent &event) {
+  switch (event.keysym.sym) {
+    case SDLK_KP8:
+      move_state_.cam_up = 0;
+      break;
+    case SDLK_KP2:
+      move_state_.cam_down = 0;
+      break;
+    case SDLK_KP4:
+      move_state_.cam_left = 0;
+      break;
+    case SDLK_KP6:
+      move_state_.cam_right = 0;
+      break;
     default:
       break;
   }
@@ -125,6 +165,10 @@ void WeldTransform::PostRenderStep() {
   if (rotate_) {
     myfloat rotation_k_ = M_PI_2 / (context()->window->height() * rotation_speed_);
 
+    char cam_left_right = move_state_.cam_left + move_state_.cam_right;
+    char cam_up_down = move_state_.cam_up + move_state_.cam_down;
+    xrel_ += cam_left_right * 10;
+    yrel_ += cam_up_down * 10;
     myfloat dist = sqrt(Sqr(xrel_) + Sqr(yrel_));
     if (dist != 0) {
       myfloat angle = dist * rotation_k_;

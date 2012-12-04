@@ -1,7 +1,7 @@
 #include "common/exception.h"
 #include "camera.h"
 
-Camera::Camera() : viewer_distance_(1), scale_(1), width_(0), height_(0), k_(0) {}
+Camera::Camera() : viewer_distance_(1), view_limit_(1), scale_(1), width_(0), height_(0), k_(0) {}
 
 void Camera::set_size(const myfloat width, const myfloat height) {
   if (width <= 0 || height <= 0) {
@@ -26,6 +26,10 @@ void Camera::set_scale(const myfloat scale) {
   }
   scale_ = scale;
   k_ = viewer_distance_ * height_ * scale_;
+}
+
+void Camera::set_view_limit(const myfloat view_limit) {
+  view_limit_ = view_limit;
 }
 
 void Camera::PerspectiveTransform(Point3D &point) const {

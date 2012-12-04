@@ -14,10 +14,12 @@ window:
   interface:
     move-speed: 120
     rotation-speed: 0.333333
-  rasterizer:
-    viewer-distance: 1000
-  scale: 0.005
   pointer: textures/crosshair.png
+  camera:
+    viewer-distance: 1000
+    scale: 0.005
+    view-limit: 10000
+
 scene:
   plane-color: "#FFFFFF"
 models:

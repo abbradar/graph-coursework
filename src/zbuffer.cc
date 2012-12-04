@@ -1,4 +1,5 @@
 #include <limits>
+#include <algorithm>
 #include "zbuffer.h"
 
 using namespace std;
@@ -23,4 +24,9 @@ void ZBuffer::set_size(const unsigned int width, const unsigned int height) {
 
 void ZBuffer::Clear() {
   memset(z_buffer_, 0xFF, sizeof(myfloat) * size_);
+  //std::fill_n(z_buffer_, size_, std::numeric_limits<myfloat>::max);
+}
+
+void ZBuffer::FillLine(const unsigned int y, const myfloat z) {
+  std::fill_n(z_buffer_ + y * width_, width_, z);
 }

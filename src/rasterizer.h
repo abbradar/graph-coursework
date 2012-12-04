@@ -21,18 +21,11 @@ class Rasterizer : public PreRenderWorker, RenderWorker, public ContextUser {
 
   virtual void Paint(sdlobj::Surface &surface);
 
-  inline myfloat view_limit() const {
-    return view_limit_;
-  }
-
-  void set_view_limit(const myfloat view_limit);
-
  private:
   template <bool kTextures> void TransformObject(const std::shared_ptr<SceneObject> &object, const Matrix4 &transform,
                                                  TransformedObjectMap &new_cache, const Point3D &normal);
 
   std::shared_ptr<TransformedObjectMap> cache_;
-  myfloat view_limit_;
   ZBuffer z_buffer_;
 };
 

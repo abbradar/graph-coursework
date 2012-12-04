@@ -29,11 +29,18 @@ class Camera : public Position {
 
   void set_scale(const myfloat scale);
 
+  inline myfloat view_limit() const {
+    return view_limit_;
+  }
+
+  void set_view_limit(const myfloat view_limit);
+
   void PerspectiveTransform(Point3D &point) const;
   void ReversePerspectiveTransform(Point3D &point) const;
 
  private:
   myfloat viewer_distance_;
+  myfloat view_limit_;
   myfloat scale_;
   myfloat width_;
   myfloat height_;

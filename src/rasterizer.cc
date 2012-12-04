@@ -1,11 +1,13 @@
+#include <algorithm>
 #include "common/math.h"
 #include "common/debug.h"
 #include "common/exception.h"
 #include "triangletraverser.h"
 #include "rasterizer.h"
 
-#define NO_NORMAL_FACE_CLIPPING
+//#define NO_NORMAL_FACE_CLIPPING
 #define NO_LIGHTING
+#define NO_DRAW_SURFACE
 
 using namespace std;
 using namespace sdlobj;
@@ -111,6 +113,18 @@ template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *tr
       Assert(false);
       break;
   }
+}
+
+template<class Clipper> bool Clip(Point3D &a, Point3D &b, const myfloat value) {
+  if (Clipper::Compare(a, value)) {
+    if (Clipper::Compare(b, value)) return false;
+    Clipper::Intersect(a, b, a, value);
+  } else if (Clipper::Compare(b, value)) {
+    if (Clipper::Compare(a, value)) return false;
+    Clipper::Intersect(a, b, b, value);
+  }
+
+  return true;
 }
 
 // Maximum number of splitted triangles after clipping
@@ -323,7 +337,7 @@ template <class Integral = unsigned> class RasterizerTraversable : public Traver
  public:
   struct TraversableContext {
     const Material *material;
-    const Surface *surface;
+    Surface *surface;
     ZBuffer *z_buffer;
     SurfacePainter *surface_painter;
   };
@@ -352,7 +366,7 @@ template <class Integral = unsigned> class RasterizerTraversable : public Traver
       sdlobj::Color color = context->material->color();
       color = ProcessColor(context, color, x, y);
       Uint32 pixel = context->surface->ColorToPixel(color);
-      SetPixel(context, x, y, this->z(), pixel);
+      SetPixel(context, x, y, pixel);
       return true;
     }
 
@@ -362,8 +376,8 @@ template <class Integral = unsigned> class RasterizerTraversable : public Traver
 #endif
     }
 
-    static inline void SetPixel(TraversableContext *context, const unsigned x, const unsigned y, const myfloat z, const Uint32 pixel) {
-      if (context->z_buffer->Check(x, y, z)) {
+    inline void SetPixel(TraversableContext *context, const unsigned x, const unsigned y, const Uint32 pixel) {
+      if (context->z_buffer->Check(x, y, this->z())) {
         context->surface_painter->SetPixel(x, y, pixel);
       }
     }
@@ -433,14 +447,14 @@ template <class Integral = unsigned> struct RasterizerTexturedTraversable : publ
       UVTraversableHorizontal(a, da, b, db) {}
 
     virtual inline bool Process(TraversableContext *context, const Integral x, const Integral y) {
-      Point2D uv;// = this->GetUV();
+      Point2D uv = this->GetUV();
       uv.x = 0;
       uv.y = 0;
       Uint32 t_pixel = context->texture->GetPixel(uv.x, uv.y);
       sdlobj::Color color = context->material->texture()->PixelToColor(t_pixel);
       color = this->ProcessColor(context, color, x, y);
       Uint32 pixel = context->surface->ColorToPixel(color);
-      this->SetPixel(context, x, y, this->z(), pixel);
+      this->SetPixel(context, x, y, pixel);
       return true;
     }
 
@@ -498,7 +512,7 @@ template <bool kTextures> void DrawTriangle(const size_t tri_i, const Transforme
   if (ClipTriangles<YClipper<Greater<myfloat>>>(triangles_buf, triangles_size, points_buf,
                                                        points_size, context->surface->height() - 1)) return;
 
-  RasterizerTexturedTraversableData data[kPointsSize];
+  RasterizerTexturedTraversableData data[points_size];
   for (size_t i = 0; i < points_size; ++i) {
     data[i].z = points_buf[i].z;
   }
@@ -512,8 +526,12 @@ template <bool kTextures> void DrawTriangle(const size_t tri_i, const Transforme
     TriangleTraverser<NormalsTraversable<myfloat>> traverser(points_buf[0], data[0].normal,
                                                     points_buf[1], data[1].normal,
                                                     points_buf[2], data[2].normal);
-    memset((bool *)&normal_found, true, 3 * sizeof(bool));
-    memset((bool *)&normal_found + 3, false, (points_size - 3) * sizeof(bool));
+    /*std::fill_n((bool *)&normal_found, IndexedTriangle::kPointsSize, true);
+    std::fill_n((bool *)&normal_found + IndexedTriangle::kPointsSize,
+                points_size - IndexedTriangle::kPointsSize, true);*/
+    memset((bool *)&normal_found, true, points_size - IndexedTriangle::kPointsSize * sizeof(bool));
+    memset((bool *)&normal_found + IndexedTriangle::kPointsSize,
+           false, (points_size - IndexedTriangle::kPointsSize) * sizeof(bool));
     for (size_t i = 0; i < triangles_size; ++i) {
       IndexedTriangle &pol = triangles_buf[i];
       if (pol.points[0] == -1) continue;
@@ -546,8 +564,12 @@ template <bool kTextures> void DrawTriangle(const size_t tri_i, const Transforme
       }
 #else
       bool normal_found[points_size];
-      memset((bool *)&normal_found, false, 3 * sizeof(bool));
-      memset((bool *)&normal_found + 3, true, (points_size - 3) * sizeof(bool));
+      /*std::fill_n((bool *)&normal_found, IndexedTriangle::kPointsSize, true);
+      std::fill_n((bool *)&normal_found + IndexedTriangle::kPointsSize,
+                  points_size - IndexedTriangle::kPointsSize, true);*/
+      memset((bool *)&normal_found, true, points_size - IndexedTriangle::kPointsSize * sizeof(bool));
+      memset((bool *)&normal_found + IndexedTriangle::kPointsSize,
+             false, (points_size - IndexedTriangle::kPointsSize) * sizeof(bool));
       for (size_t i = 0; i < triangles_size; ++i) {
         IndexedTriangle &pol = triangles_buf[i];
         if (pol.points[0] == -1) continue;
@@ -634,12 +656,12 @@ template <bool kTextures> void Rasterizer::TransformObject(const std::shared_ptr
   }
 }
 
-void Rasterizer::PreRenderStep() {
-  static const myfloat system_transform_m[] = {0, -1, 0, 0,
-                                               0, 0, -1, 0,
-                                               1, 0, 0, 0,
-                                               0, 0, 0, 1};
+static const myfloat system_transform_m[] = {0, -1, 0, 0,
+                                             0, 0, -1, 0,
+                                             1, 0, 0, 0,
+                                             0, 0, 0, 1};
 
+void Rasterizer::PreRenderStep() {
   Matrix4 transform(system_transform_m);
   transform *= context()->camera.GetMatrixTo();
 #ifndef NO_NORMAL_FACE_CLIPPING
@@ -661,16 +683,54 @@ void Rasterizer::PreRenderStep() {
   *cache_ = std::move(new_cache);
 }
 
+void DrawSurface(RasterizerTexturedTraversable<>::TraversableContext &context, const Camera &camera) {
+  Matrix4 transform(system_transform_m);
+  transform *= Matrix4::RotateY(-camera.pitch);
+
+  Point3D far = Point3D(camera.view_limit(), 0, -camera.z);
+  far = transform * far;
+  //camera.PerspectiveTransform(far);
+  far.x += camera.width() / 2.0;
+  far.y += camera.height() / 2.0;
+  Point3D near = Point3D(-camera.view_limit(), 0, -camera.z);
+  near = transform * near;
+  //camera.PerspectiveTransform(near);
+  near.x += camera.width() / 2.0;
+  near.y += camera.height() / 2.0;
+  if (far.y > near.y) std::swap(far, near);
+  if (far.y < context.surface->height() && near.y >= 0) {
+    if (!Clip<ZClipper<Less<myfloat>>>(far, near, 0)) return;
+    if (!Clip<YClipper<Less<myfloat>>>(far, near, 0)) return;
+    if (!Clip<YClipper<Greater<myfloat>>>(far, near, context.surface->height() - 1)) return;
+
+    int y = far.y, fy = near.y;
+    int dy = fy - y;
+    context.surface->FillRect(0, y, context.surface->width(), dy, 0x5F5F5F);
+    myfloat z = far.z;
+    myfloat dz = 0;
+    if (y != fy) dz = (near.z - z) / dy;
+    for (int cy = y; cy < fy; ++cy) {
+      context.z_buffer->FillLine(cy, z);
+      z += dz;
+    }
+    context.z_buffer->FillLine(fy, z);
+  }
+}
+
 void Rasterizer::Paint(sdlobj::Surface &surface) {
-  z_buffer_.set_size(context()->camera.width(), context()->camera.height());
+  z_buffer_.set_size(surface.width(), surface.height());
   z_buffer_.Clear();
 
   SurfacePainter surface_painter(&surface);
 
-  RasterizerTexturedTraversable<>::TraversableContext context;
-  context.surface = &surface;
-  context.z_buffer = &z_buffer_;
-  context.surface_painter = &surface_painter;
+  RasterizerTexturedTraversable<>::TraversableContext tcontext;
+  tcontext.surface = &surface;
+  tcontext.z_buffer = &z_buffer_;
+  tcontext.surface_painter = &surface_painter;
+
+#ifndef NO_DRAW_SURFACE
+  DrawSurface(tcontext, context()->camera);
+#endif
 
   surface_painter.StartDrawing();
   for (auto &cacheobject : *cache_) {
@@ -687,35 +747,31 @@ void Rasterizer::Paint(sdlobj::Surface &surface) {
         } else {
           material = m_i->second.get();
         }
-        context.material = material;
+        tcontext.material = material;
         if (material->texture()) {
           SurfacePainter texture_painter(material->texture().get());
           texture_painter.StartDrawing();
-          context.texture = &texture_painter;
-          DrawTriangle<true>(t, transformed, *object, &context);
+          tcontext.texture = &texture_painter;
+          DrawTriangle<true>(t, transformed, *object, &tcontext);
         } else {
-          DrawTriangle<false>(t, transformed, *object, &context);
+          DrawTriangle<false>(t, transformed, *object, &tcontext);
         }
       }
     } else {
       for (const auto &t : transformed.triangle_indexes) {
         const Material &material = *object->model()->materials()[t];
-        context.material = &material;
+        tcontext.material = &material;
         if (material.texture()) {
           SurfacePainter texture_painter(material.texture().get());
           texture_painter.StartDrawing();
-          context.texture = &texture_painter;
-          DrawTriangle<true>(t, transformed, *object, &context);
+          tcontext.texture = &texture_painter;
+          DrawTriangle<true>(t, transformed, *object, &tcontext);
         } else {
-          DrawTriangle<false>(t, transformed, *object, &context);
+          DrawTriangle<false>(t, transformed, *object, &tcontext);
         }
       }
     }
   }
-}
-
-void Rasterizer::set_view_limit(const myfloat view_limit) {
-  view_limit_ = view_limit;
 }
 
 void Rasterizer::Clear() {

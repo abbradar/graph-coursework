@@ -72,6 +72,26 @@ bool MoveTransform::ProcessKeyDown(const SDL_KeyboardEvent &event) {
       return true;
     case SDLK_g:
       return true;
+    case SDLK_KP8:
+      move_state_.cam_up = 1;
+      if (rotate_ || z_rotate_)
+        return true;
+      break;
+    case SDLK_KP2:
+      move_state_.cam_down = -1;
+      if (rotate_ || z_rotate_)
+        return true;
+      break;
+    case SDLK_KP4:
+      move_state_.cam_left = 1;
+      if (rotate_ || z_rotate_)
+        return true;
+      break;
+    case SDLK_KP6:
+      move_state_.cam_right = -1;
+      if (rotate_ || z_rotate_)
+        return true;
+      break;
     default:
       break;
   }
@@ -86,6 +106,18 @@ bool MoveTransform::ProcessKeyUp(const SDL_KeyboardEvent &event) {
     case SDLK_z:
       z_rotate_ = false;
       return true;
+    case SDLK_KP8:
+      move_state_.cam_up = 0;
+      break;
+    case SDLK_KP2:
+      move_state_.cam_down = 0;
+      break;
+    case SDLK_KP4:
+      move_state_.cam_left = 0;
+      break;
+    case SDLK_KP6:
+      move_state_.cam_right = 0;
+      break;
     default:
       break;
   }
@@ -105,6 +137,10 @@ void MoveTransform::PostRenderStep() {
     myfloat rotation_k_ = M_PI_2 / (context()->window->height() * rotation_speed_);
 
     Point3D axis;
+    char cam_left_right = move_state_.cam_left + move_state_.cam_right;
+    char cam_up_down = move_state_.cam_up + move_state_.cam_down;
+    xrel_ += cam_left_right * 10;
+    yrel_ += cam_up_down * 10;
     myfloat dist = sqrt(Sqr(xrel_) + Sqr(yrel_));
     if (dist != 0) {
       if (z_rotate_) {
@@ -120,14 +156,16 @@ void MoveTransform::PostRenderStep() {
 
       myfloat roll, pitch, yaw;
       u.AxisToEuler(angle, roll, pitch, yaw);
-      Matrix4 matrix = Matrix4::Translate(tp_.x, tp_.y, tp_.z) * Matrix4::RotateX(roll) *
-          Matrix4::RotateY(pitch) * Matrix4::RotateZ(yaw) * Matrix4::Translate(-tp_.x, -tp_.y, -tp_.z);
+      if (pitch != 0) {
+        u.x += 1;
+        u.x -= 1;
+      }
+      //Matrix4 matrix = Matrix4::RotateZ(yaw) * Matrix4::RotateY(pitch) * Matrix4::RotateX(roll);
+      //Point3D dt = matrix * tp_ - tp_;
       //matrix.ToRotate(roll, pitch, yaw);
-      myfloat tx, ty, tz;
-      matrix.ToTranslate(tx, ty, tz);
-      new_position.x += tx;
-      new_position.y += ty;
-      new_position.z += tz;
+      /*new_position.x += dt.x;
+      new_position.y += dt.y;
+      new_position.z += dt.z;*/
       new_position.roll += roll;
       new_position.pitch += pitch;
       new_position.yaw += yaw;

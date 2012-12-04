@@ -387,11 +387,12 @@ template <class T> class TriangleTraverser {
   static bool PointLines(ScreenLine<IntegralType> &a, T &ta,
                          ScreenLine<IntegralType> &b, T &tb,
                          const IntegralType x, const IntegralType y, ContextType *context) {
-    myfloat dy = y - a.y();
-    a.Advance(dy);
-    ta.Advance(dy);
-    b.Advance(dy);
-    tb.Advance(dy);
+    myfloat day = y - a.y();
+    a.Advance(day);
+    ta.Advance(day);
+    myfloat dby = y - b.y();
+    b.Advance(dby);
+    tb.Advance(dby);
     if (x < a.x() || x > b.x()) return false;
     auto tr = HorizontalTraversable(a, ta, b, tb);
     tr.Advance(x - a.x());
@@ -406,9 +407,9 @@ template <class T> class TriangleTraverser {
 
       // move line points
       a.Advance();
-      //ta.Advance();
+      ta.Advance();
       b.Advance();
-      //tb.Advance();
+      tb.Advance();
     }
     TraverseLine(a, ta, b, tb, context);
   }

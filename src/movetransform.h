@@ -9,6 +9,13 @@ class MoveTransform : public EventWorker, public ContextUser, public PostRenderW
  public:
   MoveTransform(const std::shared_ptr<Context> &context);
 
+  struct MoveState {
+    char cam_up = 0;
+    char cam_down = 0;
+    char cam_left = 0;
+    char cam_right = 0;
+  };
+
   bool ProcessMouseMotion(const SDL_MouseMotionEvent &event);
   bool ProcessMouseButtonDown(const SDL_MouseButtonEvent &event);
   bool ProcessKeyDown(const SDL_KeyboardEvent &event);
@@ -27,6 +34,7 @@ class MoveTransform : public EventWorker, public ContextUser, public PostRenderW
   Point3D p0_, p1_, p2_;
   Point3D tp_;
 
+  MoveState move_state_;
   int xrel_, yrel_;
   std::weak_ptr<SceneObject> object_;
   bool wait_finish_, finish_, rotate_, z_rotate_;
