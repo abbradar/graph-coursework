@@ -21,8 +21,8 @@ void SceneObject::set_position(const Position &position) {
 }
 
 void SceneObject::UpdatePositioned() {
-  Matrix4 rotate_transform = position_.GetRotateMatrixFrom();
-  Matrix4 transform = position_.GetTranslateMatrixFrom() * rotate_transform;
+  AffineTransform rotate_transform = position_.GetRotateMatrixFrom();
+  AffineTransform transform = position_.GetTranslateMatrixFrom() * rotate_transform;
   // points
   positioned_points_.resize(model_->points().size());
   for (size_t i = 0; i < positioned_points_.size(); ++i) {

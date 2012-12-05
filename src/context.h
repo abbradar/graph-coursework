@@ -16,7 +16,7 @@ struct TransformedObject {
   TransformedObject(const std::weak_ptr<SceneObject> &object);
 
   std::weak_ptr<SceneObject> object;
-  Point3DVector points;
+  Vector3Vector points;
   std::vector<bool> point_flags;
   std::vector<size_t> triangle_indexes;
   std::unique_ptr<MaterialOverlayMap> material_overlay;

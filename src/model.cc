@@ -11,8 +11,8 @@ Model::Model(const string &name) : name_(name) {}
 
 Model::~Model() = default;
 
-void Model::set_model(const Point3DVector &points, const TriangleVector &polygons,
-                      const Point3DVector &vertex_normals, const MaterialVector &materials) {
+void Model::set_model(const Vector3Vector &points, const TriangleVector &polygons,
+                      const Vector3Vector &vertex_normals, const MaterialVector &materials) {
   if (points.size() != vertex_normals.size()) {
     throw Exception("Points and vertex normals numbers mismatch");
   }
@@ -26,7 +26,7 @@ void Model::set_model(const Point3DVector &points, const TriangleVector &polygon
   ComputePolygonNormals();
 }
 
-void Model::set_uv_coords(std::shared_ptr<Point2DVector> &uv_coords) {
+void Model::set_uv_coords(std::shared_ptr<Vector2Vector> &uv_coords) {
   if (uv_coords->size() != points_.size()) {
     throw Exception("Points and UV coords numbers mismatch");
   }
@@ -37,15 +37,13 @@ void Model::ComputePolygonNormals() {
   polygon_normals_.clear();
   polygon_normals_.reserve(polygons_.size());
   for (const auto &p : polygons_) {
-    Point3D &offset = points_[p.points[0]];
-    Point3D a = points_[p.points[1]] - offset,
+    Vector3 &offset = points_[p.points[0]];
+    Vector3 a = points_[p.points[1]] - offset,
         b = points_[p.points[2]] - offset;
-    Point3D result = Point3D::VectorMul(a, b);
-    char sign = Sign(Point3D::ScalarMul(vertex_normals_[p.points[0]], result));
+    Vector3 result = a.cross(b);
+    char sign = Sign(vertex_normals_[p.points[0]].dot(result));
     if (sign < 0) {
-      result.x = -result.x;
-      result.y = -result.y;
-      result.z = -result.z;
+      result *= -1;
     }
     polygon_normals_.push_back(result);
   }

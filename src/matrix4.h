@@ -1,70 +1,196 @@
 #ifndef GRAPH_MATRIX4_H_
 #define GRAPH_MATRIX4_H_
 
-class Matrix4;
+#include "myfloat.h"
+#include "config.h"
+
+#ifdef USE_EIGEN
+
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+typedef Eigen::Transform<myfloat, 3, Eigen::AffineCompact> AffineTransform;
+typedef Eigen::AngleAxis<myfloat> RotateTransform;
+typedef Eigen::Translation<myfloat, 3> TranslateTransform;
+typedef Eigen::Matrix<myfloat, 4, 4> Matrix4;
+using Eigen::Scaling;
+
+#else
 
 #include <cstring>
-#include "xparse/xdata.h"
+#include <algorithm>
 #include "common/debug.h"
+#if DEBUG_LEVEL >= 4
 #include "common/exception.h"
+#endif
+
+class Matrix34;
+typedef Matrix34 AffineTransform;
+
 #include "point3d.h"
-#include "myfloat.h"
 
-class Matrix4 {
+template <size_t kTMatrixHeight, size_t kTMatrixWidth> class Matrix {
  public:
-  static const size_t kMatrixWidth;
-  static const size_t kMatrixHeight;
+  static constexpr size_t kMatrixHeight = kTMatrixHeight;
+  static constexpr size_t kMatrixWidth = kTMatrixWidth;
 
-  Matrix4();
-  Matrix4(myfloat fill);
-  Matrix4(const myfloat *array);
-  Matrix4(const Matrix4 &other);
-  ~Matrix4();
+  Matrix() = default;
 
-  Matrix4 &operator =(const Matrix4 &other);
+  Matrix(const myfloat fill) {
+    std::fill_n(matrix_, kMatrixWidth * kMatrixHeight, fill);
+  }
 
-  inline myfloat &at(size_t x, size_t y) {
+  Matrix(const myfloat *array) {
+    memcpy(matrix_, array, kMatrixWidth * kMatrixHeight * sizeof(myfloat));
+  }
+
+  Matrix(const Matrix &other) : Matrix(other.matrix_) {}
+
+  Matrix &operator =(const Matrix &other) {
+    memcpy(matrix_, other.matrix_, kMatrixWidth * kMatrixHeight * sizeof(myfloat));
+    return *this;
+  }
+
+  inline myfloat &operator ()(const size_t y, const size_t x) {
 #if DEBUG_LEVEL >= 4
     if (x > kMatrixWidth || y > kMatrixHeight) {
       throw Exception("Matrix index is out of bounds.");
     }
 #endif
-    return matrix_[y * kMatrixWidth + x];
+    return matrix_[x * kMatrixHeight + y];
   }
 
   inline myfloat *data() {
     return matrix_;
   }
 
-  Matrix4 Transpose();
+  inline const myfloat *data() const {
+    return matrix_;
+  }
 
-  static Matrix4 Translate(myfloat x, myfloat y, myfloat z);
-  static Matrix4 RotateX(myfloat a);
-  static Matrix4 RotateY(myfloat a);
-  static Matrix4 RotateZ(myfloat a);
-  static Matrix4 Scale(myfloat x, myfloat y, myfloat z);
-  static Matrix4 Identity();
+  static constexpr size_t rows() {
+    return kMatrixHeight;
+  }
 
-  static Matrix4 LoadFromXTransformMatrix(xparse::XData *data);
+  static constexpr size_t cols() {
+    return kMatrixHeight;
+  }
 
-  Matrix4 &operator +=(const Matrix4 &other);
-  Matrix4 &operator -=(const Matrix4 &other);
-  Matrix4 &operator *=(const Matrix4 &other);
+  void transposeInPlace() {
+    for (size_t i = 1; i < kMatrixHeight; ++i) {
+      for (size_t j = 0; j < i; ++j) {
+        std::swap(operator ()(i, j), operator ()(j, i));
+      }
+    }
+  }
 
-  void ToRotate(myfloat &roll, myfloat &pitch, myfloat &yaw);
-  void ToTranslate(myfloat &x, myfloat &y, myfloat &z);
+  Matrix &operator +=(const Matrix &other) {
+    for (myfloat *ti = matrix_, *oi = other.matrix_; ti < matrix_ + kMatrixHeight * kMatrixWidth; ++ti, ++oi)
+      *ti += *oi;
+    return *this;
+  }
+
+  Matrix &operator -=(const Matrix &other) {
+    for (myfloat *ti = matrix_, *oi = other.matrix_; ti < matrix_ + kMatrixHeight * kMatrixWidth; ++ti, ++oi)
+      *ti -= *oi;
+    return *this;
+  }
+
+  template <size_t kOMatrixWidth>
+    Matrix<kMatrixHeight, kOMatrixWidth> &operator *=(const Matrix<kTMatrixWidth, kOMatrixWidth> &other) {
+      *this = *this * other;
+      return *this;
+    }
 
  private:
-  myfloat *matrix_;
+  myfloat matrix_[kMatrixHeight * kMatrixWidth];
 
-  friend Matrix4 operator +(const Matrix4 &a, const Matrix4 &b);
-  friend Matrix4 operator -(const Matrix4 &a, const Matrix4 &b);
-  friend Matrix4 operator *(const Matrix4 &a, const Matrix4 &b);
-  friend Point3D operator *(const Matrix4 &matrix, const Point3D &point);
+  template <size_t kMatrixHeight, size_t kMatrixWidth>
+    friend Matrix<kMatrixHeight, kMatrixWidth> operator +(const Matrix<kMatrixHeight, kMatrixWidth> &a,
+                                                          const Matrix<kMatrixHeight, kMatrixWidth> &b);
+  template <size_t kMatrixHeight, size_t kMatrixWidth>
+    friend Matrix<kMatrixHeight, kMatrixWidth> operator -(const Matrix<kMatrixHeight, kMatrixWidth> &a,
+                                                          const Matrix<kMatrixHeight, kMatrixWidth> &b);
+  template <size_t kMatrixHeight, size_t kMatrixCSize, size_t kMatrixWidth>
+    friend Matrix<kMatrixHeight, kMatrixWidth> operator *(const Matrix<kMatrixHeight, kMatrixCSize> &a,
+                                                          const Matrix<kMatrixCSize, kMatrixWidth> &b);
 };
 
-Matrix4 operator +(const Matrix4 &a, const Matrix4 &b);
-Matrix4 operator -(const Matrix4 &a, const Matrix4 &b);
-Matrix4 operator *(const Matrix4 &a, const Matrix4 &b);
+template <size_t kMatrixHeight, size_t kMatrixWidth>
+  Matrix<kMatrixHeight, kMatrixWidth> operator +(const Matrix<kMatrixHeight, kMatrixWidth> &a,
+                                                        const Matrix<kMatrixHeight, kMatrixWidth> &b) {
+  Matrix<kMatrixHeight, kMatrixWidth> r(a);
+  r += b;
+  return r;
+}
+
+template <size_t kMatrixHeight, size_t kMatrixWidth>
+  Matrix<kMatrixHeight, kMatrixWidth> operator -(const Matrix<kMatrixHeight, kMatrixWidth> &a,
+                                                        const Matrix<kMatrixHeight, kMatrixWidth> &b) {
+  Matrix<kMatrixHeight, kMatrixWidth> r(a);
+  r -= b;
+  return r;
+}
+
+template <size_t kMatrixHeight, size_t kMatrixCSize, size_t kMatrixWidth>
+  Matrix<kMatrixHeight, kMatrixWidth> operator *(const Matrix<kMatrixHeight, kMatrixCSize> &a,
+                                                        const Matrix<kMatrixCSize, kMatrixWidth> &b) {
+  Matrix<kMatrixHeight, kMatrixWidth> r;
+  myfloat *ri = r.data();
+  const myfloat *bstart = b.data();
+  for (size_t i = 0; i < kMatrixWidth; ++i) {
+    for (size_t j = 0; j < kMatrixHeight; ++j, ++ri) {
+      myfloat cr = 0;
+      const myfloat *ai = a.data() + j, *bi = bstart;
+      for (size_t k = 0; k < kMatrixCSize - 1; ++k) {
+        cr += *ai * *bi;
+        ai += kMatrixHeight;
+        ++bi;
+      }
+      cr += *ai * *bi;
+      *ri = cr;
+    }
+    bstart += kMatrixCSize;
+  }
+  return r;
+}
+
+typedef Matrix<4, 4> Matrix4;
+
+class Matrix34 : public Matrix<3, 4> {
+ public:
+  Matrix34();
+  Matrix34(const Matrix4 &matrix4);
+  Matrix34(const myfloat fill);
+  Matrix34(const myfloat *array);
+  Matrix34(const Matrix34 &other);
+
+  Matrix34 &operator *=(const Matrix34 &other);
+
+ private:
+  friend Vector3 operator *(const Matrix34 &matrix, const Vector3 &vector);
+  friend Matrix34 operator *(const Matrix34 &a, const Matrix34 &b);
+};
+
+Vector3 operator *(const Matrix34 &matrix, const Vector3 &vector);
+Matrix34 operator *(const Matrix34 &a, const Matrix34 &b);
+
+class RotateTransform : public AffineTransform {
+ public:
+  RotateTransform(const myfloat angle, const Vector3UnitX &);
+  RotateTransform(const myfloat angle, const Vector3UnitY &);
+  RotateTransform(const myfloat angle, const Vector3UnitZ &);
+
+  //RotateTransform(const myfloat angle, const &Vector3);
+};
+
+class TranslateTransform : public AffineTransform {
+ public:
+  TranslateTransform(const myfloat x, const myfloat y, const myfloat z);
+};
+
+AffineTransform Scaling(const myfloat kx, const myfloat ky, const myfloat kz);
+
+#endif
 
 #endif // GRAPH_MATRIX4_H_

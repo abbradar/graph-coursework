@@ -1,69 +1,87 @@
-#include "common/math.h"
 #include "point3d.h"
 
-Point3D &Point3D::operator +=(const Point3D &other) {
-  x += other.x;
-  y += other.y;
-  z += other.z;
+#ifndef USE_EIGEN
+
+#include "common/math.h"
+
+Vector3 &Vector3::operator +=(const Vector3 &other) {
+  x_ += other.x_;
+  y_ += other.y_;
+  z_ += other.z_;
   return *this;
 }
 
-Point3D &Point3D::operator -=(const Point3D &other) {
-  x -= other.x;
-  y -= other.y;
-  z -= other.z;
+Vector3 &Vector3::operator -=(const Vector3 &other) {
+  x_ -= other.x_;
+  y_ -= other.y_;
+  z_ -= other.z_;
   return *this;
 }
 
-Point3D &Point3D::operator *=(const Matrix4 &matrix) {
-  *this = matrix * *this;
-  return *this;
-}
-
-void Point3D::WeightNormalize() {
-  x /= w;
-  y /= w;
-  z /= w;
-  w = 1;
-}
-
-Point3D Point3D::VectorMul(const Point3D &a, const Point3D &b) {
-  Point3D result;
-  result.x = a.y * b.z - a.z * b.y;
-  result.y = a.z * b.x - a.x * b.z;
-  result.z = a.x * b.y - a.y * b.x;
+Vector3 Vector3::cross(const Vector3 &b) const {
+  Vector3 result;
+  result.x_ = y_ * b.z_ - z_ * b.y_;
+  result.y_ = z_ * b.x_ - x_ * b.z_;
+  result.z_ = x_ * b.y_ - y_ * b.x_;
   return result;
 }
 
-myfloat Point3D::ScalarMul(const Point3D &a, const Point3D &b) {
-  return a.x * b.x + a.y * b.y + a.z * b.z;
+myfloat Vector3::dot(const Vector3 &b) const {
+  return x_ * b.x_ + y_ * b.y_ + z_ * b.z_;
 }
 
-myfloat Point3D::Distance(const Point3D &a, const Point3D &b) {
-  return sqrt(DistanceSqr(a, b));
+const Vector3UnitX &Vector3::UnitX() {
+  static const Vector3UnitX unit;
+  return unit;
 }
 
-myfloat Point3D::DistanceSqr(const Point3D &a, const Point3D &b) {
-  return Sqr(a.x - b.x) + Sqr(a.y - b.y) + Sqr(a.z - b.z);
+const Vector3UnitY &Vector3::UnitY() {
+  static const Vector3UnitY unit;
+  return unit;
 }
 
-void Point3D::AxisToEuler(const myfloat angle, myfloat &roll, myfloat &pitch, myfloat &yaw) {
+const Vector3UnitZ &Vector3::UnitZ() {
+  static const Vector3UnitZ unit;
+  return unit;
+}
+
+myfloat Vector3::norm() const {
+  return sqrt(squaredNorm());
+}
+
+myfloat Vector3::squaredNorm() const {
+  return Sqr(x_) + Sqr(y_) + Sqr(z_);
+}
+
+Vector3 operator +(const Vector3 &a, const Vector3 &b) {
+  Vector3 r(a);
+  r += b;
+  return r;
+}
+
+Vector3 operator -(const Vector3 &a, const Vector3 &b) {
+  Vector3 r(a);
+  r -= b;
+  return r;
+}
+
+void AxisToEuler(const Vector3 &p, const myfloat angle, myfloat &roll, myfloat &pitch, myfloat &yaw) {
   myfloat cosa = cos(angle);
   myfloat rcosa = 1 - cosa;
   myfloat sina = sin(angle);
-  myfloat siny = -z * x * rcosa + y * sina;
+  myfloat siny = -p.z() * p.x() * rcosa + p.y() * sina;
   // there goes assumption than cos(y) >= 0:
   if (siny >= 1) return;
   myfloat cosy = sqrt(1 - Sqr(siny));
 
-  myfloat sinx = (z * y * rcosa + x * sina) / cosy;
-  myfloat cosx = (cosa + z * z * rcosa) / cosy;
-  myfloat cosz = (cosa + x * x * rcosa) / cosy;
-  myfloat sinz = (y * x * rcosa + z * sina) / cosy;
+  myfloat sinx = (p.z() * p.y() * rcosa + p.x() * sina) / cosy;
+  myfloat cosx = (cosa + Sqr(p.z()) * rcosa) / cosy;
+  myfloat cosz = (cosa + Sqr(p.x()) * rcosa) / cosy;
+  myfloat sinz = (p.y() * p.x() * rcosa + p.z() * sina) / cosy;
   // now let's check if our assumption was correct
   myfloat check1 = cosx * cosz + sinx * siny * sinz;
-  myfloat check2 = cosa + y * y * rcosa;
-  if (abs(check1 - check2) > 0.1) {
+  myfloat check2 = cosa + Sqr(p.y()) * rcosa;
+  if (fabs(check1 - check2) > 0.001) {
     cosy = -cosy;
     sinx = -sinx;
     cosx = -cosx;
@@ -75,33 +93,4 @@ void Point3D::AxisToEuler(const myfloat angle, myfloat &roll, myfloat &pitch, my
   yaw = Angle(sinz, cosz);
 }
 
-Point3D operator +(const Point3D &a, const Point3D &b) {
-  Point3D r(a);
-  r += b;
-  return r;
-}
-
-Point3D operator -(const Point3D &a, const Point3D &b) {
-  Point3D r(a);
-  r -= b;
-  return r;
-}
-
-Point3D operator *(const Matrix4 &matrix, const Point3D &point) {
-  Point3D r;
-  myfloat *c = matrix.matrix_;
-  r.x = c[Matrix4::kMatrixWidth * 0 + 0] * point.x + c[Matrix4::kMatrixWidth * 0 + 1] * point.y
-      + c[Matrix4::kMatrixWidth * 0 + 2] * point.z + c[Matrix4::kMatrixWidth * 0 + 3] * point.w;
-  r.y = c[Matrix4::kMatrixWidth * 1 + 0] * point.x + c[Matrix4::kMatrixWidth * 1 + 1] * point.y
-      + c[Matrix4::kMatrixWidth * 1 + 2] * point.z + c[Matrix4::kMatrixWidth * 1 + 3] * point.w;
-  r.z = c[Matrix4::kMatrixWidth * 2 + 0] * point.x + c[Matrix4::kMatrixWidth * 2 + 1] * point.y
-      + c[Matrix4::kMatrixWidth * 2 + 2] * point.z + c[Matrix4::kMatrixWidth * 2 + 3] * point.w;
-  r.w = c[Matrix4::kMatrixWidth * 3 + 0] * point.x + c[Matrix4::kMatrixWidth * 3 + 1] * point.y
-      + c[Matrix4::kMatrixWidth * 3 + 2] * point.z + c[Matrix4::kMatrixWidth * 3 + 3] * point.w;
-  return r;
-}
-
-
-Point3D Point3D::Inverse() const {
-  return Point3D(-x, -y, -z, w);
-}
+#endif

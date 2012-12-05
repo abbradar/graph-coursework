@@ -6,7 +6,7 @@ using namespace xparse;
 
 namespace xparse {
 
-Point2D LoadFromCoords2D(const xparse::XDataValue::NodeData &data) {
+Vector2 LoadFromCoords2D(const xparse::XDataValue::NodeData &data) {
   // this should be checked during .x template validation, so it's for debug only
 #if DEBUG_LEVEL >= 4
   if (data.size() != 2) {
@@ -18,7 +18,7 @@ Point2D LoadFromCoords2D(const xparse::XDataValue::NodeData &data) {
     }
   }
 #endif
-  return Point2D(data[0]->data().float_value, data[1]->data().float_value);
+  return Vector2(data[0]->data().float_value, data[1]->data().float_value);
 }
 
 }

@@ -9,7 +9,7 @@ class PointTracer {
   PointTracer();
 
   void Reset();
-  bool TraceNext(const IndexedTriangle &triangle, const Point3DVector &points);
+  bool TraceNext(const IndexedTriangle &triangle, const Vector3Vector &points);
 
   inline unsigned int x() {
     return x_;

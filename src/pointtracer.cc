@@ -53,11 +53,14 @@ void PointTracer::Reset() {
   z_ = std::numeric_limits<myfloat>::max();
 }
 
-bool PointTracer::TraceNext(const IndexedTriangle &triangle, const Point3DVector &points) {
-  return TriangleTraverser<PointTraceTraverser<>>::OnePoint(&z_, x_, y_,
-                                                   points[triangle.points[0]], points[triangle.points[0]].z,
-                                                   points[triangle.points[1]], points[triangle.points[1]].z,
-                                                   points[triangle.points[2]], points[triangle.points[2]].z);
+bool PointTracer::TraceNext(const IndexedTriangle &triangle, const Vector3Vector &points) {
+  if (points[triangle.points[0]].z() < 0 &&
+      points[triangle.points[1]].z() < 0 &&
+      points[triangle.points[0]].z() < 0) return false;
+  return TriangleTraverser<PointTraceTraverser<>>::OnePoint<Vector3, false>(&z_, x_, y_,
+      points[triangle.points[0]], points[triangle.points[0]].z(),
+      points[triangle.points[1]], points[triangle.points[1]].z(),
+      points[triangle.points[2]], points[triangle.points[2]].z());
 }
 
 void PointTracer::set_point(unsigned int x, unsigned int y) {

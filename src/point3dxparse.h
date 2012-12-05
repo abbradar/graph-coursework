@@ -6,7 +6,7 @@
 
 namespace xparse {
 
-Point3D LoadFromVector(const xparse::XDataValue::NodeData &data);
+Vector3 LoadFromVector(const xparse::XDataValue::NodeData &data);
 
 }
 

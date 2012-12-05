@@ -12,12 +12,12 @@ template <class Integral> class ScreenLine {
  public:
   inline ScreenLine() = default;
   
-  inline ScreenLine(const Point2D &a, const Point2D &b) : y_(a.y), fy_(b.y),
-          x_(a.x), dx_(0) {
+  template <class Vector> inline ScreenLine(const Vector &a, const Vector &b) : y_(a.y()), fy_(b.y()),
+      x_(a.x()), dx_(0) {
     static_assert(std::is_arithmetic<Integral>::value, "Template type should be arithmetic.");
     Integral dy = fy_ - y_;
     if (dy != 0) {
-      dx_ = (b.x - a.x) / dy;
+      dx_ = (b.x() - a.x()) / dy;
     }
   }
 
@@ -175,13 +175,13 @@ template <class T> class TriangleTraverser {
 
   static constexpr size_t kLinesNum = 3;
 
-  TriangleTraverser(const Point2D &a, const DataType &da,
-                    const Point2D &b, const DataType &db,
-                    const Point2D &c, const DataType &dc) :
-      xmin(std::numeric_limits<myfloat>::max()),
-      xmax(-std::numeric_limits<myfloat>::max()),
-      horizontal(false), right_big(false) {    
-    const Point2D *points_ptr[kLinesNum];
+  template <class Vector> TriangleTraverser(const Vector &a, const DataType &da,
+                    const Vector &b, const DataType &db,
+                    const Vector &c, const DataType &dc) :
+      xmin_(std::numeric_limits<myfloat>::max()),
+      xmax_(-std::numeric_limits<myfloat>::max()),
+      horizontal_(false), right_big_(false) {
+    const Vector *points_ptr[kLinesNum];
     points_ptr[0] = &a; points_ptr[1] = &b, points_ptr[2] = &c;
     const DataType *data_ptr[kLinesNum];
     data_ptr[0] = &da; data_ptr[1] = &db, data_ptr[2] = &dc;
@@ -190,96 +190,96 @@ template <class T> class TriangleTraverser {
     
     // find x edges
     for (size_t i = 0; i < kLinesNum; ++i) {
-      WideBounds(points_ptr[i]->x, xmin, xmax);
+      WideBounds(points_ptr[i]->x(), xmin_, xmax_);
     }
 
-    if ((IntegralType)points_ptr[0]->y == (IntegralType)points_ptr[1]->y) {
-      if (points_ptr[0]->x > points_ptr[1]->x) {
+    if ((IntegralType)points_ptr[0]->y() == (IntegralType)points_ptr[1]->y()) {
+      if (points_ptr[0]->x() > points_ptr[1]->x()) {
         std::swap(points_ptr[0], points_ptr[1]);
         std::swap(data_ptr[0], data_ptr[1]);
       }
-      big = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[2]);
-      tbig = T(big, *data_ptr[0], *data_ptr[2]);
-      small1 = ScreenLine<IntegralType>(*points_ptr[1], *points_ptr[2]);
-      tsmall1 = T(small1, *data_ptr[1], *data_ptr[2]);
-      horizontal = true;
+      big_ = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[2]);
+      tbig_ = T(big_, *data_ptr[0], *data_ptr[2]);
+      small1_ = ScreenLine<IntegralType>(*points_ptr[1], *points_ptr[2]);
+      tsmall1_ = T(small1_, *data_ptr[1], *data_ptr[2]);
+      horizontal_ = true;
     } else {
-      big = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[2]);
-      tbig = T(big, *data_ptr[0], *data_ptr[2]);
-      small1 = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[1]);
-      tsmall1 = T(small1, *data_ptr[0], *data_ptr[1]);
+      big_ = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[2]);
+      tbig_ = T(big_, *data_ptr[0], *data_ptr[2]);
+      small1_ = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[1]);
+      tsmall1_ = T(small1_, *data_ptr[0], *data_ptr[1]);
 
-      right_big = big.dx() > small1.dx();
+      right_big_ = big_.dx() > small1_.dx();
 
-      if (big.y() != big.fy()) {
-        small2 = ScreenLine<IntegralType>(*points_ptr[1], *points_ptr[2]);
-        tsmall2 = T(small2, *data_ptr[1], *data_ptr[2]);
+      if (big_.y() != big_.fy()) {
+        small2_ = ScreenLine<IntegralType>(*points_ptr[1], *points_ptr[2]);
+        tsmall2_ = T(small2_, *data_ptr[1], *data_ptr[2]);
       } else {
-        horizontal = true;
+        horizontal_ = true;
       }
     }
   }
 
   void Traverse(ContextType *context) {
-    ScreenLine<IntegralType> lbig = big, lsmall1 = small1;
-    T ltbig = tbig, ltsmall1 = tsmall1;
-    if (!right_big)
+    ScreenLine<IntegralType> lbig = big_, lsmall1 = small1_;
+    T ltbig = tbig_, ltsmall1 = tsmall1_;
+    if (!right_big_)
       TraverseLines(lbig, ltbig, lsmall1, ltsmall1, lsmall1.fy(), context);
     else
       TraverseLines(lsmall1, ltsmall1, lbig, ltbig, lsmall1.fy(), context);
-    if (!horizontal) {
-      ScreenLine<IntegralType> lsmall2 = small2;
-      T ltsmall2 = tsmall2;
-      if (!right_big)
+    if (!horizontal_) {
+      ScreenLine<IntegralType> lsmall2 = small2_;
+      T ltsmall2 = tsmall2_;
+      if (!right_big_)
         TraverseLines(lbig, ltbig, lsmall2, ltsmall2, lbig.fy(), context);
       else
         TraverseLines(lsmall2, ltsmall2, lbig, ltbig, lbig.fy(), context);
     }
   }
 
-  bool Point(ContextType *context, const IntegralType x, const IntegralType y) {
-    if (y < big.y() || y > big.fy() || x < xmin || x > xmax) return false;
+  template <bool kContinue> bool Point(ContextType *context, const IntegralType x, const IntegralType y) {
+    if (!kContinue && (y < big_.y() || y > big_.fy() || x < xmin_ || x > xmax_)) return false;
     
-    ScreenLine<IntegralType> lbig = big;
-    T ltbig = tbig;
-    if (!horizontal) {
-      if (y <= small1.fy()) {
-        ScreenLine<IntegralType> lsmall1 = small1;
-        T ltsmall1 = tsmall1;
-        if (!right_big)
-          return PointLines(lbig, ltbig, lsmall1, ltsmall1, x, y, context);
+    ScreenLine<IntegralType> lbig = big_;
+    T ltbig = tbig_;
+    if (!horizontal_) {
+      if (y <= small1_.fy()) {
+        ScreenLine<IntegralType> lsmall1 = small1_;
+        T ltsmall1 = tsmall1_;
+        if (!right_big_)
+          return PointLines<kContinue>(lbig, ltbig, lsmall1, ltsmall1, x, y, context);
         else
-          return PointLines(lsmall1, ltsmall1, lbig, ltbig, x, y, context);
+          return PointLines<kContinue>(lsmall1, ltsmall1, lbig, ltbig, x, y, context);
       } else {
-        ScreenLine<IntegralType> lsmall2 = small2;
-        T ltsmall2 = tsmall2;
-        if (!right_big)
-          return PointLines(lbig, ltbig, lsmall2, ltsmall2, x, y, context);
+        ScreenLine<IntegralType> lsmall2 = small2_;
+        T ltsmall2 = tsmall2_;
+        if (!right_big_)
+          return PointLines<kContinue>(lbig, ltbig, lsmall2, ltsmall2, x, y, context);
         else
-          return PointLines(lsmall2, ltsmall2, lbig, ltbig, x, y, context);
+          return PointLines<kContinue>(lsmall2, ltsmall2, lbig, ltbig, x, y, context);
       }
     } else {
-      ScreenLine<IntegralType> lsmall1 = small1;
-      T ltsmall1 = tsmall1;
-      if (!right_big)
-        return PointLines(lbig, ltbig, lsmall1, ltsmall1, x, y, context);
+      ScreenLine<IntegralType> lsmall1 = small1_;
+      T ltsmall1 = tsmall1_;
+      if (!right_big_)
+        return PointLines<kContinue>(lbig, ltbig, lsmall1, ltsmall1, x, y, context);
       else
-        return PointLines(lsmall1, ltsmall1, lbig, ltbig, x, y, context);
+        return PointLines<kContinue>(lsmall1, ltsmall1, lbig, ltbig, x, y, context);
     }
   }
 
-  static void OneTraverse(ContextType *context, const Point2D &a, const DataType &da,
-                          const Point2D &b, const DataType &db,
-                          const Point2D &c, const DataType &dc) {
-    const Point2D *points_ptr[kLinesNum];
+  template <class Vector> static void OneTraverse(ContextType *context, const Vector &a, const DataType &da,
+                          const Vector &b, const DataType &db,
+                          const Vector &c, const DataType &dc) {
+    const Vector *points_ptr[kLinesNum];
     points_ptr[0] = &a; points_ptr[1] = &b, points_ptr[2] = &c;
     const DataType *data_ptr[kLinesNum];
     data_ptr[0] = &da; data_ptr[1] = &db, data_ptr[2] = &dc;
     
     SortPoints(points_ptr, data_ptr);
     
-    if ((IntegralType)points_ptr[0]->y == (IntegralType)points_ptr[1]->y) {
-      if (points_ptr[0]->x > points_ptr[1]->x) {
+    if ((IntegralType)points_ptr[0]->y() == (IntegralType)points_ptr[1]->y()) {
+      if (points_ptr[0]->x() > points_ptr[1]->x()) {
         std::swap(points_ptr[0], points_ptr[1]);
         std::swap(data_ptr[0], data_ptr[1]);
       }
@@ -313,13 +313,12 @@ template <class T> class TriangleTraverser {
     }
   }
 
-  static bool OnePoint(ContextType *context, const IntegralType x, const IntegralType y,
-                       const Point2D &a, const DataType &da,
-                       const Point2D &b, const DataType &db,
-                       const Point2D &c, const DataType &dc) {
-    if (da < 0 && db < 0 && dc < 0) return false;
-
-    const Point2D *points_ptr[kLinesNum];
+  template <class Vector, bool kContinue>
+    static bool OnePoint(ContextType *context, const IntegralType x, const IntegralType y,
+                       const Vector &a, const DataType &da,
+                       const Vector &b, const DataType &db,
+                       const Vector &c, const DataType &dc) {
+    const Vector *points_ptr[kLinesNum];
     points_ptr[0] = &a; points_ptr[1] = &b, points_ptr[2] = &c;
     const DataType *data_ptr[kLinesNum];
     data_ptr[0] = &da; data_ptr[1] = &db, data_ptr[2] = &dc;
@@ -327,17 +326,19 @@ template <class T> class TriangleTraverser {
     SortPoints(points_ptr, data_ptr);
 
     // find x edges
-    myfloat xmin = std::numeric_limits<myfloat>::max(),
-            xmax = -std::numeric_limits<myfloat>::max();
-    for (size_t i = 0; i < kLinesNum; ++i) {
-      WideBounds(points_ptr[i]->x, xmin, xmax);
+    if (!kContinue) {
+      myfloat xmin = std::numeric_limits<myfloat>::max(),
+              xmax = -std::numeric_limits<myfloat>::max();
+      for (size_t i = 0; i < kLinesNum; ++i) {
+        WideBounds(points_ptr[i]->x(), xmin, xmax);
+      }
+      // clip by triangle bounds
+      if (x < xmin || x > xmax || y < points_ptr[0]->y()
+          || y > points_ptr[2]->y()) return false;
     }
-    // clip by triangle bounds
-    if (x < xmin || x > xmax || y < points_ptr[0]->y
-        || y > points_ptr[2]->y) return false;
 
-    if ((IntegralType)points_ptr[0]->y == (IntegralType)points_ptr[1]->y) {
-      if (points_ptr[0]->x > points_ptr[1]->x) {
+    if ((IntegralType)points_ptr[0]->y() == (IntegralType)points_ptr[1]->y()) {
+      if (points_ptr[0]->x() > points_ptr[1]->x()) {
         std::swap(points_ptr[0], points_ptr[1]);
         std::swap(data_ptr[0], data_ptr[1]);
       }
@@ -345,7 +346,7 @@ template <class T> class TriangleTraverser {
       T ta = T(a, *data_ptr[0], *data_ptr[2]);
       ScreenLine<IntegralType> b(*points_ptr[1], *points_ptr[2]);
       T tb = T(b, *data_ptr[1], *data_ptr[2]);
-      return PointLines(a, ta, b, tb, x, y, context);
+      return PointLines<kContinue>(a, ta, b, tb, x, y, context);
     } else {
       ScreenLine<IntegralType> big(*points_ptr[0], *points_ptr[2]);
       T tbig(big, *data_ptr[0], *data_ptr[2]);
@@ -353,30 +354,32 @@ template <class T> class TriangleTraverser {
       T tsmall1(small1, *data_ptr[0], *data_ptr[1]);
       if (big.dx() <= small1.dx()) {
         if (y <= small1.fy()) {
-          return PointLines(big, tbig, small1, tsmall1, x, y, context);
+          return PointLines<kContinue>(big, tbig, small1, tsmall1, x, y, context);
         } else {
           ScreenLine<IntegralType> small2(*points_ptr[1], *points_ptr[2]);
           T tsmall2(small2, *data_ptr[1], *data_ptr[2]);
-          return PointLines(big, tbig, small2, tsmall2, x, y, context);
+          return PointLines<kContinue>(big, tbig, small2, tsmall2, x, y, context);
         }
       } else {
         if (y <= small1.fy()) {
-          return PointLines(small1, tsmall1, big, tbig, x, y, context);
+          return PointLines<kContinue>(small1, tsmall1, big, tbig, x, y, context);
         } else {
           ScreenLine<IntegralType> small2(*points_ptr[1], *points_ptr[2]);
           T tsmall2(small2, *data_ptr[1], *data_ptr[2]);
-          return PointLines(small2, tsmall2, big, tbig, x, y, context);
+          return PointLines<kContinue>(small2, tsmall2, big, tbig, x, y, context);
         }
       }
     }
+
+    return false;
   }
 
  private:
-  static inline void SortPoints(const Point2D **points_ptr, const DataType **data_ptr) {
+  template <class Vector> static inline void SortPoints(const Vector **points_ptr, const DataType **data_ptr) {
     // sort them
     for (size_t i = kLinesNum - 1; i > 0; --i) {
       for (size_t j = 0; j < i; ++j) {
-        if (points_ptr[j]->y > points_ptr[j + 1]->y) {
+        if (points_ptr[j]->y() > points_ptr[j + 1]->y()) {
           std::swap(points_ptr[j], points_ptr[j + 1]);
           std::swap(data_ptr[j], data_ptr[j + 1]);
         }
@@ -384,7 +387,7 @@ template <class T> class TriangleTraverser {
     }
   }
 
-  static bool PointLines(ScreenLine<IntegralType> &a, T &ta,
+  template <bool kContinue> static bool PointLines(ScreenLine<IntegralType> &a, T &ta,
                          ScreenLine<IntegralType> &b, T &tb,
                          const IntegralType x, const IntegralType y, ContextType *context) {
     myfloat day = y - a.y();
@@ -393,7 +396,7 @@ template <class T> class TriangleTraverser {
     myfloat dby = y - b.y();
     b.Advance(dby);
     tb.Advance(dby);
-    if (x < a.x() || x > b.x()) return false;
+    if (!kContinue && (x < a.x() || x > b.x())) return false;
     auto tr = HorizontalTraversable(a, ta, b, tb);
     tr.Advance(x - a.x());
     return tr.Process(context, x, y);
@@ -420,18 +423,19 @@ template <class T> class TriangleTraverser {
     if (a.x() <= b.x()) {
       auto tr = HorizontalTraversable(a, ta, b, tb);
       IntegralType y = a.y();
-      for (IntegralType x = a.x(); x < (IntegralType)b.x(); ++x) {
+      IntegralType bx = b.x();
+      for (IntegralType x = a.x(); x < bx; ++x) {
         tr.Process(context, x, y);
         tr.Advance();
       }
-      tr.Process(context, b.x(), y);
+      tr.Process(context, bx, y);
     }
   }
 
-  ScreenLine<IntegralType> big, small1, small2;
-  T tbig, tsmall1, tsmall2;
-  myfloat xmin, xmax;
-  bool horizontal, right_big;
+  ScreenLine<IntegralType> big_, small1_, small2_;
+  T tbig_, tsmall1_, tsmall2_;
+  myfloat xmin_, xmax_;
+  bool horizontal_, right_big_;
 };
 
 #endif // GRAPH_TRIANGLETRAVERSER_H_

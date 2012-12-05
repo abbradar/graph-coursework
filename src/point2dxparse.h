@@ -6,7 +6,7 @@
 
 namespace xparse {
 
-Point2D LoadFromCoords2D(const xparse::XDataValue::NodeData &data);
+Vector2 LoadFromCoords2D(const xparse::XDataValue::NodeData &data);
 
 }
 

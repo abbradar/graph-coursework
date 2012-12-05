@@ -100,4 +100,10 @@ template <class T> inline T Angle(const T sin, const T cos) {
   return angle;
 }
 
+template <class T> inline void TrimAbs(T &value, const T trim) {
+  if (fabs(value) < trim) {
+    value = 0;
+  }
+}
+
 #endif // COMMON_MATH_H_

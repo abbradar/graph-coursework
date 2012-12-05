@@ -14,11 +14,11 @@ WeldTransform::WeldTransform(const std::shared_ptr<Context> &context) :
   }
 
   old_position_ = lock->position();
-  tp_.x = traced->x;
-  tp_.y = traced->y;
-  tp_.z = traced->z;
+  tp_.x() = traced->x;
+  tp_.y() = traced->y;
+  tp_.z() = traced->z;
   context->camera.ReversePerspectiveTransform(tp_);
-  tp_ = Point3D(tp_.z, -tp_.x, -tp_.y);
+  tp_ = Vector3(tp_.z(), -tp_.x(), -tp_.y());
   tp_ = old_position_.GetMatrixTo() * context->camera.GetMatrixFrom() * tp_;
 
   tn_ = lock->positioned_polygon_normals()[traced->triangle_index];
@@ -56,33 +56,33 @@ void WeldTransform::ProcessEnter() {
       return;
     }
 
-    Point3D np;
-    np.x = traced->x;
-    np.y = traced->y;
-    np.z = traced->z;
+    Vector3 np;
+    np.x() = traced->x;
+    np.y() = traced->y;
+    np.z() = traced->z;
     context()->camera.ReversePerspectiveTransform(np);
-    np = Point3D(np.z, -np.x, -np.y);
+    np = Vector3(np.z(), -np.x(), -np.y());
     np = context()->camera.GetMatrixFrom() * np;
 
-    Point3D nn = new_lock->positioned_polygon_normals()[traced->triangle_index].Inverse();
+    Vector3 nn = new_lock->positioned_polygon_normals()[traced->triangle_index] * -1;
 
     Position new_position;
-    new_position.yaw = Point2D(nn.x, nn.y).Angle() - Point2D(tn_.x, tn_.y).Angle();
-    Matrix4 z_transform = Matrix4::RotateZ(-new_position.yaw);
+    new_position.yaw = Angle(Vector2(tn_.x(), tn_.y()), Vector2(nn.x(), nn.y()));
+    AffineTransform z_transform(RotateTransform(-new_position.yaw, Vector3::UnitZ()));
     nn = z_transform * nn;
     tn_ = z_transform * tn_;
-    new_position.pitch = Point2D(nn.x, nn.z).Angle() - Point2D(tn_.x, tn_.z).Angle();
-    Matrix4 y_transform = Matrix4::RotateY(-new_position.pitch);
+    new_position.pitch = Angle(Vector2(tn_.x(), tn_.z()), Vector2(nn.x(), nn.z()));
+    AffineTransform y_transform(RotateTransform(-new_position.pitch, Vector3::UnitY()));
     nn = y_transform * nn;
     tn_ = y_transform * tn_;
-    new_position.roll = Point2D(nn.y, nn.z).Angle() - Point2D(tn_.y, tn_.z).Angle();
-    Matrix4 matrix = Matrix4::Translate(tp_.x, tp_.y, tp_.z) * Matrix4::RotateX(new_position.roll) *
+    new_position.roll = Angle(Vector2(tn_.y(), tn_.z()), Vector2(nn.y(), nn.z()));
+    /*Matrix4 matrix = Matrix4::Translate(tp_.x, tp_.y, tp_.z) * Matrix4::RotateX(new_position.roll) *
         Matrix4::RotateY(new_position.pitch) * Matrix4::RotateZ(new_position.yaw) * Matrix4::Translate(-tp_.x, -tp_.y, -tp_.z);
     myfloat tx, ty, tz;
     matrix.ToTranslate(tx, ty, tz);
     new_position.x = np.x + tx;
     new_position.y = np.y + ty;
-    new_position.z = np.z + tz;
+    new_position.z = np.z + tz;*/
 
     lock->set_position(new_position);
     tn_ = lock->positioned_polygon_normals()[traced->triangle_index];
@@ -174,10 +174,10 @@ void WeldTransform::PostRenderStep() {
       myfloat angle = dist * rotation_k_;
 
       Position new_position(lock->position());
-      Point3D u = new_position.GetRotateMatrixTo() * tn_;
+      Vector3 u = new_position.GetRotateMatrixTo() * tn_;
 
       myfloat roll, pitch, yaw;
-      u.AxisToEuler(angle, roll, pitch, yaw);
+      /*u.AxisToEuler(angle, roll, pitch, yaw);
       Matrix4 matrix = Matrix4::Translate(tp_.x, tp_.y, tp_.z) * Matrix4::RotateX(roll) *
           Matrix4::RotateY(pitch) * Matrix4::RotateZ(yaw) * Matrix4::Translate(-tp_.x, -tp_.y, -tp_.z);
       //matrix.ToRotate(roll, pitch, yaw);

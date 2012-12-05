@@ -1,46 +1,47 @@
+#include <Eigen/Geometry>
 #include "position.h"
 
-const Point3D Position::kCameraDirection = Point3D(1, 0, 0);
+const Vector3 Position::kCameraDirection = Vector3::UnitX();
 
 Position::Position() : Position(0, 0, 0, 0, 0, 0) {}
 
 Position::Position(myfloat x_, myfloat y_, myfloat z_, myfloat roll_, myfloat pitch_, myfloat yaw_)
   : x(x_), y(y_), z(z_), roll(roll_), pitch(pitch_), yaw(yaw_) {}
 
-Matrix4 Position::GetMatrixFrom() const {
-  Matrix4 transform = GetTranslateMatrixFrom();
-  transform *= GetRotateMatrixFrom();
+AffineTransform Position::GetMatrixFrom() const {
+  AffineTransform transform = GetTranslateMatrixFrom() * GetRotateMatrixFrom();
   return transform;
 }
 
-Matrix4 Position::GetMatrixTo() const {
-  Matrix4 transform = GetRotateMatrixTo();
-  transform *= GetTranslateMatrixTo();
+AffineTransform Position::GetMatrixTo() const {
+  AffineTransform transform = GetRotateMatrixTo() * GetTranslateMatrixTo();
   return transform;
 }
 
-Matrix4 Position::GetRotateMatrixFrom() const {
-  Matrix4 transform = Matrix4::RotateZ(yaw);
-  transform *= Matrix4::RotateY(pitch);
-  transform *= Matrix4::RotateX(roll);
+AffineTransform Position::GetRotateMatrixFrom() const {
+  AffineTransform transform(
+        RotateTransform(yaw, Vector3::UnitZ())
+      * RotateTransform(pitch, Vector3::UnitY())
+      * RotateTransform(roll, Vector3::UnitX()));
   return transform;
 }
 
-Matrix4 Position::GetRotateMatrixTo() const {
-  Matrix4 transform = Matrix4::RotateX(-roll);
-  transform *= Matrix4::RotateY(-pitch);
-  transform *= Matrix4::RotateZ(-yaw);
+AffineTransform Position::GetRotateMatrixTo() const {
+  AffineTransform transform(
+        RotateTransform(-roll, Vector3::UnitX())
+      * RotateTransform(-pitch, Vector3::UnitY())
+      * RotateTransform(-yaw, Vector3::UnitZ()));
   return transform;
 }
 
-Matrix4 Position::GetTranslateMatrixFrom() const {
-  return Matrix4::Translate(x, y, z);
+AffineTransform Position::GetTranslateMatrixFrom() const {
+  return AffineTransform(TranslateTransform(x, y, z));
 }
 
-Matrix4 Position::GetTranslateMatrixTo() const {
-  return Matrix4::Translate(-x, -y, -z);
+AffineTransform Position::GetTranslateMatrixTo() const {
+  return AffineTransform(TranslateTransform(-x, -y, -z));
 }
 
-Point3D Position::GetPoint3D() const {
-  return Point3D(x, y, z);
+Vector3 Position::GetVector3() const {
+  return Vector3(x, y, z);
 }

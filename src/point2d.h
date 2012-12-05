@@ -1,52 +1,92 @@
 #ifndef GRAPH_POINT2D_H_
 #define GRAPH_POINT2D_H_
 
-#include "xparse/xdata.h"
 #include "myfloat.h"
 #include "point3d.h"
+#include "config.h"
 
-struct Point2D {
+#ifdef USE_EIGEN
+
+#include "Eigen/Core"
+
+typedef Eigen::Matrix<myfloat, 2, 1> Vector2;
+
+#else
+
+class Vector2 {
  public:
-  myfloat x;
-  myfloat y;
 
-  inline Point2D() : x(0), y(0) {}
-  inline Point2D(myfloat x_, myfloat y_) : x(x_), y(y_) {}
-  inline Point2D(const Point3D &p3d) : x(p3d.x), y(p3d.y) {}
+  inline Vector2() : x_(0), y_(0) {}
+  inline Vector2(myfloat x, myfloat y) : x_(x), y_(y) {}
 
-  Point2D &operator +=(const Point2D &other);
-  Point2D &operator -=(const Point2D &other);
+  Vector2 &operator +=(const Vector2 &other);
+  Vector2 &operator -=(const Vector2 &other);
 
-  template <class T> Point2D &operator *(const T num) {
-    x *= num;
-    y *= num;
+  template <class T> Vector2 &operator *=(const T num) {
+    x_ *= num;
+    y_ *= num;
     return *this;
   }
 
-  myfloat Angle(const Point2D &other) const;
-  myfloat Angle() const;
-  myfloat Length() const;
-  myfloat LengthSqr() const;
+  template <class T> Vector2 &operator /=(const T num) {
+    x_ /= num;
+    y_ /= num;
+    return *this;
+  }
 
-  static myfloat Distance(const Point2D &a, const Point2D &b);
-  static myfloat DistanceSqr(const Point2D &a, const Point2D &b);
+  inline myfloat &x() {
+    return x_;
+  }
+
+  inline myfloat &y() {
+    return y_;
+  }
+
+  inline const myfloat &x() const {
+    return x_;
+  }
+
+  inline const myfloat &y() const {
+    return y_;
+  }
+
+  myfloat norm() const;
+  myfloat squaredNorm() const;
 
  private:
-  friend Point2D operator +(const Point2D &a, const Point2D &b);
-  friend Point2D operator -(const Point2D &a, const Point2D &b);
+  myfloat x_;
+  myfloat y_;
+
+  friend Vector2 operator +(const Vector2 &a, const Vector2 &b);
+  friend Vector2 operator -(const Vector2 &a, const Vector2 &b);
 };
 
-Point2D operator +(const Point2D &a, const Point2D &b);
-Point2D operator -(const Point2D &a, const Point2D &b);
+Vector2 operator +(const Vector2 &a, const Vector2 &b);
+Vector2 operator -(const Vector2 &a, const Vector2 &b);
 
-template <class T> Point2D operator *(const Point2D &point, const T num) {
-  Point2D p(point);
+template <class T> Vector2 operator *(const Vector2 &point, const T num) {
+  Vector2 p(point);
   p *= num;
   return p;
 }
 
-template <class T> Point2D operator *(const T num, const Point2D &point) {
-  return point * num;
+template <class T> Vector2 operator *(const T num, const Vector2 &point) {
+  Vector2 p(point);
+  p *= num;
+  return p;
 }
+
+template <class T> Vector2 operator /(const Vector2 &point, const T num) {
+  Vector2 p(point);
+  p /= num;
+  return p;
+}
+
+#endif
+
+myfloat Angle(const Vector2 &vec);
+myfloat NormAngle(const Vector2 &vec);
+myfloat Angle(const Vector2 &a, const Vector2 &b);
+myfloat NormAngle(const Vector2 &a, const Vector2 &b);
 
 #endif // GRAPH_POINT2D_H_

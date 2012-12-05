@@ -3,10 +3,10 @@
 #include "point2d.h"
 #include "movetransform.h"
 
-const Point3D MoveTransform::kP0 = Point3D(0, 0, 0);
-const Point3D MoveTransform::kP1 = Point3D(1, 0, 0);
-const Point3D MoveTransform::kP2 = Point3D(0, 1, 0);
-const Point3D MoveTransform::kP3 = Point3D(0, 0, 1);
+const Vector3 MoveTransform::kP0 = Vector3(0, 0, 0);
+const Vector3 MoveTransform::kP1 = Vector3::UnitX();
+const Vector3 MoveTransform::kP2 = Vector3::UnitY();
+const Vector3 MoveTransform::kP3 = Vector3::UnitZ();
 
 MoveTransform::MoveTransform(const std::shared_ptr<Context> &context) :
  ContextUser(context), xrel_(0), yrel_(0), wait_finish_(false), finish_(false),
@@ -20,14 +20,14 @@ MoveTransform::MoveTransform(const std::shared_ptr<Context> &context) :
   }
 
   old_position_ = lock->position();
-  tp_.x = traced->x;
-  tp_.y = traced->y;
-  tp_.z = traced->z;
+  tp_.x() = traced->x;
+  tp_.y() = traced->y;
+  tp_.z() = traced->z;
   context->camera.ReversePerspectiveTransform(tp_);
-  tp_ = Point3D(tp_.z, -tp_.x, -tp_.y);
+  tp_ = Vector3(tp_.z(), -tp_.x(), -tp_.y());
   tp_ = old_position_.GetMatrixTo() * context->camera.GetMatrixFrom() * tp_;
 
-  Matrix4 obj_transform = context->camera.GetMatrixTo() * old_position_.GetMatrixFrom();
+  AffineTransform obj_transform = context->camera.GetMatrixTo() * old_position_.GetMatrixFrom();
   p0_ = obj_transform * kP0;
   p1_ = obj_transform * kP1;
   p2_ = obj_transform * kP2;
@@ -136,7 +136,7 @@ void MoveTransform::PostRenderStep() {
   if (z_rotate_ || rotate_) {
     myfloat rotation_k_ = M_PI_2 / (context()->window->height() * rotation_speed_);
 
-    Point3D axis;
+    Vector3 axis;
     char cam_left_right = move_state_.cam_left + move_state_.cam_right;
     char cam_up_down = move_state_.cam_up + move_state_.cam_down;
     xrel_ += cam_left_right * 10;
@@ -144,21 +144,22 @@ void MoveTransform::PostRenderStep() {
     myfloat dist = sqrt(Sqr(xrel_) + Sqr(yrel_));
     if (dist != 0) {
       if (z_rotate_) {
-        axis.x = 1;
+        axis.x() = 1;
       } else {
-        axis.z = -xrel_ / dist;
-        axis.y = yrel_ / dist;
+        axis.z() = -xrel_ / dist;
+        axis.y() = yrel_ / dist;
       }
       myfloat angle = dist * rotation_k_;
 
       Position new_position(lock->position());
-      Point3D u = new_position.GetRotateMatrixTo() * context()->camera.GetRotateMatrixFrom() * axis;
+      Vector3 u = new_position.GetRotateMatrixTo() * context()->camera.GetRotateMatrixFrom() * axis;
 
       myfloat roll, pitch, yaw;
-      u.AxisToEuler(angle, roll, pitch, yaw);
+
+      AxisToEuler(u, angle, roll, pitch, yaw);
       if (pitch != 0) {
-        u.x += 1;
-        u.x -= 1;
+        u.x() += 1;
+        u.x() -= 1;
       }
       //Matrix4 matrix = Matrix4::RotateZ(yaw) * Matrix4::RotateY(pitch) * Matrix4::RotateX(roll);
       //Point3D dt = matrix * tp_ - tp_;
@@ -166,39 +167,39 @@ void MoveTransform::PostRenderStep() {
       /*new_position.x += dt.x;
       new_position.y += dt.y;
       new_position.z += dt.z;*/
-      new_position.roll += roll;
-      new_position.pitch += pitch;
-      new_position.yaw += yaw;
+      new_position.roll = Circle<myfloat>(new_position.roll + roll, 0, 2 * M_PI);
+      new_position.pitch = Circle<myfloat>(new_position.pitch + pitch, 0, 2 * M_PI);
+      new_position.yaw = Circle<myfloat>(new_position.yaw + yaw, 0, 2 * M_PI);
 
       lock->set_position(new_position);
     }
   } else {
-    Matrix4 from_camera = context()->camera.GetMatrixFrom();
-    Point3D n_p0 = from_camera * p0_,
+    AffineTransform from_camera = context()->camera.GetMatrixFrom();
+    Vector3 n_p0 = from_camera * p0_,
             n_p1 = from_camera * p1_,
             n_p2 = from_camera * p2_;
     Position new_position;
-    new_position.x = n_p0.x;
-    new_position.y = n_p0.y;
-    new_position.z = n_p0.z;
+    new_position.x = n_p0.x();
+    new_position.y = n_p0.y();
+    new_position.z = n_p0.z();
     n_p1 -= n_p0;
     n_p2 -= n_p0;
     /*Matrix4 tr_transform = new_position.GetTranslateMatrixTo();
     n_p1 = tr_transform * n_p1;
     n_p2 = tr_transform * n_p2;*/
-    new_position.yaw = Point2D(n_p1.x, n_p1.y).Angle();
-    Matrix4 z_transform = Matrix4::RotateZ(-new_position.yaw);
+    new_position.yaw = Angle(Vector2(n_p1.x(), n_p1.y()));
+    AffineTransform z_transform(RotateTransform(-new_position.yaw, Vector3::UnitZ()));
     n_p1 = z_transform * n_p1;
     n_p2 = z_transform * n_p2;
-    new_position.pitch = Point2D(n_p1.x, n_p1.z).Angle();
+    new_position.pitch = Angle(Vector2(n_p1.x(), n_p1.z()));
     /*if (new_position.yaw > M_PI_2 && new_position.yaw < M_PI + M_PI_2) {
       new_position.pitch = -new_position.pitch;
     }*/
-    Matrix4 y_transform = Matrix4::RotateY(-new_position.pitch);
+    AffineTransform y_transform(RotateTransform(-new_position.pitch, Vector3::UnitY()));
     //n_p1 = y_transform * n_p1;
     n_p2 = y_transform * n_p2;
     //n_p2 = new_position.GetRotateMatrixTo() * n_p2;
-    new_position.roll = Point2D(n_p2.y, n_p2.z).Angle();
+    new_position.roll = Angle(Vector2(n_p2.y(), n_p2.z()));
     /*Matrix4 x_transform = Matrix4::RotateX(-new_position.roll);
     n_p1 = x_transform * n_p1;
     n_p2 = x_transform * n_p2;*/

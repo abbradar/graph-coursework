@@ -20,11 +20,11 @@ class SceneObject {
 
   void set_model(const std::shared_ptr<Model> &model);
 
-  inline const Point3DVector &positioned_points() const {
+  inline const Vector3Vector &positioned_points() const {
     return positioned_points_;
   }
 
-  inline const Point3DVector &positioned_polygon_normals() const {
+  inline const Vector3Vector &positioned_polygon_normals() const {
     return positioned_polygon_normals_;
   }
 
@@ -36,8 +36,8 @@ class SceneObject {
 
  private:
   std::shared_ptr<Model> model_;
-  Point3DVector positioned_points_;
-  Point3DVector positioned_polygon_normals_;
+  Vector3Vector positioned_points_;
+  Vector3Vector positioned_polygon_normals_;
   Position position_;
 
   void UpdatePositioned();

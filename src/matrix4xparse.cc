@@ -11,11 +11,11 @@ Matrix4 LoadFromTransformMatrix(xparse::XData *data) {
   Matrix4 matrix;
   XDataValue *matrix_node = (*data->data[0]->data().node_value)[0].get();
   auto array = matrix_node->data().array_value;
-  Assert(array->size() == Matrix4::kMatrixWidth * Matrix4::kMatrixHeight);
-  for (size_t i = 0; i < Matrix4::kMatrixWidth * Matrix4::kMatrixHeight; ++i) {
+  Assert(array->size() == (size_t)matrix.rows() * matrix.cols());
+  for (size_t i = 0; i < (size_t)matrix.rows() * matrix.cols(); ++i) {
     matrix.data()[i] = (*array)[i].float_value;
   }
-  return matrix.Transpose();
+  return matrix;
 }
 
 }

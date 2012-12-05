@@ -1,4 +1,5 @@
 #include <memory>
+#include "common/exception.h"
 #include "positionsettings.h"
 #include "sceneobjectsettings.h"
 

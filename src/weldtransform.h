@@ -32,7 +32,7 @@ class WeldTransform : public EventWorker, public ContextUser, public PostRenderW
   void set_rotation_speed(const myfloat rotation_speed);
 
  private:
-  Point3D tp_, tn_;
+  Vector3 tp_, tn_;
 
   MoveState move_state_;
   int xrel_, yrel_;

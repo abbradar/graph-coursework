@@ -62,10 +62,11 @@ Model LoadModel(istream &in, const string &name, const XFile &templates,
     }
   }
 
-  Matrix4 rotate_transform = transform;
-  for (size_t i = 0; i < Matrix4::kMatrixHeight - 1; ++i) {
-    rotate_transform.at(Matrix4::kMatrixWidth - 1, i);
-  }
+  AffineTransform full_transform(transform);
+  transform(0, 3) = 0;
+  transform(1, 3) = 0;
+  transform(2, 3) = 0;
+  AffineTransform rotate_transform(transform);
 
   XData *mesh = nullptr;
   for (auto &mesh_i : model->nested_data) {
@@ -78,11 +79,11 @@ Model LoadModel(istream &in, const string &name, const XFile &templates,
   }
   if (!mesh) throw Exception("Mesh not found");
 
-  Point3DVector points;
+  Vector3Vector points;
   points.reserve(mesh->data[0]->data().int_value);
   for (auto &xvec : *(mesh->data[1]->data().array_value)) {
-    Point3D point = LoadFromVector(*(xvec.node_value));
-    point = transform * point;
+    Vector3 point = LoadFromVector(*(xvec.node_value));
+    point = full_transform * point;
     points.push_back(point);
   }
 
@@ -103,12 +104,12 @@ Model LoadModel(istream &in, const string &name, const XFile &templates,
   }
   if (!normals) throw Exception("MeshNormals not found");
 
-  Point3DVector normal_points;
+  Vector3Vector normal_points;
   normal_points.reserve(normals->data[0]->data().int_value);
   for (auto &xvec : *(normals->data[1]->data().array_value)) {
-    Point3D point = LoadFromVector(*(xvec.node_value));
+    Vector3 point = LoadFromVector(*(xvec.node_value));
     point = rotate_transform * point;
-    normal_points.push_back(point);
+    normal_points.push_back(point / point.norm());
   }
 
   XData *material_list = nullptr;
@@ -159,10 +160,10 @@ Model LoadModel(istream &in, const string &name, const XFile &templates,
     }
   }
   if (texture_coords) {
-    std::shared_ptr<Point2DVector> uv_coords = make_shared<Point2DVector>();
+    std::shared_ptr<Vector2Vector> uv_coords = make_shared<Vector2Vector>();
     uv_coords->reserve(texture_coords->data[0]->data().int_value);
     for (auto &uv : *(texture_coords->data[1]->data().array_value)) {
-      Point2D point = LoadFromCoords2D(*(uv.node_value));
+      Vector2 point = LoadFromCoords2D(*(uv.node_value));
       uv_coords->push_back(point);
     }
     object.set_uv_coords(uv_coords);

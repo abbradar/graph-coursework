@@ -30,9 +30,9 @@ class MoveTransform : public EventWorker, public ContextUser, public PostRenderW
   void set_rotation_speed(const myfloat rotation_speed);
 
  private:
-  static const Point3D kP0, kP1, kP2, kP3;
-  Point3D p0_, p1_, p2_;
-  Point3D tp_;
+  static const Vector3 kP0, kP1, kP2, kP3;
+  Vector3 p0_, p1_, p2_;
+  Vector3 tp_;
 
   MoveState move_state_;
   int xrel_, yrel_;

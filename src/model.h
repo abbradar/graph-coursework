@@ -12,8 +12,8 @@
 #include "indexedtriangle.h"
 #include "matrix4.h"
 
-typedef std::vector<Point3D> Point3DVector;
-typedef std::vector<Point2D> Point2DVector;
+typedef std::vector<Vector2> Vector2Vector;
+typedef std::vector<Vector3> Vector3Vector;
 typedef std::vector<IndexedTriangle> TriangleVector;
 typedef std::vector<std::shared_ptr<Material>> MaterialVector;
 
@@ -27,7 +27,7 @@ class Model {
   }
 
   /** Points vector */
-  inline const Point3DVector &points() const {
+  inline const Vector3Vector &points() const {
     return points_;
   }
 
@@ -35,15 +35,15 @@ class Model {
     return polygons_;
   }
 
-  void set_model(const Point3DVector &points, const TriangleVector &polygons,
-                 const Point3DVector &vertex_normals,
+  void set_model(const Vector3Vector &points, const TriangleVector &polygons,
+                 const Vector3Vector &vertex_normals,
                  const MaterialVector &material_indexes);
 
-  inline const Point3DVector &vertex_normals() const {
+  inline const Vector3Vector &vertex_normals() const {
     return vertex_normals_;
   }
 
-  inline const Point3DVector &polygon_normals() const {
+  inline const Vector3Vector &polygon_normals() const {
     return polygon_normals_;
   }
 
@@ -51,20 +51,20 @@ class Model {
     return materials_;
   }
 
-  inline const std::shared_ptr<Point2DVector> &uv_coords() const {
+  inline const std::shared_ptr<Vector2Vector> &uv_coords() const {
     return uv_coords_;
   }
 
-  void set_uv_coords(std::shared_ptr<Point2DVector> &uv_coords);
+  void set_uv_coords(std::shared_ptr<Vector2Vector> &uv_coords);
 
  private:
   std::string name_;
-  Point3DVector points_;
+  Vector3Vector points_;
   TriangleVector polygons_;
-  Point3DVector vertex_normals_;
-  Point3DVector polygon_normals_;
+  Vector3Vector vertex_normals_;
+  Vector3Vector polygon_normals_;
   MaterialVector materials_;
-  std::shared_ptr<Point2DVector> uv_coords_;
+  std::shared_ptr<Vector2Vector> uv_coords_;
 
   void ComputePolygonNormals();
 };

@@ -22,8 +22,8 @@ class Rasterizer : public PreRenderWorker, RenderWorker, public ContextUser {
   virtual void Paint(sdlobj::Surface &surface);
 
  private:
-  template <bool kTextures> void TransformObject(const std::shared_ptr<SceneObject> &object, const Matrix4 &transform,
-                                                 TransformedObjectMap &new_cache, const Point3D &normal);
+  template <bool kTextures> void TransformObject(const std::shared_ptr<SceneObject> &object, const AffineTransform &transform,
+                                                 TransformedObjectMap &new_cache, const Vector3 &normal);
 
   std::shared_ptr<TransformedObjectMap> cache_;
   ZBuffer z_buffer_;
