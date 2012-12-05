@@ -136,7 +136,7 @@ void MoveTransform::PostRenderStep() {
   if (z_rotate_ || rotate_) {
     myfloat rotation_k_ = M_PI_2 / (context()->window->height() * rotation_speed_);
 
-    Vector3 axis;
+    Vector3 axis(0, 0, 0);
     char cam_left_right = move_state_.cam_left + move_state_.cam_right;
     char cam_up_down = move_state_.cam_up + move_state_.cam_down;
     xrel_ += cam_left_right * 10;

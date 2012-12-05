@@ -24,9 +24,12 @@ const Uint32 Window::kVideoModeFlags = SDL_ASYNCBLIT | SDL_HWACCEL | SDL_HWSURFA
 const Uint32 Window::kSDLSubsystems = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 const Uint32 Window::kSDLImageSubsystems = IMG_INIT_PNG;
 
-Window::Window(int width, int height, int bpp, int fps) :
+Window::Window(unsigned width, unsigned height, unsigned bpp, unsigned fps) :
  cursor_x_(0), cursor_y_(0), grab_input_(false), frame_timer_(fps),
  context_(new Context(this)), log_control_destination_(new LogControlDestination()) {
+#ifdef COMPILE_TIME_BPP
+  AssertMsg(bpp == kDefaultBpp, "bpp != defaultBpp with compile time optimization");
+#endif
   logging::Logger::instance().destinations().push_back(log_control_destination_);
   settings_.AddBlock(std::shared_ptr<SettingsBlock>(new WindowSettings(this)));
   settings_.AddBlock(std::shared_ptr<SettingsBlock>(new ModelsSettings(&context_->models)));
@@ -60,7 +63,7 @@ Window::Window(int width, int height, int bpp, int fps) :
   SDL::instance().set_show_cursor(false);
 }
 
-Window::Window() : Window(640, 480, 32, 60) {}
+Window::Window() : Window(640, 480, kDefaultBpp, 60) {}
 
 Window::~Window() {
   for (auto i = Logger::instance().destinations().begin();
@@ -364,7 +367,10 @@ void Window::set_rotation_speed(const myfloat rotation_speed) {
   position_handler_->set_rotation_speed(rotation_speed);
 }
 
-void Window::SetVideoMode(const int width, const int height, const int bpp) {
+void Window::SetVideoMode(const unsigned width, const unsigned height, const unsigned bpp) {
+#ifdef COMPILE_TIME_BPP
+  AssertMsg(bpp == kDefaultBpp, "bpp != defaultBpp with compile time optimization");
+#endif
   SDL::instance().SetVideoMode(width, height, bpp, kVideoModeFlags);
 }
 

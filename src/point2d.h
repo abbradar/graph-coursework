@@ -15,9 +15,8 @@ typedef Eigen::Matrix<myfloat, 2, 1> Vector2;
 
 class Vector2 {
  public:
-
-  inline Vector2() : x_(0), y_(0) {}
-  inline Vector2(myfloat x, myfloat y) : x_(x), y_(y) {}
+  constexpr inline Vector2() : x_(0), y_(0) {}
+  constexpr inline Vector2(myfloat x, myfloat y) : x_(x), y_(y) {}
 
   Vector2 &operator +=(const Vector2 &other);
   Vector2 &operator -=(const Vector2 &other);

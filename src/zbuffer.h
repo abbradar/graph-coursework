@@ -2,12 +2,46 @@
 #define GRAPH_ZBUFFER_H_
 
 #include <cstring>
+#include <iterator>
 #include "common/debug.h"
 #include "myfloat.h"
 
 class ZBuffer {
  public:
-  typedef myfloat ZBufferType;
+  class Iterator {
+   public:
+    Iterator();
+
+    inline bool Check(const myfloat z) {
+      if (*pos_ < z) {
+        return false;
+      } else {
+        *pos_ = z;
+        return true;
+      }
+    }
+
+    inline myfloat &operator *() {
+      return *pos_;
+    }
+
+    inline Iterator &operator ++() {
+      ++pos_;
+      return *this;
+    }
+
+    inline Iterator &operator --() {
+      --pos_;
+      return *this;
+    }
+
+   private:
+    friend class ZBuffer;
+
+    Iterator(myfloat *pos);
+
+    myfloat *pos_;
+  };
   ZBuffer(const unsigned int width, const unsigned int height);
   ~ZBuffer();
 
@@ -43,7 +77,7 @@ class ZBuffer {
     return z_buffer_[y * width_ + x];
   }
 
-  void FillLine(const unsigned int y, const myfloat z);
+  Iterator Position(const unsigned int x, const unsigned int y);
 
  private:
   unsigned int width_;

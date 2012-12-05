@@ -30,8 +30,8 @@ class ContextTracer;
 class FPSLabel;
 
 class Window : public sdlobj::EventHandler {
- public:
-  Window(int width, int height, int bpp, int fps);
+ public:  
+  Window(unsigned width, unsigned height, unsigned bpp, unsigned fps);
   Window();
   ~Window();
 
@@ -121,7 +121,7 @@ class Window : public sdlobj::EventHandler {
   const sdlobj::Surface &pointer();
   void set_pointer(const sdlobj::Surface &pointer);
 
-  void SetVideoMode(const int width, const int height, const int bpp);
+  void SetVideoMode(const unsigned width, const unsigned height, const unsigned bpp);
 
   void Run();
 

@@ -36,7 +36,7 @@ template <size_t kTMatrixHeight, size_t kTMatrixWidth> class Matrix {
 
   Matrix() = default;
 
-  Matrix(const myfloat fill) {
+  explicit Matrix(const myfloat fill) {
     std::fill_n(matrix_, kMatrixWidth * kMatrixHeight, fill);
   }
 
@@ -68,11 +68,11 @@ template <size_t kTMatrixHeight, size_t kTMatrixWidth> class Matrix {
     return matrix_;
   }
 
-  static constexpr size_t rows() {
+  static constexpr inline size_t rows() {
     return kMatrixHeight;
   }
 
-  static constexpr size_t cols() {
+  static constexpr inline size_t cols() {
     return kMatrixHeight;
   }
 
@@ -161,7 +161,7 @@ class Matrix34 : public Matrix<3, 4> {
  public:
   Matrix34();
   Matrix34(const Matrix4 &matrix4);
-  Matrix34(const myfloat fill);
+  explicit Matrix34(const myfloat fill);
   Matrix34(const myfloat *array);
   Matrix34(const Matrix34 &other);
 

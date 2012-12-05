@@ -59,36 +59,22 @@ template <class Integral> class ScreenLine {
 template <class Integral> class Traversable {
  public:
   typedef Integral IntegralType;
-  // There should also be:
-  // typedef <smth> DataType
-  //
-  // inline Traversable(const ScreenLine<Integral> &line, const DataType &a,
-  // const DataType &b);
 
   inline Traversable() {
     static_assert(std::is_arithmetic<Integral>::value, "Template type should be arithmetic.");
   }
 
-  virtual inline ~Traversable() = default;
-
   template <class Context> class HorizontalTraversable {
    public:
     // There should also be:
-    // inline HorizontalTraversable(const ScreenLine<Integral> &la, const Traversable<Integral> &a,
+    // inline HorizontalTraversable(Context *context, const ScreenLine<Integral> &la, const Traversable<Integral> &a,
     //                              const ScreenLine<Integral> &lb, const Traversable<Integral> &b)
     inline HorizontalTraversable() {
       static_assert(std::is_arithmetic<Integral>::value, "Template type should be arithmetic.");
     }
 
     typedef Context ContextType;
-
-    virtual inline void Advance() = 0;
-    virtual inline void Advance(const Integral value) = 0;
-    virtual inline bool Process(Context *context, const Integral x, const Integral y) = 0;
   };
-
-  virtual inline void Advance() = 0;
-  virtual inline void Advance(const Integral value) = 0;
 };
 
 template <class Integral> class ZTraversable {
@@ -397,7 +383,7 @@ template <class T> class TriangleTraverser {
     b.Advance(dby);
     tb.Advance(dby);
     if (!kContinue && (x < a.x() || x > b.x())) return false;
-    auto tr = HorizontalTraversable(a, ta, b, tb);
+    auto tr = HorizontalTraversable(context, a, ta, b, tb);
     tr.Advance(x - a.x());
     return tr.Process(context, x, y);
   }
@@ -421,7 +407,7 @@ template <class T> class TriangleTraverser {
                                   ScreenLine<IntegralType> &b, T &tb,
                                   ContextType *context) {
     if (a.x() <= b.x()) {
-      auto tr = HorizontalTraversable(a, ta, b, tb);
+      auto tr = HorizontalTraversable(context, a, ta, b, tb);
       IntegralType y = a.y();
       IntegralType bx = b.x();
       for (IntegralType x = a.x(); x < bx; ++x) {

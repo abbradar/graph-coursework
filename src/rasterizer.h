@@ -2,12 +2,8 @@
 #define GRAPH_RASTERIZER_H_
 
 #include <memory>
-#include <map>
 #include "sdlobj/surface.h"
-#include "sdlobj/surfacepainter.h"
-#include "scene.h"
 #include "myfloat.h"
-#include "matrix4.h"
 #include "zbuffer.h"
 #include "renderworker.h"
 #include "context.h"

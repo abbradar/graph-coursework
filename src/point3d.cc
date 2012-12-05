@@ -1,8 +1,7 @@
+#include "common/math.h"
 #include "point3d.h"
 
 #ifndef USE_EIGEN
-
-#include "common/math.h"
 
 Vector3 &Vector3::operator +=(const Vector3 &other) {
   x_ += other.x_;
@@ -65,6 +64,8 @@ Vector3 operator -(const Vector3 &a, const Vector3 &b) {
   return r;
 }
 
+#endif
+
 void AxisToEuler(const Vector3 &p, const myfloat angle, myfloat &roll, myfloat &pitch, myfloat &yaw) {
   myfloat cosa = cos(angle);
   myfloat rcosa = 1 - cosa;
@@ -92,5 +93,3 @@ void AxisToEuler(const Vector3 &p, const myfloat angle, myfloat &roll, myfloat &
   pitch = Angle(siny, cosy);
   yaw = Angle(sinz, cosz);
 }
-
-#endif

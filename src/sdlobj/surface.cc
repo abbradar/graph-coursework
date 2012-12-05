@@ -100,6 +100,14 @@ bool Surface::SetColorKey(const Uint32 flags, const Uint32 key) {
   return SDL_SetColorKey(surface_struct_, flags, key) == 0;
 }
 
+void Surface::Lock() {
+  SDL_LockSurface(surface_struct_);
+}
+
+void Surface::Unlock() {
+  SDL_UnlockSurface(surface_struct_);
+}
+
 Surface::SurfaceWrapper::SurfaceWrapper() : surface(nullptr) {}
 Surface::SurfaceWrapper::SurfaceWrapper(SDL_Surface *surface_) : surface(surface_) {}
 

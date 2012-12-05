@@ -14,7 +14,7 @@ template <class Integral = myfloat> class PointTraceTraverser : public Traversab
   class HorizontalTraversable : public TraversableHorizontal, virtual public ZTraversableHorizontal {
    public:
 
-    inline HorizontalTraversable(const ScreenLine<Integral> &la, const PointTraceTraverser &a,
+    inline HorizontalTraversable(myfloat *, const ScreenLine<Integral> &la, const PointTraceTraverser &a,
                                  const ScreenLine<Integral> &lb, const PointTraceTraverser &b) :
       ZTraversableHorizontal(la, a, lb, b) {}
 

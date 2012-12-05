@@ -21,8 +21,8 @@ class Vector3UnitZ;
 
 class Vector3 {
  public:
-  inline Vector3() : x_(0), y_(0), z_(0) {}
-  inline Vector3(myfloat x, myfloat y, myfloat z) :
+  constexpr inline Vector3() : x_(0), y_(0), z_(0) {}
+  constexpr inline Vector3(myfloat x, myfloat y, myfloat z) :
       x_(x), y_(y), z_(z) {}
   inline ~Vector3() = default;
 

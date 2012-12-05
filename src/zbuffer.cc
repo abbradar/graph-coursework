@@ -1,5 +1,4 @@
 #include <limits>
-#include <algorithm>
 #include "zbuffer.h"
 
 using namespace std;
@@ -27,6 +26,11 @@ void ZBuffer::Clear() {
   //std::fill_n(z_buffer_, size_, std::numeric_limits<myfloat>::max);
 }
 
-void ZBuffer::FillLine(const unsigned int y, const myfloat z) {
-  std::fill_n(z_buffer_ + y * width_, width_, z);
+ZBuffer::Iterator ZBuffer::Position(const unsigned int x, const unsigned int y) {
+  return z_buffer_ + y * width_ + x;
 }
+
+
+ZBuffer::Iterator::Iterator()  = default;
+
+ZBuffer::Iterator::Iterator(myfloat *pos) : pos_(pos) {}

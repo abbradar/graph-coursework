@@ -7,5 +7,8 @@
 #define NO_LIGHTING
 #define NO_DRAW_SURFACE
 #define AFFINE_TEXTURES
+#define COMPILE_TIME_BPP
+
+constexpr unsigned kDefaultBpp = 32;
 
 #endif // GRAPH_CONFIG_H_

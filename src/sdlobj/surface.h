@@ -45,13 +45,8 @@ public:
     return surface_struct_->format->BitsPerPixel;
   }
 
-  inline void Lock() {
-    SDL_LockSurface(surface_struct_);
-  }
-
-  inline void Unlock() {
-    SDL_UnlockSurface(surface_struct_);
-  }
+  void Lock();
+  void Unlock();
 
   bool SetAlpha(const Uint32 flags, const Uint8 alpha);
 

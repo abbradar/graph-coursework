@@ -1,4 +1,5 @@
 #include <boost/format.hpp>
+#include "common/exception.h"
 #include "fpslabel.h"
 
 using namespace sdlobj;

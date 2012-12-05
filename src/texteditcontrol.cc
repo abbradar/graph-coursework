@@ -1,5 +1,5 @@
 #include <sstream>
-#include "sdlobj/surfacepainter.h"
+#include "surfacepainterfactory.h"
 #include "texteditcontrol.h"
 
 using namespace sdlobj;
@@ -95,8 +95,9 @@ void TextEditControl::Repaint(sdlobj::Surface &surface) {
     surface = font().RenderUTF8_Blended(label().data(), font_color());
   }
 
-  SurfacePainter painter(&surface);
-  painter.StartDrawing();
-  painter.DrawLine(cw, 0, cw, font().line_skip(), surface.ColorToPixel(font_color()));
-  painter.FinishDrawing();
+  SurfacePainterWrapper *painter = GetSurfacePainter(&surface);
+  painter->StartDrawing();
+  DrawLine(painter, cw, 0, cw, font().line_skip(), surface.ColorToPixel(font_color()));
+  painter->FinishDrawing();
+  delete painter;
 }
