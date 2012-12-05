@@ -6,8 +6,8 @@
 #include <vector>
 #include <istream>
 #include "sdlobj/color.h"
-#include "point3d.h"
-#include "point2d.h"
+#include "vector3.h"
+#include "vector2.h"
 #include "material.h"
 #include "indexedtriangle.h"
 #include "matrix4.h"

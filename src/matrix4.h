@@ -27,7 +27,7 @@ using Eigen::Scaling;
 class Matrix34;
 typedef Matrix34 AffineTransform;
 
-#include "point3d.h"
+#include "vector3.h"
 
 template <size_t kTMatrixHeight, size_t kTMatrixWidth> class Matrix {
  public:

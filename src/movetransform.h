@@ -1,7 +1,7 @@
 #ifndef GRAPH_MOVETRANSFORM_H_
 #define GRAPH_MOVETRANSFORM_H_
 
-#include "point3d.h"
+#include "vector3.h"
 #include "eventworker.h"
 #include "context.h"
 

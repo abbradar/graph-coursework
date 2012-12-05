@@ -1,5 +1,4 @@
-#include "common/math.h"
-#include "point2d.h"
+#include "vector2.h"
 
 myfloat Angle(const Vector2 &vec) {
   if (vec.x() == 0 && vec.y() == 0) return 0;
@@ -51,13 +50,6 @@ Vector2 operator -(const Vector2 &a, const Vector2 &b) {
   Vector2 r(a);
   r -= b;
   return r;
-}
-
-myfloat Vector2::norm() const {
-  return sqrt(squaredNorm());
-}
-myfloat Vector2::squaredNorm() const {
-  return Sqr(x_) + Sqr(y_);
 }
 
 #endif

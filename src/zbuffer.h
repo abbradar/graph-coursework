@@ -42,6 +42,7 @@ class ZBuffer {
 
     myfloat *pos_;
   };
+
   ZBuffer(const unsigned int width, const unsigned int height);
   ~ZBuffer();
 

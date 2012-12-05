@@ -2,7 +2,7 @@
 #define GRAPH_POSITION_H_
 
 #include "matrix4.h"
-#include "point3d.h"
+#include "vector3.h"
 #include "myfloat.h"
 
 /** Object position in 3D space.

@@ -1,5 +1,4 @@
-#include "common/math.h"
-#include "point3d.h"
+#include "vector3.h"
 
 #ifndef USE_EIGEN
 
@@ -42,14 +41,6 @@ const Vector3UnitY &Vector3::UnitY() {
 const Vector3UnitZ &Vector3::UnitZ() {
   static const Vector3UnitZ unit;
   return unit;
-}
-
-myfloat Vector3::norm() const {
-  return sqrt(squaredNorm());
-}
-
-myfloat Vector3::squaredNorm() const {
-  return Sqr(x_) + Sqr(y_) + Sqr(z_);
 }
 
 Vector3 operator +(const Vector3 &a, const Vector3 &b) {

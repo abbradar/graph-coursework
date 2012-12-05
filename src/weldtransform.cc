@@ -1,6 +1,6 @@
 #include "common/exception.h"
 #include "common/math.h"
-#include "point2d.h"
+#include "vector2.h"
 #include "weldtransform.h"
 
 WeldTransform::WeldTransform(const std::shared_ptr<Context> &context) :
@@ -82,7 +82,7 @@ void WeldTransform::ProcessEnter() {
     new_position.z = np.z() - tp_.z();
 
     lock->set_position(new_position);
-    tn_ = lock->positioned_polygon_normals()[traced->triangle_index];
+    tn_ = lock->positioned_polygon_normals()[traced->triangle_index].normalized();
     context()->window->set_grab_input(true);
     rotate_ = true;
   }

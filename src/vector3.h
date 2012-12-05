@@ -1,5 +1,5 @@
-#ifndef GRAPH_POINT3D_H_
-#define GRAPH_POINT3D_H_
+#ifndef GRAPH_VECTOR3_H_
+#define GRAPH_VECTOR3_H_
 
 #include "myfloat.h"
 #include "config.h"
@@ -17,6 +17,7 @@ class Vector3UnitX;
 class Vector3UnitY;
 class Vector3UnitZ;
 
+#include "common/math.h"
 #include "matrix4.h"
 
 class Vector3 {
@@ -74,8 +75,17 @@ class Vector3 {
   static const Vector3UnitY &UnitY();
   static const Vector3UnitZ &UnitZ();
 
-  myfloat norm() const;
-  myfloat squaredNorm() const;
+  myfloat norm() const {
+    return sqrt(squaredNorm());
+  }
+
+  myfloat squaredNorm() const {
+    return Sqr(x_) + Sqr(y_) + Sqr(z_);
+  }
+
+  Vector3 normalized() const {
+    return *this / norm();
+  }
 
  private:
   myfloat x_;
@@ -127,4 +137,4 @@ class Vector3UnitZ : public Vector3 {
 
 void AxisToEuler(const Vector3 &p, const myfloat angle, myfloat &roll, myfloat &pitch, myfloat &yaw);
 
-#endif // GRAPH_POINT3D_H_
+#endif // GRAPH_VECTOR3_H_

@@ -1,6 +1,6 @@
 #include "common/exception.h"
 #include "common/math.h"
-#include "point2d.h"
+#include "vector2.h"
 #include "movetransform.h"
 
 const Vector3 MoveTransform::kP0 = Vector3(0, 0, 0);

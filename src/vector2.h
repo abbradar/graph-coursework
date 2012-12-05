@@ -1,8 +1,7 @@
-#ifndef GRAPH_POINT2D_H_
-#define GRAPH_POINT2D_H_
+#ifndef GRAPH_VECTOR2_H_
+#define GRAPH_VECTOR2_H_
 
 #include "myfloat.h"
-#include "point3d.h"
 #include "config.h"
 
 #ifdef USE_EIGEN
@@ -12,6 +11,8 @@
 typedef Eigen::Matrix<myfloat, 2, 1> Vector2;
 
 #else
+
+#include "common/math.h"
 
 class Vector2 {
  public:
@@ -49,8 +50,17 @@ class Vector2 {
     return y_;
   }
 
-  myfloat norm() const;
-  myfloat squaredNorm() const;
+  myfloat norm() const {
+    return sqrt(squaredNorm());
+  }
+
+  myfloat squaredNorm() const {
+    return Sqr(x_) + Sqr(y_);
+  }
+
+  Vector3 normalized() const {
+    return *this / norm();
+  }
 
  private:
   myfloat x_;
@@ -88,4 +98,4 @@ myfloat NormAngle(const Vector2 &vec);
 myfloat Angle(const Vector2 &a, const Vector2 &b);
 myfloat NormAngle(const Vector2 &a, const Vector2 &b);
 
-#endif // GRAPH_POINT2D_H_
+#endif // GRAPH_VECTOR2_H_
