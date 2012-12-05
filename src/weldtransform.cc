@@ -21,7 +21,7 @@ WeldTransform::WeldTransform(const std::shared_ptr<Context> &context) :
   tp_ = Vector3(tp_.z(), -tp_.x(), -tp_.y());
   tp_ = old_position_.GetMatrixTo() * context->camera.GetMatrixFrom() * tp_;
 
-  tn_ = lock->positioned_polygon_normals()[traced->triangle_index];
+  tn_ = lock->model()->polygon_normals()[traced->triangle_index];
 }
 
 bool WeldTransform::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
@@ -76,13 +76,10 @@ void WeldTransform::ProcessEnter() {
     nn = y_transform * nn;
     tn_ = y_transform * tn_;
     new_position.roll = Angle(Vector2(tn_.y(), tn_.z()), Vector2(nn.y(), nn.z()));
-    /*Matrix4 matrix = Matrix4::Translate(tp_.x, tp_.y, tp_.z) * Matrix4::RotateX(new_position.roll) *
-        Matrix4::RotateY(new_position.pitch) * Matrix4::RotateZ(new_position.yaw) * Matrix4::Translate(-tp_.x, -tp_.y, -tp_.z);
-    myfloat tx, ty, tz;
-    matrix.ToTranslate(tx, ty, tz);
-    new_position.x = np.x + tx;
-    new_position.y = np.y + ty;
-    new_position.z = np.z + tz;*/
+    tp_ = new_position.GetMatrixFrom() * tp_;
+    new_position.x = np.x() - tp_.x();
+    new_position.y = np.y() - tp_.y();
+    new_position.z = np.z() - tp_.z();
 
     lock->set_position(new_position);
     tn_ = lock->positioned_polygon_normals()[traced->triangle_index];
@@ -173,22 +170,17 @@ void WeldTransform::PostRenderStep() {
     if (dist != 0) {
       myfloat angle = dist * rotation_k_;
 
-      Position new_position(lock->position());
-      Vector3 u = new_position.GetRotateMatrixTo() * tn_;
+      const Position &old_position = lock->position();
+      Vector3 ttp = old_position.GetMatrixFrom() * tp_;
 
-      myfloat roll, pitch, yaw;
-      /*u.AxisToEuler(angle, roll, pitch, yaw);
-      Matrix4 matrix = Matrix4::Translate(tp_.x, tp_.y, tp_.z) * Matrix4::RotateX(roll) *
-          Matrix4::RotateY(pitch) * Matrix4::RotateZ(yaw) * Matrix4::Translate(-tp_.x, -tp_.y, -tp_.z);
-      //matrix.ToRotate(roll, pitch, yaw);
-      myfloat tx, ty, tz;
-      matrix.ToTranslate(tx, ty, tz);
-      /*new_position.x += tx;
-      new_position.y += ty;
-      new_position.z += tz;*/
-      new_position.roll += roll;
-      new_position.pitch += pitch;
-      new_position.yaw += yaw;
+      AffineTransform matrix = TranslateTransform(ttp.x(), ttp.y(), ttp.z())
+          * RotateTransform(angle, tn_) * TranslateTransform(-ttp.x(), -ttp.y(), -ttp.z())
+          * old_position.GetMatrixFrom();
+
+      Position new_position;
+
+      TransformToTranslate(matrix, new_position.x, new_position.y, new_position.z);
+      TransformToEuler(matrix, new_position.roll, new_position.pitch, new_position.yaw);
 
       lock->set_position(new_position);
     }

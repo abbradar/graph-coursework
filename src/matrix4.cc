@@ -1,37 +1,8 @@
+#include "common/math.h"
+#include "common/exception.h"
 #include "matrix4.h"
 
 #ifndef USE_EIGEN
-
-#include <cmath>
-
-/*void Matrix4::ToRotate(myfloat &roll, myfloat &pitch, myfloat &yaw) {
-  myfloat siny = -at(0, 2);
-  // there goes assumption than cos(y) >= 0:
-  if (siny >= 1) return;
-  myfloat cosy = sqrt(1 - Sqr(siny));
-  myfloat sinx = at(1, 2) / cosy;
-  myfloat cosx = at(2, 2) / cosy;
-  myfloat cosz = at(0, 0) / cosy;
-  myfloat sinz = at(0, 1) / cosy;
-  // now let's check if our assumption was correct
-  myfloat check1 = cosx * cosz + sinx * siny * sinz;
-  if (fabs(check1 - at(1,1)) > 0.1) {
-    cosy = -cosy;
-    sinx = -sinx;
-    cosx = -cosx;
-    cosz = -cosz;
-    sinz = -sinz;
-  }
-  roll = Angle(sinx, cosx);
-  pitch = Angle(siny, cosy);
-  yaw = Angle(sinz, cosz);
-}
-
-void Matrix4::ToTranslate(myfloat &x, myfloat &y, myfloat &z) {
-  x = at(3, 0);
-  y = at(3, 1);
-  z = at(3, 2);
-}*/
 
 Matrix34 operator *(const Matrix34 &a, const Matrix34 &b) {
   Matrix34 r;
@@ -97,8 +68,8 @@ RotateTransform::RotateTransform(const myfloat angle, const Vector3UnitY &) : Af
   myfloat sina = sin(angle);
   myfloat cosa = cos(angle);
   operator ()(0, 0) = cosa;
-  operator ()(0, 2) = -sina;
-  operator ()(2, 0) = sina;
+  operator ()(0, 2) = sina;
+  operator ()(2, 0) = -sina;
   operator ()(2, 2) = cosa;
 }
 
@@ -109,6 +80,24 @@ RotateTransform::RotateTransform(const myfloat angle, const Vector3UnitZ &) : Af
   operator ()(0, 1) = -sina;
   operator ()(1, 0) = sina;
   operator ()(1, 1) = cosa;
+}
+
+RotateTransform::RotateTransform(const myfloat angle, const Vector3 &a) : AffineTransform(0.0) {
+  myfloat cosa = cos(angle);
+  myfloat rcosa = 1 - cosa;
+  myfloat sina = sin(angle);
+
+  operator ()(0, 0) = cosa + Sqr(a.x()) * rcosa;
+  operator ()(1, 0) = a.y() * a.x() * rcosa + a.z() * sina;
+  operator ()(2, 0) = a.z() * a.x() * rcosa - a.y() * sina;
+
+  operator ()(0, 1) = a.x() * a.y() * rcosa - a.z() * sina;
+  operator ()(1, 1) = cosa + Sqr(a.y()) * rcosa;
+  operator ()(2, 1) = a.z() * a.y() * rcosa + a.x() * sina;
+
+  operator ()(0, 2) = a.x() * a.z() * rcosa + a.y() * sina;
+  operator ()(1, 2) = a.y() * a.z() * rcosa - a.x() * sina;
+  operator ()(2, 2) = cosa + Sqr(a.z()) * rcosa;
 }
 
 TranslateTransform::TranslateTransform(const myfloat x, const myfloat y, const myfloat z) : AffineTransform(kIdentityMatrix34) {
@@ -146,3 +135,32 @@ Matrix34::Matrix34(const myfloat *array) : Matrix<3, 4>(array) {}
 Matrix34::Matrix34(const Matrix34 &other) : Matrix<3, 4>(other) {}
 
 #endif
+
+void TransformToEuler(const AffineTransform &transform, myfloat &roll, myfloat &pitch, myfloat &yaw) {
+  myfloat siny = -transform(2, 0);
+  // there goes assumption than cos(y) >= 0:
+  if (siny >= 1) throw Exception("Invalid rotation matrix");
+  myfloat cosy = sqrt(1 - Sqr(siny));
+  myfloat sinx = transform(2, 1) / cosy;
+  myfloat cosx = transform(2, 2) / cosy;
+  myfloat cosz = transform(0, 0) / cosy;
+  myfloat sinz = transform(1, 0) / cosy;
+  // now let's check if our assumption was correct
+  myfloat check1 = cosx * cosz + sinx * siny * sinz;
+  if (fabs(check1 - transform(1, 1)) > 0.1) {
+    cosy = -cosy;
+    sinx = -sinx;
+    cosx = -cosx;
+    cosz = -cosz;
+    sinz = -sinz;
+  }
+  roll = Angle(sinx, cosx);
+  pitch = Angle(siny, cosy);
+  yaw = Angle(sinz, cosz);
+}
+
+void TransformToTranslate(const AffineTransform &transform, myfloat &x, myfloat &y, myfloat &z) {
+  x = transform(0, 3);
+  y = transform(1, 3);
+  z = transform(2, 3);
+}

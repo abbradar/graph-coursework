@@ -93,6 +93,7 @@ template <class Integral> class ZTraversable {
         dz_ = (b.z() - z_) / dx;
       } else {
         z_ = std::min(a.z(), b.z());
+        dz_ = 0;
       }
     }
 
@@ -128,6 +129,7 @@ template <class Integral> class ZTraversable {
       dz_ = (b - a) / dy;
     } else {
       z_ = std::min(a, b);
+      dz_ = 0;
     }
   }
 

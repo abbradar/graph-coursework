@@ -138,8 +138,8 @@ void PositionHandler::EventStep() {
   if (mul > 0) {
     myfloat len = move_step_ / mul;
     if (forward_back) {
-      camera.z += forward_back * len * sin(camera.pitch);
-      myfloat prj = forward_back * len * cos(camera.pitch);
+      camera.z += forward_back * len * sin(-camera.pitch);
+      myfloat prj = forward_back * len * cos(-camera.pitch);
       camera.x += prj * cos(camera.yaw);
       camera.y += prj * sin(camera.yaw);
     }
@@ -154,7 +154,7 @@ void PositionHandler::EventStep() {
   }
 
   if (context()->window->grab_input()) {
-    camera.pitch += move_state_.yrel * rotation_k_;
+    camera.pitch -= move_state_.yrel * rotation_k_;
     camera.yaw += move_state_.xrel * rotation_k_;
   }
   move_state_.xrel = 0;
@@ -162,7 +162,7 @@ void PositionHandler::EventStep() {
 
   char cam_left_right = move_state_.cam_left + move_state_.cam_right;
   char cam_up_down = move_state_.cam_up + move_state_.cam_down;
-  camera.pitch += cam_up_down * rotation_k_ * 10;
+  camera.pitch -= cam_up_down * rotation_k_ * 10;
   camera.yaw += cam_left_right * rotation_k_ * 10;
   camera.pitch = Trim<myfloat>(camera.pitch, -M_PI_2, M_PI_2);
   camera.yaw = Circle<myfloat>(camera.yaw, -M_PI, M_PI);

@@ -60,6 +60,15 @@ template <size_t kTMatrixHeight, size_t kTMatrixWidth> class Matrix {
     return matrix_[x * kMatrixHeight + y];
   }
 
+  inline const myfloat &operator ()(const size_t y, const size_t x) const {
+#if DEBUG_LEVEL >= 4
+    if (x > kMatrixWidth || y > kMatrixHeight) {
+      throw Exception("Matrix index is out of bounds.");
+    }
+#endif
+    return matrix_[x * kMatrixHeight + y];
+  }
+
   inline myfloat *data() {
     return matrix_;
   }
@@ -180,8 +189,7 @@ class RotateTransform : public AffineTransform {
   RotateTransform(const myfloat angle, const Vector3UnitX &);
   RotateTransform(const myfloat angle, const Vector3UnitY &);
   RotateTransform(const myfloat angle, const Vector3UnitZ &);
-
-  //RotateTransform(const myfloat angle, const &Vector3);
+  RotateTransform(const myfloat angle, const Vector3 &a);
 };
 
 class TranslateTransform : public AffineTransform {
@@ -192,5 +200,8 @@ class TranslateTransform : public AffineTransform {
 AffineTransform Scaling(const myfloat kx, const myfloat ky, const myfloat kz);
 
 #endif
+
+void TransformToEuler(const AffineTransform &transform, myfloat &roll, myfloat &pitch, myfloat &yaw);
+void TransformToTranslate(const AffineTransform &transform, myfloat &x, myfloat &y, myfloat &z);
 
 #endif // GRAPH_MATRIX4_H_

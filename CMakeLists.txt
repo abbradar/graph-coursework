@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build")
 add_definitions(-std=c++11 -Wall -fstack-protector -fPIE)
 
 # Build type
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 # Platform specific
 include(CheckIncludeFiles)
@@ -18,7 +18,7 @@ endif()
 
 # Debug levels
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  add_definitions(-DDEBUG_LEVEL=3 -O0)
+  add_definitions(-DDEBUG_LEVEL=3 -O1)
 else()
   add_definitions(-DDEBUG_LEVEL=1 -O3)
 endif()
