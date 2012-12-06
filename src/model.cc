@@ -45,6 +45,6 @@ void Model::ComputePolygonNormals() {
     if (sign < 0) {
       result *= -1;
     }
-    polygon_normals_.push_back(result);
+    polygon_normals_.push_back(result.normalized());
   }
 }

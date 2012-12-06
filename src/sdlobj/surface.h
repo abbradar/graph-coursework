@@ -21,6 +21,7 @@ public:
   Surface(const unsigned int width, const unsigned int height, const Uint32 flags, const unsigned int bpp,
           const Uint32 Rmask, const Uint32 Gmask, const Uint32 Bmask, const Uint32 Amask);
   Surface(const Surface &other);
+  Surface(Surface &&other);
 
   Surface &operator =(const Surface &other);
 
@@ -32,6 +33,11 @@ public:
 
   SDL_Surface *surface();
 
+  Surface DisplayConvert() const;
+  Surface DisplayConvertAlpha() const;
+
+  bool DisplayFormat() const;
+  bool CompatibleFormat(const Surface &other) const;
 
   inline unsigned int width() const {
     return surface_struct_->w;

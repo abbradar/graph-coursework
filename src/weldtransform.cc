@@ -22,6 +22,8 @@ WeldTransform::WeldTransform(const std::shared_ptr<Context> &context) :
   tp_ = old_position_.GetMatrixTo() * context->camera.GetMatrixFrom() * tp_;
 
   tn_ = lock->model()->polygon_normals()[traced->triangle_index];
+  tnl_ = (lock->model()->points()[lock->model()->polygons()[traced->triangle_index].points[0]]
+      - tp_).normalized();
 }
 
 bool WeldTransform::ProcessMouseMotion(const SDL_MouseMotionEvent &event) {
@@ -64,25 +66,36 @@ void WeldTransform::ProcessEnter() {
     np = Vector3(np.z(), -np.x(), -np.y());
     np = context()->camera.GetMatrixFrom() * np;
 
-    Vector3 nn = new_lock->positioned_polygon_normals()[traced->triangle_index] * -1;
+    const Vector3 &onn = -new_lock->positioned_polygon_normals()[traced->triangle_index];
+    Vector3 nn = onn;
+    Vector3 nnl = (new_lock->positioned_points()[
+                   new_lock->model()->polygons()[traced->triangle_index].points[0]]
+        - np).normalized();
 
     Position new_position;
-    new_position.yaw = Angle(Vector2(tn_.x(), tn_.y()), Vector2(nn.x(), nn.y()));
+    new_position.yaw = NormAngle(Vector2(nn.x(), nn.y()), Vector2(tn_.x(), tn_.y()));
     AffineTransform z_transform(RotateTransform(-new_position.yaw, Vector3::UnitZ()));
+    AffineTransform r_z_transform(RotateTransform(new_position.yaw, Vector3::UnitZ()));
     nn = z_transform * nn;
-    tn_ = z_transform * tn_;
-    new_position.pitch = Angle(Vector2(tn_.x(), tn_.z()), Vector2(nn.x(), nn.z()));
+    tn_ = r_z_transform * tn_;
+    nnl = z_transform * nnl;
+    tnl_ = r_z_transform * tnl_;
+    new_position.pitch = -NormAngle(Vector2(nn.x(), nn.z()), Vector2(tn_.x(), tn_.z()));
     AffineTransform y_transform(RotateTransform(-new_position.pitch, Vector3::UnitY()));
+    AffineTransform r_y_transform(RotateTransform(new_position.pitch, Vector3::UnitY()));
     nn = y_transform * nn;
-    tn_ = y_transform * tn_;
-    new_position.roll = Angle(Vector2(tn_.y(), tn_.z()), Vector2(nn.y(), nn.z()));
+    tn_ = r_y_transform * tn_;
+    nnl = y_transform * nnl;
+    tnl_ = r_y_transform * tnl_;
+    new_position.roll = NormAngle(Vector2(nnl.y(), nnl.z()), Vector2(tnl_.y(), tnl_.z()));
     tp_ = new_position.GetMatrixFrom() * tp_;
     new_position.x = np.x() - tp_.x();
     new_position.y = np.y() - tp_.y();
     new_position.z = np.z() - tp_.z();
 
     lock->set_position(new_position);
-    tn_ = lock->positioned_polygon_normals()[traced->triangle_index].normalized();
+    tn_ = onn;
+    tp_ = np;
     context()->window->set_grab_input(true);
     rotate_ = true;
   }
@@ -171,10 +184,9 @@ void WeldTransform::PostRenderStep() {
       myfloat angle = dist * rotation_k_;
 
       const Position &old_position = lock->position();
-      Vector3 ttp = old_position.GetMatrixFrom() * tp_;
 
-      AffineTransform matrix = TranslateTransform(ttp.x(), ttp.y(), ttp.z())
-          * RotateTransform(angle, tn_) * TranslateTransform(-ttp.x(), -ttp.y(), -ttp.z())
+      AffineTransform matrix = TranslateTransform(tp_.x(), tp_.y(), tp_.z())
+          * RotateTransform(angle, tn_) * TranslateTransform(-tp_.x(), -tp_.y(), -tp_.z())
           * old_position.GetMatrixFrom();
 
       Position new_position;

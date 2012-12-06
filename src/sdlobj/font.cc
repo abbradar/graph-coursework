@@ -10,6 +10,7 @@ namespace sdlobj {
 Font::Font() : font_(), font_struct_(nullptr) {}
 Font::Font(TTF_Font *font) : font_(new FontWrapper(font)), font_struct_(font_->font) {}
 Font::Font(const Font &other) : font_(other.font_), font_struct_(other.font_struct_ ) {}
+Font::Font(Font &&other) = default;
 
 Font &Font::operator =(const Font &other) {
   font_ = other.font_;

@@ -34,6 +34,10 @@ class Vector2 {
     return *this;
   }
 
+  inline Vector2 operator -() const {
+    return Vector2(-x_, -y_);
+  }
+
   inline myfloat &x() {
     return x_;
   }
@@ -58,8 +62,8 @@ class Vector2 {
     return Sqr(x_) + Sqr(y_);
   }
 
-  Vector3 normalized() const {
-    return *this / norm();
+  Vector2 normalized() const {
+    return Vector2(*this) /= norm();
   }
 
  private:

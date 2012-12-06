@@ -50,7 +50,7 @@ Window::Window(unsigned width, unsigned height, unsigned bpp, unsigned fps) :
   log_control_->set_max_items(5);
   log_control_destination_->set_log_control(log_control_);
 
-  context_tracer_->material().set_color(sdlobj::Color(0, 255, 0));
+  context_tracer_->material().set_ambient_color(Vector3(0, 1, 0));
 
   RegisterWorker(static_pointer_cast<ConveyorWorker>(rasterizer_));
   RegisterWorker(static_pointer_cast<ConveyorWorker>(context_tracer_));

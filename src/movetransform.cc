@@ -178,14 +178,14 @@ void MoveTransform::PostRenderStep() {
     new_position.z = n_p0.z();
     n_p1 -= n_p0;
     n_p2 -= n_p0;
-    new_position.yaw = Angle(Vector2(n_p1.x(), n_p1.y()));
+    new_position.yaw = NormAngle(Vector2(n_p1.x(), n_p1.y()));
     AffineTransform z_transform(RotateTransform(-new_position.yaw, Vector3::UnitZ()));
     n_p1 = z_transform * n_p1;
     n_p2 = z_transform * n_p2;
-    new_position.pitch = -Angle(Vector2(n_p1.x(), n_p1.z()));
+    new_position.pitch = -NormAngle(Vector2(n_p1.x(), n_p1.z()));
     AffineTransform y_transform(RotateTransform(-new_position.pitch, Vector3::UnitY()));
     n_p2 = y_transform * n_p2;
-    new_position.roll = Angle(Vector2(n_p2.y(), n_p2.z()));
+    new_position.roll = NormAngle(Vector2(n_p2.y(), n_p2.z()));
 
     lock->set_position(new_position);
   }

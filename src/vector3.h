@@ -68,6 +68,10 @@ class Vector3 {
     return *this;
   }
 
+  inline Vector3 operator -() const {
+    return Vector3(-x_, -y_, -z_);
+  }
+
   Vector3 cross(const Vector3 &b) const;
   myfloat dot(const Vector3 &b) const;
 
@@ -84,7 +88,7 @@ class Vector3 {
   }
 
   Vector3 normalized() const {
-    return *this / norm();
+    return Vector3(*this) /= norm();
   }
 
  private:

@@ -6,6 +6,8 @@ Surface::Surface() : surface_(), surface_struct_(nullptr) {}
 Surface::Surface(SDL_Surface *surface) : surface_(new SurfaceWrapper(surface)), surface_struct_(surface_->surface) {}
 Surface::Surface(const Surface &other) : surface_(other.surface_), surface_struct_(other.surface_struct_) {}
 
+Surface::Surface(Surface &&other) = default;
+
 Surface &Surface::operator =(const Surface &other) {
   surface_ = other.surface_;
   surface_struct_ = other.surface_struct_;
@@ -113,6 +115,28 @@ Surface::SurfaceWrapper::SurfaceWrapper(SDL_Surface *surface_) : surface(surface
 
 Surface::SurfaceWrapper::~SurfaceWrapper() {
   if (surface) SDL_FreeSurface(surface);
+}
+
+Surface Surface::DisplayConvert() const {
+  return Surface(SDL_DisplayFormat(surface_struct_));
+}
+
+Surface Surface::DisplayConvertAlpha() const {
+  return Surface(SDL_DisplayFormatAlpha(surface_struct_));
+}
+
+bool Surface::DisplayFormat() const {
+  return CompatibleFormat(SDL::instance().surface());
+}
+
+bool Surface::CompatibleFormat(const Surface &other) const {
+  if (!surface_struct_) return !other.surface_struct_;
+  SDL_PixelFormat *fa = surface_struct_->format, *fb = other.surface_struct_->format;
+  bool value = fa->BitsPerPixel == fb->BitsPerPixel;
+  value = value && fa->BitsPerPixel < 8 && fa->palette != fb->palette;
+  value = value && fa->Rmask == fb->Rmask && fa->Gmask == fb->Gmask
+      && fa->Bmask == fb->Bmask;
+  return value;
 }
 
 }

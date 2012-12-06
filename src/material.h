@@ -4,6 +4,7 @@
 #include <memory>
 #include "sdlobj/color.h"
 #include "sdlobj/surface.h"
+#include "vector3.h"
 #include "myfloat.h"
 
 class Material {
@@ -11,11 +12,11 @@ class Material {
   Material();
   Material(const Material &other);
 
-  inline const sdlobj::Color &color() const {
-    return color_;
+  inline const Vector3 &ambient_color() const {
+    return ambient_color_;
   }
 
-  void set_color(const sdlobj::Color &color);
+  void set_ambient_color(const Vector3 &ambient_color);
 
   inline const std::shared_ptr<sdlobj::Surface> &texture() const {
     return texture_;
@@ -23,29 +24,30 @@ class Material {
 
   void set_texture(const std::shared_ptr<sdlobj::Surface> &texture);
 
-  inline myfloat power() const {
-    return power_;
+  inline myfloat shininess() const {
+    return shininess_;
   }
 
-  void set_power(const myfloat power);
+  void set_shininess(const myfloat shininess);
 
-  inline const sdlobj::Color &specular_color() const {
+  inline const Vector3 &specular_color() const {
     return specular_color_;
   }
 
-  void set_specular_color(const sdlobj::Color &specular_color);
+  void set_specular_color(const Vector3 &specular_color);
 
-  inline const sdlobj::Color &emissive_color() const {
+  inline const Vector3 &emissive_color() const {
     return emissive_color_;
   }
 
-  void set_emissive_color(const sdlobj::Color &emissive_color);
+  void set_emissive_color(const Vector3 &emissive_color);
 
  private:
-  sdlobj::Color color_;
-  myfloat power_;
-  sdlobj::Color specular_color_;
-  sdlobj::Color emissive_color_;
+  myfloat shininess_;
+  Vector3 ambient_color_;
+  Vector3 specular_color_;
+  Vector3 emissive_color_;
+
   std::shared_ptr<sdlobj::Surface> texture_;
 };
 

@@ -17,6 +17,7 @@ public:
 
   Font(TTF_Font *font);
   Font(const Font &other);
+  Font(Font &&other);
 
   Font &operator =(const Font &other);
 

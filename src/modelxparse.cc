@@ -3,9 +3,9 @@
 #include "matrix4.h"
 #include "myfloat.h"
 #include "materialxparse.h"
-#include "point3dxparse.h"
+#include "vector3xparse.h"
 #include "indexedtrianglexparse.h"
-#include "point2dxparse.h"
+#include "vector2xparse.h"
 #include "matrix4xparse.h"
 #include "modelxparse.h"
 
@@ -109,7 +109,7 @@ Model LoadModel(istream &in, const string &name, const XFile &templates,
   for (auto &xvec : *(normals->data[1]->data().array_value)) {
     Vector3 point = LoadFromVector(*(xvec.node_value));
     point = rotate_transform * point;
-    normal_points.push_back(point / point.norm());
+    normal_points.push_back(point.normalized());
   }
 
   XData *material_list = nullptr;

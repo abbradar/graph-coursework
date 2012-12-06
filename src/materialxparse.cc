@@ -4,6 +4,7 @@
 #include "common/debug.h"
 #include "sdlobj/sdlimage.h"
 #include "colorxparse.h"
+#include "config.h"
 #include "material.h"
 
 using namespace std;
@@ -20,10 +21,10 @@ Material LoadFromMaterial(const XData *data) {
   }
 #endif
   Material material;
-  material.set_color(LoadFromColorRGBA(*(data->data[0]->data().node_value)));
-  material.set_power(data->data[1]->data().float_value);
-  material.set_specular_color(LoadFromColorRGB(*(data->data[2]->data().node_value)));
-  material.set_emissive_color(LoadFromColorRGB(*(data->data[3]->data().node_value)));
+  material.set_ambient_color(LoadFloatFromColorRGBA(*(data->data[0]->data().node_value)));
+  material.set_shininess(data->data[1]->data().float_value);
+  material.set_specular_color(LoadFloatFromColorRGB(*(data->data[2]->data().node_value)));
+  material.set_emissive_color(LoadFloatFromColorRGB(*(data->data[3]->data().node_value)));
   for (auto &i : data->nested_data) {
     Assert(i.type() == XNestedData::kNode);
     XData *texture = i.data().node;

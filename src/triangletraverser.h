@@ -5,7 +5,6 @@
 #include <limits>
 #include <algorithm>
 #include "common/math.h"
-#include "point2d.h"
 #include "myfloat.h"
 
 template <class Integral> class ScreenLine {

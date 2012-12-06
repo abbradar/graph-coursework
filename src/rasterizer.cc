@@ -17,21 +17,21 @@ Rasterizer::Rasterizer(const std::shared_ptr<Context> &context) :
 
 /* These functions are safe to call with result = a | b */
 
-template<class T> class Less {
+template <class T> class Less {
  public:
   inline static bool Compare(const T &a, const T &b) {
     return a < b;
   }
 };
 
-template<class T> class Greater {
+template <class T> class Greater {
  public:
   inline static bool Compare(const T &a, const T &b) {
     return a > b;
   }
 };
 
-template<class Comparer> class XClipper {
+template <class Comparer> class XClipper {
  public:
   inline static bool Compare(const Vector3 &point, const myfloat value) {
     return Comparer::Compare(point.x(), value);
@@ -45,7 +45,7 @@ template<class Comparer> class XClipper {
   }
 };
 
-template<class Comparer> class YClipper {
+template <class Comparer> class YClipper {
  public:
   inline static bool Compare(const Vector3 &point, const myfloat value) {
     return Comparer::Compare(point.y(), value);
@@ -59,7 +59,7 @@ template<class Comparer> class YClipper {
   }
 };
 
-template<class Comparer> class ZClipper {
+template <class Comparer> class ZClipper {
  public:
   inline static bool Compare(const Vector3 &point, const myfloat value) {
     return Comparer::Compare(point.z(), value);
@@ -73,7 +73,7 @@ template<class Comparer> class ZClipper {
   }
 };
 
-template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *triangles, size_t &triangles_num,
+template <class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *triangles, size_t &triangles_num,
            Vector3 *points, size_t &points_num, const myfloat value) {
   int good_indexes[IndexedTriangle::kPointsSize];
   int bad_indexes[IndexedTriangle::kPointsSize];
@@ -113,7 +113,7 @@ template<class Clipper> void Clip(IndexedTriangle &triangle, IndexedTriangle *tr
   }
 }
 
-template<class Clipper> bool Clip(Vector3 &a, Vector3 &b, const myfloat value) {
+template <class Clipper> bool Clip(Vector3 &a, Vector3 &b, const myfloat value) {
   if (Clipper::Compare(a, value)) {
     if (Clipper::Compare(b, value)) return false;
     Clipper::Intersect(a, b, a, value);
@@ -143,14 +143,27 @@ template <class Clipper> bool ClipTriangles(IndexedTriangle *triangles, size_t &
   return triangles_num == 1 && triangles[0].points[0] == -1;
 }
 
-template <class Integral = myfloat> class NormalsTraversable : virtual public Traversable<Integral> {
- public:
-  typedef Vector3 DataType;
+#ifndef NO_LIGHTING
+struct LightingSourceData {
+  Vector3 direction;
+  Vector3 reflection;
+};
 
-  class HorizontalTraversable : virtual public Traversable<Integral>::template HorizontalTraversable<Vector3> {
+struct LightingData {
+  Vector3 viewer;
+  Vector3 normal;
+  LightingSourceData *sources;
+  size_t sources_size;
+};
+
+template <class Integral = myfloat> class LightingTraversable : virtual public Traversable<Integral> {
+ public:
+  typedef LightingData DataType;
+
+  class HorizontalTraversable : virtual public Traversable<Integral>::template HorizontalTraversable<LightingData> {
    public:
-    inline HorizontalTraversable(Vector3 *, const ScreenLine<Integral> &la, const NormalsTraversable<Integral> &a,
-                                 const ScreenLine<Integral> &lb, const NormalsTraversable<Integral> &b) : n_(a.n()) {
+    inline HorizontalTraversable(LightingData *, const ScreenLine<Integral> &la, const LightingTraversable<Integral> &a,
+                                 const ScreenLine<Integral> &lb, const LightingTraversable<Integral> &b) : n_(a.n()) {
       myfloat dx = (Integral)lb.x() - (Integral)la.x();
       if (dx != 0) {
         dn_.x() = (b.n().x() - a.n().x()) / dx;
@@ -167,27 +180,25 @@ template <class Integral = myfloat> class NormalsTraversable : virtual public Tr
       n_ += dn_ * value;
     }
 
-    inline bool Process(Vector3 *context, const Integral, const Integral) {
+    inline bool Process(LightingData *context, const Integral, const Integral) {
       *context = n_;
       return true;
     }
 
-    inline const Vector3 &n() const {
+    inline const Vector3 &normal() const {
       return n_;
     }
 
-    inline const Vector3 &dn() const {
-      return dn_;
-    }
-
    private:
-    Vector3 n_;
-    Vector3 dn_;
+    Vector3 normal_;
+    Vector3 dnormal_;
+    Vector3 viewer_;
+    Vector3 dviewer_;
   };
 
-  inline NormalsTraversable() = default;
+  inline LightingTraversable() = default;
 
-  inline NormalsTraversable(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) : n_(a) {
+  inline LightingTraversable(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) : n_(a) {
     myfloat dy = line.fy() - line.y();
     if (dy != 0) {
       dn_.x = (b.x() - a.x()) / dy;
@@ -208,40 +219,44 @@ template <class Integral = myfloat> class NormalsTraversable : virtual public Tr
     return n_;
   }
 
-  inline const Vector3 &dn() const {
-    return dn_;
-  }
-
  private:
-  Vector3 n_;
-  Vector3 dn_;
+  Vector3 normal_;
+  Vector3 dnormal_;
+  Vector3 viewer_;
+  Vector3 dviewer_;
 };
+
+#endif
 
 struct ZTraversableData {
   myfloat z;
 };
 
-struct UVTraversableData : virtual public ZTraversableData {
+struct TextureTraversableData : virtual public ZTraversableData {
   Vector2 uv;
 };
 
-template <class Integral = myfloat> class UVCoordsTraversable : virtual public Traversable<Integral>,
+template <class Integral = myfloat> class TextureTraversable : virtual public Traversable<Integral>,
     virtual public ZTraversable<Integral> {
  public:
-  typedef UVTraversableData DataType;
+  typedef TextureTraversableData DataType;
   typedef typename ZTraversable<Integral>::HorizontalTraversable ZTraversableHorizontal;
   typedef typename Traversable<Integral>::template HorizontalTraversable<Vector2> TraversableHorizontal;
 
   class HorizontalTraversable : public TraversableHorizontal, public virtual ZTraversableHorizontal {
    public:
-    inline HorizontalTraversable(Vector2 *, const ScreenLine<Integral> &la, const UVCoordsTraversable &a,
-                                 const ScreenLine<Integral> &lb, const UVCoordsTraversable &b) :
-        ZTraversableHorizontal(la, a, lb, b),uv_z_(a.uv_z()) {
+    inline HorizontalTraversable(Vector2 *, const ScreenLine<Integral> &la, const TextureTraversable &a,
+                                 const ScreenLine<Integral> &lb, const TextureTraversable &b) :
+      ZTraversableHorizontal(la, a, lb, b), uv_z_(a.uv_z()) {
       myfloat dx = (Integral)lb.x() - (Integral)la.x();
       if (dx != 0) {
         duv_z_.x() = (b.uv_z().x() - uv_z_.x()) / dx;
         duv_z_.y() = (b.uv_z().y() - uv_z_.y()) / dx;
       }
+    }
+
+    inline const Vector2 &uv_z() const {
+      return uv_z_;
     }
 
     inline void Advance() {
@@ -265,22 +280,14 @@ template <class Integral = myfloat> class UVCoordsTraversable : virtual public T
 #endif
     }
 
-    inline const Vector2 &uv_z() const {
-      return uv_z_;
-    }
-
-    inline const Vector2 &duv_z() const {
-      return duv_z_;
-    }
-
    private:
     Vector2 uv_z_;
     Vector2 duv_z_;
   };
 
-  inline UVCoordsTraversable() = default;
+  inline TextureTraversable() = default;
 
-  inline UVCoordsTraversable(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) :
+  inline TextureTraversable(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) :
       ZTraversable<Integral>(line, a.z, b.z) {
 #ifndef AFFINE_TEXTURES
     myfloat iz = 1 / this->z();
@@ -301,6 +308,10 @@ template <class Integral = myfloat> class UVCoordsTraversable : virtual public T
     }
   }
 
+  inline const Vector2 &uv_z() const {
+    return uv_z_;
+  }
+
   inline void Advance() {
     uv_z_ += duv_z_;
   }
@@ -315,14 +326,6 @@ template <class Integral = myfloat> class UVCoordsTraversable : virtual public T
 #else
     return uv_z_;
 #endif
-  }
-
-  inline const Vector2 &uv_z() const {
-    return uv_z_;
-  }
-
-  inline const Vector2 &duv_z() const {
-    return duv_z_;
   }
 
  private:
@@ -350,6 +353,8 @@ template <class Integral = unsigned> class RasterizerTraversable : public Traver
     SurfacePainterWrapper *surface_painter;
 #ifdef NO_LIGHTING
     Uint32 pixel;
+#else
+    myfloat ambient_light;
 #endif
   };
 
@@ -380,7 +385,7 @@ template <class Integral = unsigned> class RasterizerTraversable : public Traver
       if (!z_buffer().Check(this->z())) return false;
 #ifndef NO_LIGHTING
       sdlobj::Color color = context->material->color();
-      color = ProcessColor(context, color, x, y);
+      color = ProcessColor(color);
       Uint32 pixel = context->surface->ColorToPixel(color);
       painter().SetPixel(pixel);
 #else
@@ -389,7 +394,7 @@ template <class Integral = unsigned> class RasterizerTraversable : public Traver
       return true;
     }
 
-    inline sdlobj::Color ProcessColor(TraversableContext *context, const sdlobj::Color &color, const unsigned x, const unsigned y) {
+    inline sdlobj::Color ProcessColor(const sdlobj::Color &color) {
       return color;
     }
 
@@ -447,18 +452,18 @@ template <class Integral = unsigned> class RasterizerTraversable : public Traver
 };
 
 struct RasterizerTexturedTraversableData : public RasterizerTraversableData,
-    public UVTraversableData {
+    public TextureTraversableData {
 };
 
 template <class Integral = unsigned> struct RasterizerTexturedTraversable : public RasterizerTraversable<Integral>,
-    public UVCoordsTraversable<Integral> {
+    public TextureTraversable<Integral> {
  public:
   struct TraversableContext : public RasterizerTraversable<Integral>::TraversableContext {
     const SurfacePainterWrapper *texture;
   };
 
   typedef RasterizerTexturedTraversableData DataType;
-  typedef typename UVCoordsTraversable<Integral>::HorizontalTraversable UVTraversableHorizontal;
+  typedef typename TextureTraversable<Integral>::HorizontalTraversable UVTraversableHorizontal;
   typedef typename RasterizerTraversable<Integral>::HorizontalTraversable RasterizerHorizontal;
   typedef typename ZTraversable<Integral>::HorizontalTraversable ZTraversableHorisontal;
 
@@ -482,10 +487,12 @@ template <class Integral = unsigned> struct RasterizerTexturedTraversable : publ
           h = context->texture->surface()->height() - 1;
       if (uv.x() > w) uv.x() = w;
       if (uv.y() > h) uv.y() = h;
-      Uint32 t_pixel = context->texture->GetPixel(uv.x(), uv.y());
-      sdlobj::Color color = context->material->texture()->PixelToColor(t_pixel);
-      color = this->ProcessColor(context, color, x, y);
-      Uint32 pixel = context->surface->ColorToPixel(color);
+      Uint32 pixel = context->texture->GetPixel(uv.x(), uv.y());
+#ifndef NO_LIGHTING
+      sdlobj::Color color = context->material->texture()->PixelToColor(pixel);
+      color = this->ProcessColor(color);
+      pixel = context->surface->ColorToPixel(color);
+#endif
       this->painter().SetPixel(pixel);
       return true;
     }
@@ -503,16 +510,16 @@ template <class Integral = unsigned> struct RasterizerTexturedTraversable : publ
 
   inline RasterizerTexturedTraversable(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) :
       ZTraversable<Integral>(line, a.z, b.z), RasterizerTraversable<Integral>(line, a, b),
-      UVCoordsTraversable<Integral>(line, a, b) {}
+      TextureTraversable<Integral>(line, a, b) {}
 
   inline void Advance() {
     RasterizerTraversable<Integral>::Advance();
-    UVCoordsTraversable<Integral>::Advance();
+    TextureTraversable<Integral>::Advance();
   }
 
   inline void Advance(const Integral value) {
     RasterizerTraversable<Integral>::Advance(value);
-    UVCoordsTraversable<Integral>::Advance(value);
+    TextureTraversable<Integral>::Advance(value);
   }
 };
 
@@ -585,7 +592,7 @@ template <bool kTextures> void DrawTriangle(const size_t tri_i, const Transforme
       data[i].uv.y() *= context->texture->surface()->height() - 1;
     }
     if (points_size > 3) {
-      TriangleTraverser<UVCoordsTraversable<myfloat>> traverser(points_buf[0], data[0],
+      TriangleTraverser<TextureTraversable<myfloat>> traverser(points_buf[0], data[0],
                                                        points_buf[1], data[1],
                                                        points_buf[2], data[2]);
 #ifndef NO_LIGHTING
@@ -749,6 +756,34 @@ void DrawSurface(RasterizerTexturedTraversable<>::TraversableContext &context, c
   }
 }
 
+inline void PrepareAndDraw(RasterizerTexturedTraversable<>::TraversableContext &tcontext,
+                    const Material &material, SurfacePainterWrapper *&texture_painter,
+                    Surface *&texture, const size_t t, const Surface &surface,
+                    const TransformedObject &transformed, const SceneObject &object) {
+  tcontext.material = &material;
+  if (material.texture()) {
+    if (texture != material.texture().get()) {
+      if (texture_painter) delete texture_painter;
+      texture = material.texture().get();
+#if defined(NO_LIGHTING) || defined(COMPILE_TIME_BPP)
+      if (!texture->DisplayFormat()) {
+        *texture = texture->DisplayConvert();
+      }
+#endif
+      texture_painter = GetSurfacePainter(texture);
+      texture_painter->StartDrawing();
+    }
+    tcontext.texture = texture_painter;
+    DrawTriangle<true>(t, transformed, object, &tcontext);
+  } else {
+#ifdef NO_LIGHTING
+    Vector3 color = material.ambient_color() * 0xFF;
+    tcontext.pixel = surface.ColorToPixel(Color(color.x(), color.y(), color.z()));
+#endif
+    DrawTriangle<false>(t, transformed, object, &tcontext);
+  }
+}
+
 void Rasterizer::Paint(sdlobj::Surface &surface) {
   z_buffer_.set_size(surface.width(), surface.height());
   z_buffer_.Clear();
@@ -782,42 +817,14 @@ void Rasterizer::Paint(sdlobj::Surface &surface) {
         } else {
           material = m_i->second.get();
         }
-        tcontext.material = material;
-        if (material->texture()) {
-          if (texture != material->texture().get()) {
-            if (texture_painter) delete texture_painter;
-            texture_painter = GetSurfacePainter(material->texture().get());
-            texture = material->texture().get();
-            texture_painter->StartDrawing();
-          }
-          tcontext.texture = texture_painter;
-          DrawTriangle<true>(t, transformed, *object, &tcontext);
-        } else {
-#ifdef NO_LIGHTING
-          tcontext.pixel = surface.ColorToPixel(material->color());
-#endif
-          DrawTriangle<false>(t, transformed, *object, &tcontext);
-        }
+        PrepareAndDraw(tcontext, *material, texture_painter, texture, t,
+                       surface, transformed, *object);
       }
     } else {
       for (const auto &t : transformed.triangle_indexes) {
-        const Material &material = *object->model()->materials()[t];
-        tcontext.material = &material;
-        if (material.texture()) {
-          if (texture != material.texture().get()) {
-            if (texture_painter) delete texture_painter;
-            texture_painter = GetSurfacePainter(material.texture().get());
-            texture = material.texture().get();
-            texture_painter->StartDrawing();
-          }
-          tcontext.texture = texture_painter;
-          DrawTriangle<true>(t, transformed, *object, &tcontext);
-        } else {
-#ifdef NO_LIGHTING
-          tcontext.pixel = surface.ColorToPixel(material.color());
-#endif
-          DrawTriangle<false>(t, transformed, *object, &tcontext);
-        }
+        const Material *material = object->model()->materials()[t].get();
+        PrepareAndDraw(tcontext, *material, texture_painter, texture, t,
+                       surface, transformed, *object);
       }
     }
   }

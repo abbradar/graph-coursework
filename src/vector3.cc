@@ -1,3 +1,4 @@
+#include "common/math.h"
 #include "vector3.h"
 
 #ifndef USE_EIGEN
