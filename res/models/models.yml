@@ -2,3 +2,7 @@
   root-frame: Root
   model-frame: Cone
   model: cone.x
+- name: Cube
+  root-frame: Root
+  model-frame: Cube
+  model: textured_cube.x

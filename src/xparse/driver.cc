@@ -29,7 +29,7 @@ bool Driver::Parse(std::istream &in) {
   parser.set_debug_level(trace_parsing_);
 #endif
   error_ = false;
-  if (!parser.parse()) return false;
+  if (parser.parse()) return false;
   return !error_;
 }
 

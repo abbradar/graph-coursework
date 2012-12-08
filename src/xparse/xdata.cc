@@ -12,13 +12,26 @@ bool XDataReference::Resolve(XFile *file) {
   return false;
 }
 
-XNestedData::XNestedData(Type type) : type_(type) {
+XNestedData::XNestedData(const Type type) : type_(type) {
   switch (type_) {
     case kNode:
       data_.node = new XData();
       break;
     case kNodeReference:
       data_.reference = new XDataReference();
+      break;
+    default:
+      throw Exception("Invalid nested data type");
+  }
+}
+
+XNestedData::XNestedData(const Type type, void *ptr) : type_(type) {
+  switch (type_) {
+    case kNode:
+    data_.node = (XData *)ptr;
+      break;
+    case kNodeReference:
+      data_.reference = (XDataReference *)ptr;
       break;
     default:
       throw Exception("Invalid nested data type");
@@ -65,7 +78,7 @@ XNestedData &XNestedData::operator =(const XNestedData &other) {
   return *this;
 }
 
-XDataValue::XDataValue(Type type, bool array_type) : type_(type), array_type_(array_type) {
+XDataValue::XDataValue(const Type type, bool array_type) : type_(type), array_type_(array_type) {
   if (array_type_) {
     data_.array_value = new ArrayData();
   } else {
@@ -82,6 +95,25 @@ XDataValue::XDataValue(Type type, bool array_type) : type_(type), array_type_(ar
       default:
         throw Exception("Invalid data type");
     }
+  }
+}
+
+XDataValue::XDataValue(const Type type, void *ptr) : type_(type), array_type_(false) {
+  switch (type_) {
+    case kInteger:
+      //data_.int_value = *(int *)ptr;
+      break;
+    case kFloat:
+      //data_.float_value = *(float *)ptr;
+      break;
+    case kString:
+      data_.string_value = (string *)ptr;
+      break;
+    case kNode:
+      data_.node_value = (NodeData *)ptr;
+      break;
+    default:
+      throw Exception("Invalid data type");
   }
 }
 
@@ -242,8 +274,9 @@ bool ValidateTemplate(const XTemplate *nested, vector<shared_ptr<XDataValue>>::i
         Assert(false);
         break;
     }
-    XDataValue *value = new XDataValue(type, member->member_type() == XTemplateMember::kArray);
-    if (value->array_type()) {
+    XDataValue *value;
+    if (member->member_type() == XTemplateMember::kArray) {
+      value = new XDataValue(type, true);
       int size = 1;
       for (const auto &i : *(member->array_size())) {
         switch (i.type()) {
@@ -265,6 +298,7 @@ bool ValidateTemplate(const XTemplate *nested, vector<shared_ptr<XDataValue>>::i
         value->data().array_value->push_back(move(data));
       }
     } else {
+      value = new XDataValue(type, nullptr);
       if (!ValidateData(member.get(), in, end, value->data())) return false;
     }
 

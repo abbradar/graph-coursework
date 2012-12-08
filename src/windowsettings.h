@@ -20,7 +20,7 @@ class WindowSettings : public SettingsBlock {
   virtual const std::string name();
   virtual void operator <<(const YAML::Node &node);
  private:
-  static const char *const kName;
+  static const std::string kName;
   Window *window_;
 };
 

@@ -38,12 +38,26 @@ bool XTemplateMemberReference::Resolve(XTemplate *x_template) {
   return found;
 }
 
-XTemplateMember::ArraySize::ArraySize(Type type) : type_(type) {
+XTemplateMember::ArraySize::ArraySize(const Type type) : type_(type) {
   switch (type_) {
     case kStatic:
       break;
     case kDynamic:
       data_.reference = new XTemplateMemberReference();
+      break;
+    default:
+      Assert(false);
+      break;
+  }
+}
+
+XTemplateMember::ArraySize::ArraySize(const Type type, void *ptr) : type_(type) {
+  switch (type_) {
+    case kStatic:
+      //data_.size = *(size_t *)ptr;
+      break;
+    case kDynamic:
+      data_.reference = (XTemplateMemberReference *)ptr;
       break;
     default:
       Assert(false);

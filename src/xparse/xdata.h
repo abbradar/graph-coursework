@@ -32,7 +32,8 @@ class XNestedData {
     XDataReference *reference;
   };
 
-  XNestedData(Type type);
+  XNestedData(const Type type);
+  XNestedData(const Type type, void *ptr);
   XNestedData(const XNestedData &other);
   ~XNestedData();
 
@@ -76,7 +77,8 @@ class XDataValue {
     ArrayData *array_value;
   };
 
-  XDataValue(Type type, bool array_type = false);
+  XDataValue(const Type type, bool array_type = false);
+  XDataValue(const Type type, void *ptr);
   XDataValue(const XDataValue &other);
   ~XDataValue();
 

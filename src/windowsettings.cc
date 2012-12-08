@@ -15,10 +15,10 @@ WindowSettings::WindowSettings(Window *window) : window_(window) {}
 
 WindowSettings::~WindowSettings() = default;
 
-const char *const WindowSettings::kName = "window";
+const std::string WindowSettings::kName = std::string("window");
 
 const std::string WindowSettings::name() {
-  return string(kName);
+  return kName;
 }
 
 void WindowSettings::set_window(Window *window) {

@@ -45,7 +45,8 @@ class XTemplateMember {
       XTemplateMemberReference *reference;
     };
 
-    ArraySize(Type type);
+    ArraySize(const Type type);
+    ArraySize(const Type type, void *ptr);
     ArraySize(const ArraySize &other);
     ~ArraySize();
 

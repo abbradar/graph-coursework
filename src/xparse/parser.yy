@@ -150,10 +150,12 @@ using namespace xparse;
 %% /*** Grammar Rules ***/
 
 x-file : tHeader data-list tEndOfFile {
-  if (!$1->Validate())
+  bool valid = $1->Validate();
+  delete $1;
+  if (!valid) {
     error(yyloc, "Invalid file header.");
     YYABORT;
-  delete $1;
+  }
 }
 
 data-list : template-or-node | template-or-node data-list
@@ -386,11 +388,9 @@ nested-data-list : {
 }
 
 nested-data : data-node {
-  $$ = new XNestedData(XNestedData::kNode);
-  $$->data().node = $1;
+  $$ = new XNestedData(XNestedData::kNode, $1);
 } | data-reference {
-  $$ = new XNestedData(XNestedData::kNodeReference);
-  $$->data().reference = $1;
+  $$ = new XNestedData(XNestedData::kNodeReference, $1);
 }
 
 data-reference : '{' node-reference '}' {
