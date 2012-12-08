@@ -42,6 +42,8 @@ class CachedDrawer : virtual public RenderWorker {
     return surface_;
   }
 
+  void SetColorKey(const Uint32 flags, const Uint32 key);
+
   virtual void Paint(sdlobj::Surface &surface);
 
  protected:

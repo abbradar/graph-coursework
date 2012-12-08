@@ -35,7 +35,11 @@ class PositionHandler : public EventWorker, public PreRenderWorker, public Conte
     kNone = 0,
     kGrabInput = 0b1,
     kTransform = 0b10,
-    kWeld = 0b100
+    kWeld = 0b100,
+    kAdd = 0b1000,
+    kRemove = 0b10000,
+    kLoad = 0b100000,
+    kSave = 0b1000000
   };
 
   struct MoveState {

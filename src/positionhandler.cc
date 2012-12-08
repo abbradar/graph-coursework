@@ -1,6 +1,9 @@
 #include "common/math.h"
 #include "movetransform.h"
 #include "weldtransform.h"
+#include "objectmenu.h"
+#include "sceneloadcontrol.h"
+#include "scenesavecontrol.h"
 #include "positionhandler.h"
 
 using namespace std;
@@ -53,11 +56,23 @@ bool PositionHandler::ProcessKeyDown(const SDL_KeyboardEvent &event) {
     case SDLK_t:
       action_ |= kTransform;
       break;
-    case SDLK_l:
+    case SDLK_c:
       action_ |= kWeld;
       break;
     case SDLK_g:
       action_ |= kGrabInput;
+      break;
+    case SDLK_n:
+      action_ |= kAdd;
+      break;
+    case SDLK_y:
+      action_ |= kRemove;
+      break;
+    case SDLK_l:
+      action_ |= kLoad;
+      break;
+    case SDLK_p:
+      action_ |= kSave;
       break;
     default:
       return false;
@@ -97,15 +112,6 @@ bool PositionHandler::ProcessKeyUp(const SDL_KeyboardEvent &event) {
     case SDLK_LCTRL:
       move_state_.down = 0;
       break;
-    /*case SDLK_t:
-      action_ &= !kTransform;
-      break;
-    case SDLK_l:
-      action_ &= !kWeld;
-      break;
-    case SDLK_g:
-      action_ &= !kGrabInput;
-      break;*/
     default:
       return false;
   }
@@ -166,6 +172,37 @@ void PositionHandler::EventStep() {
   camera.yaw += cam_left_right * rotation_k_ * 10;
   camera.pitch = Trim<myfloat>(camera.pitch, -M_PI_2, M_PI_2);
   camera.yaw = Circle<myfloat>(camera.yaw, -M_PI, M_PI);
+
+  if (action_ & kGrabInput) {
+    context()->window->set_grab_input(!context()->window->grab_input());
+  }
+  if (action_ & kAdd) {
+    auto ti = make_shared<ObjectMenu>(context());
+    ti->set_font(context()->window->font());
+    ti->set_position(context()->window->cursor_x(), context()->window->cursor_y());
+    ti->set_size(ti->preferred_width(), ti->preferred_height());
+    context()->window->RegisterWorker(ti);
+  }
+  if (action_ & kRemove) {
+    auto traced = context()->traced_object.lock();
+    if (traced) {
+      auto lock = traced->object.lock();
+      if (lock)
+        context()->scene.objects().remove(lock);
+    }
+  }
+  if (action_ & kLoad) {
+    auto ti = make_shared<SceneLoadControl>(context());
+    ti->set_font(context()->window->font());
+    ti->set_position(context()->window->cursor_x(), context()->window->cursor_y());
+    context()->window->RegisterWorker(ti);
+  }
+  if (action_ & kSave) {
+    auto ti = make_shared<SceneSaveControl>(context());
+    ti->set_font(context()->window->font());
+    ti->set_position(context()->window->cursor_x(), context()->window->cursor_y());
+    context()->window->RegisterWorker(ti);
+  }
 }
 
 void PositionHandler::PreRenderStep() {
@@ -182,9 +219,6 @@ void PositionHandler::PreRenderStep() {
       ti->set_rotation_speed(rotation_speed_);
       context()->window->RegisterWorker(ti);
     }
-  }
-  if (action_ & kGrabInput) {
-    context()->window->set_grab_input(!context()->window->grab_input());
   }
   action_ = kNone;
 }

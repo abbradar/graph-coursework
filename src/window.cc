@@ -8,7 +8,6 @@
 #include "colorsettings.h"
 #include "windowsettings.h"
 #include "modelssettings.h"
-#include "scenesettings.h"
 #include "config.h"
 #include "window.h"
 
@@ -378,11 +377,6 @@ void Window::SetVideoMode(const unsigned width, const unsigned height, const uns
 #include <fstream>
 
 void Window::Run() {
-  // DEBUG
-  ifstream fs("scene.yml");
-  LoadScene(context_->scene, fs, context_->models);
-  fs.close();
-
   LogDebug("Starting event loop");
 
   while (frame_timer_.WaitFrame()) { // event loop

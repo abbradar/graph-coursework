@@ -116,6 +116,14 @@ void SDL::WarpMouse(const unsigned short x, const unsigned short y) {
   SDL_WarpMouse(x, y);
 }
 
+bool SDL::translate_keysym() {
+  return SDL_EnableUNICODE(-1) == 1;
+}
+
+void SDL::set_translate_keysym(const bool translate_keysym) {
+  SDL_EnableUNICODE(translate_keysym);
+}
+
 void SDL::ProcessEvent(const SDL_Event &event)
 {
   switch (event.type) {

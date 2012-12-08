@@ -3,10 +3,12 @@
 
 #include <string>
 #include "cachedlabelcontrol.h"
+#include "eventworker.h"
 
-class TextEditControl : public CachedLabelControl {
+class TextEditControl : public CachedLabelControl, public EventWorker {
  public:
   TextEditControl();
+  ~TextEditControl();
 
   inline unsigned cursor() {
    return cursor_;
@@ -24,7 +26,7 @@ class TextEditControl : public CachedLabelControl {
 
   virtual void set_label(const std::string &label);
 
-  virtual void KeyDown(const SDL_keysym &key);
+  virtual bool ProcessKeyDown(const SDL_KeyboardEvent &event);
 
  protected:
   virtual void OnEntered();
@@ -32,6 +34,7 @@ class TextEditControl : public CachedLabelControl {
   virtual void Repaint(sdlobj::Surface &surface);
 
  private:
+  bool translate_keysym_;
   unsigned cursor_;
   std::string caption_;
 };

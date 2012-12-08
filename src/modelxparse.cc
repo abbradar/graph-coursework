@@ -1,3 +1,4 @@
+#include "common/math.h"
 #include "common/debug.h"
 #include "common/exception.h"
 #include "matrix4.h"
@@ -164,6 +165,9 @@ Model LoadModel(istream &in, const string &name, const XFile &templates,
     uv_coords->reserve(texture_coords->data[0]->data().int_value);
     for (auto &uv : *(texture_coords->data[1]->data().array_value)) {
       Vector2 point = LoadFromCoords2D(*(uv.node_value));
+      //if (!InBounds<myfloat>(point.x(), 0, 1) || !InBounds<myfloat>(point.y(), 0, 1)) {
+      //  throw Exception("Invalid texture coordinates.");
+      //}
       uv_coords->push_back(point);
     }
     object.set_uv_coords(uv_coords);

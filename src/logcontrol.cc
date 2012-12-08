@@ -51,6 +51,7 @@ void LogControl::ClearRendered() {
 
 void LogControl::Repaint(sdlobj::Surface &surface) {
   Uint32 back_p = surface.ColorToPixel(back_color());
+  SetColorKey(SDL_SRCCOLORKEY, back_p);
   surface.Fill(back_p);
   unsigned curr_y = 0;
   unsigned line_skip = font().line_skip();

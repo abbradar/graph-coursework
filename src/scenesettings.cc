@@ -13,12 +13,6 @@ void LoadScene(Scene &scene, istream &in, const Models &models) {
   YAML::Node doc;
   parser.GetNextDocument(doc);
 
-  doc["position"] >> *scene.position();
-  for (auto &mi : doc["objects"]) {
-    SceneObject *obj = new SceneObject(LoadSceneObject(mi, models));
-    scene.objects().push_back(shared_ptr<SceneObject>(obj));
-  }
-
   for (auto &mi : doc["light-sources"]) {
     LightSource *obj = new LightSource();
     mi >> *obj;
@@ -33,7 +27,6 @@ void LoadScene(Scene &scene, istream &in, const Models &models) {
 void SaveScene(Scene &scene, ostream &out) {
   YAML::Emitter emitter;
   emitter << YAML::BeginMap;
-  emitter << YAML::Key << "position" << YAML::Value << *scene.position();
   emitter << YAML::Key << "objects" << YAML::Value << YAML::BeginSeq;
 
   for (auto &i : scene.objects()) {
@@ -41,13 +34,18 @@ void SaveScene(Scene &scene, ostream &out) {
   }
 
   emitter << YAML::EndSeq;
-  emitter << YAML::Key << "light-sources" << YAML::Value << YAML::BeginSeq;
+  emitter << YAML::Key << "light-sources" << YAML::Value;
 
-  for (auto &i : scene.light_sources()) {
-    emitter << *i;
+  if (scene.light_sources().size() > 0) {
+    emitter << YAML::BeginSeq;
+
+    for (auto &i : scene.light_sources()) {
+      emitter << *i;
+    }
+
+    emitter << YAML::EndSeq;
   }
 
-  emitter << YAML::EndSeq;
   emitter << YAML::Key << "ambient-light" << YAML::Value << scene.ambient_light();
   emitter << YAML::EndMap;
 

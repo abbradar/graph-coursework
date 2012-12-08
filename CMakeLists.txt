@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 # Additional modules dir
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build")
 
-add_definitions(-std=c++11 -Wall -fstack-protector -fPIE)
+add_definitions(-std=c++11 -Wall -fstack-protector -fPIE -ffast-math)
 
 # Build type
 set(CMAKE_BUILD_TYPE Debug)
@@ -18,9 +18,9 @@ endif()
 
 # Debug levels
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  add_definitions(-DDEBUG_LEVEL=3 -O1)
+  add_definitions(-DDEBUG_LEVEL=3 -O1 -fno-omit-frame-pointer)
 else()
-  add_definitions(-DDEBUG_LEVEL=1 -O3)
+  add_definitions(-DDEBUG_LEVEL=1 -O3 -fomit-frame-pointer)
 endif()
 
 # Various packages

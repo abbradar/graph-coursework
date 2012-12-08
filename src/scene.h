@@ -32,10 +32,6 @@ class Scene {
     return light_sources_;
   }
 
-  inline const std::shared_ptr<Position> &position() const {
-    return position_;
-  }
-
   inline myfloat ambient_light() const {
     return ambient_light_;
   }
@@ -46,7 +42,6 @@ class Scene {
   SceneObjectList objects_;
   LightSourceList light_sources_;
   myfloat ambient_light_;
-  std::shared_ptr<Position> position_;
 };
 
 #endif // GRAPH_SCENE_H_

@@ -18,6 +18,7 @@ void ListControl::set_items(const std::vector<string> &items) {
 void ListControl::Repaint(Surface &surface) {
   Uint32 font_p = surface.ColorToPixel(font_color());
   Uint32 back_p = surface.ColorToPixel(back_color());
+  SetColorKey(SDL_SRCCOLORKEY, back_p);
   surface.Fill(back_p);
   unsigned curr_y = 0;
   unsigned line_skip = font().line_skip();

@@ -5,7 +5,14 @@
 using namespace sdlobj;
 using namespace std;
 
-TextEditControl::TextEditControl() : cursor_(0) {}
+TextEditControl::TextEditControl() : cursor_(0) {
+  translate_keysym_ = SDL::instance().translate_keysym();
+  SDL::instance().set_translate_keysym(true);
+}
+
+TextEditControl::~TextEditControl() {
+  SDL::instance().set_translate_keysym(translate_keysym_);
+}
 
 void TextEditControl::set_cursor(const unsigned cursor) {
   if (cursor_ != cursor) {
@@ -29,52 +36,51 @@ unsigned TextEditControl::preferred_width() {
 
 void TextEditControl::OnEntered() {}
 
-void TextEditControl::KeyDown(const SDL_keysym &key) {
-  if (key.sym >= 'a' && key.sym <= 'z') {
-    char chr = key.sym;
-    if (key.mod & KMOD_SHIFT) {
-      chr -= 'a' - 'A';
+bool TextEditControl::ProcessKeyDown(const SDL_KeyboardEvent &event) {
+  switch (event.keysym.sym) {
+    case SDLK_BACKSPACE: {
+      if (cursor_ > 0) {
+        auto bi = label().begin() + --cursor_;
+        label().erase(bi, bi + 1);
+        Invalidate();
+      }
+      return true;
     }
-    auto bi = label().begin() + cursor_++;
-    label().insert(bi, chr);
-    Invalidate();
-  } else {
-    switch (key.sym) {
-      case SDLK_BACKSPACE: {
-        if (cursor_ > 0) {
-          auto bi = label().begin() + --cursor_;
-          label().erase(bi, bi);
-          Invalidate();
-        }
-        break;
+    case SDLK_DELETE: {
+      if (cursor_ < label().size()) {
+        auto bi = label().begin() + cursor_;
+        label().erase(bi, bi + 1);
+        Invalidate();
       }
-      case SDLK_DELETE: {
-        if (cursor_ < label().size()) {
-          auto bi = label().begin() + cursor_;
-          label().erase(bi, bi);
-          Invalidate();
-        }
-        break;
+      return true;
+    }
+    case SDLK_LEFT:
+      if (cursor_ > 0) {
+        --cursor_;
+        Invalidate();
       }
-      case SDLK_LEFT:
-        if (cursor_ > 0) {
-          --cursor_;
-          Invalidate();
-        }
-        break;
-      case SDLK_RIGHT:
-        if (cursor_ < label().size()) {
-          ++cursor_;
-          Invalidate();
-        }
-        break;
-      case SDLK_RETURN:
-        OnEntered();
-        break;
-      default:
-        break;
+      return true;
+    case SDLK_RIGHT:
+      if (cursor_ < label().size()) {
+        ++cursor_;
+        Invalidate();
+      }
+      return true;
+    case SDLK_RETURN:
+      OnEntered();
+      return true;
+    default: {
+      if (event.keysym.unicode) {
+        char chr = (char)event.keysym.unicode;
+        auto bi = label().begin() + cursor_++;
+        label().insert(bi, chr);
+        Invalidate();
+        return true;
+      }
+      break;
     }
   }
+  return false;
 }
 
 void TextEditControl::set_label(const std::string &label) {
@@ -95,6 +101,11 @@ void TextEditControl::Repaint(sdlobj::Surface &surface) {
     surface = font().RenderUTF8_Blended(label().data(), font_color());
   }
 
+  if (surface.width() == 0) {
+    surface = Surface(1, preferred_height());
+  } else if (cw == surface.width()) {
+    --cw;
+  }
   SurfacePainterWrapper *painter = GetSurfacePainter(&surface);
   painter->StartDrawing();
   DrawLine(painter, cw, 0, cw, font().line_skip(), surface.ColorToPixel(font_color()));

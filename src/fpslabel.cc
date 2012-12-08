@@ -20,6 +20,8 @@ void FPSLabel::EventStep() {
 
 void FPSLabel::Repaint(Surface &surface) {
   set_label((boost::format("%.1f fps") % context()->window->measured_fps()).str());
+  Uint32 back_p = surface.ColorToPixel(back_color());
+  SetColorKey(SDL_SRCCOLORKEY, back_p);
   surface = font().RenderUTF8_Solid(label().data(), font_color());
 }
 

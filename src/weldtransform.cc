@@ -96,7 +96,6 @@ void WeldTransform::ProcessEnter() {
     lock->set_position(new_position);
     tn_ = onn;
     tp_ = np;
-    context()->window->set_grab_input(true);
     rotate_ = true;
   }
 }
@@ -114,9 +113,6 @@ bool WeldTransform::ProcessKeyDown(const SDL_KeyboardEvent &event) {
     } case SDLK_RETURN:
       ProcessEnter();
       break;
-    case SDLK_g:
-      if (rotate_)
-        return true;
     case SDLK_KP8:
       move_state_.cam_up = 1;
       if (rotate_)

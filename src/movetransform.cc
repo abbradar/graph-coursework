@@ -11,7 +11,6 @@ const Vector3 MoveTransform::kP3 = Vector3::UnitZ();
 MoveTransform::MoveTransform(const std::shared_ptr<Context> &context) :
  ContextUser(context), xrel_(0), yrel_(0), wait_finish_(false), finish_(false),
   rotate_(false), z_rotate_(false), rotation_speed_(1) {
-  context->window->set_grab_input(true);
   auto traced = context->traced_object.lock();
   object_ = traced->object;
   auto lock = object_.lock();
@@ -69,8 +68,6 @@ bool MoveTransform::ProcessKeyDown(const SDL_KeyboardEvent &event) {
       return true;
     case SDLK_z:
       z_rotate_ = true;
-      return true;
-    case SDLK_g:
       return true;
     case SDLK_KP8:
       move_state_.cam_up = 1;

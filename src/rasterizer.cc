@@ -481,12 +481,14 @@ template <class Integral = unsigned> struct RasterizerTexturedTraversable : publ
     inline bool Process(TraversableContext *context, const Integral x, const Integral y) {
       if (!this->z_buffer().Check(this->z())) return false;
       Vector2 uv = this->GetUV();
+#ifndef AFFINE_TEXTURES
       if (uv.x() < 0) uv.x() = 0;
       if (uv.y() < 0) uv.y() = 0;
       int w = context->texture->surface()->width() - 1,
           h = context->texture->surface()->height() - 1;
       if (uv.x() > w) uv.x() = w;
       if (uv.y() > h) uv.y() = h;
+#endif
       Uint32 pixel = context->texture->GetPixel(uv.x(), uv.y());
 #ifndef NO_LIGHTING
       sdlobj::Color color = context->material->texture()->PixelToColor(pixel);

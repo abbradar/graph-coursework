@@ -46,6 +46,9 @@ class SDL : public Singleton<SDL> {
 
   void WarpMouse(const unsigned short x, const unsigned short y);
 
+  bool translate_keysym();
+  void set_translate_keysym(const bool translate_keysym);
+
   inline std::shared_ptr<EventHandler> &event_handler() {
     return event_handler_;
   }

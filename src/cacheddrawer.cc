@@ -16,7 +16,10 @@ void CachedDrawer::set_size(const unsigned width, const unsigned height) {
   if (width_ != width || height_ != height) {
     width_ = width;
     height_ = height;
+    Uint32 colorkey = surface_.surface()->format->colorkey;
+    Uint32 flags = surface_.surface()->flags & (SDL_SRCCOLORKEY | SDL_RLEACCEL);
     surface_ = Surface(width_, height_);
+    SetColorKey(flags, colorkey);
     Invalidate();
   }
 }
@@ -31,6 +34,10 @@ unsigned CachedDrawer::preferred_height() {
 
 void CachedDrawer::Invalidate() {
   valid_ = false;
+}
+
+void CachedDrawer::SetColorKey(const Uint32 flags, const Uint32 key) {
+  surface_.SetColorKey(flags, key);
 }
 
 void CachedDrawer::Paint(Surface &surface) {
