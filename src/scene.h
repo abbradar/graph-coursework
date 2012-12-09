@@ -12,7 +12,7 @@
 class Scene {
  public:
   typedef std::list<std::shared_ptr<SceneObject>> SceneObjectList;
-  typedef std::list<std::shared_ptr<LightSource>> LightSourceList;
+  typedef std::vector<LightSource> LightSourceVector;
 
   Scene();
 
@@ -24,7 +24,7 @@ class Scene {
     return objects_;
   }
 
-  inline LightSourceList &light_sources() {
+  inline LightSourceVector &light_sources() {
     return light_sources_;
   }
 
@@ -40,7 +40,7 @@ class Scene {
 
  private:
   SceneObjectList objects_;
-  LightSourceList light_sources_;
+  LightSourceVector light_sources_;
   myfloat ambient_light_;
 };
 

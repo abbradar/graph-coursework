@@ -29,9 +29,29 @@ void SceneObject::UpdatePositioned() {
     positioned_points_[i] = transform * model_->points()[i];
   }
 
+#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
   // polygon normals
   positioned_polygon_normals_.resize(model_->polygon_normals().size());
   for (size_t i = 0; i < positioned_polygon_normals_.size(); ++i) {
     positioned_polygon_normals_[i] = rotate_transform * model_->polygon_normals()[i];
   }
+#endif
+
+#if defined(GOURAUD_SHADING) || defined(PHONG_SHADING)
+  // vertex normals
+  positioned_vertex_normals_.resize(model_->vertex_normals().size());
+  for (size_t i = 0; i < positioned_vertex_normals_.size(); ++i) {
+    positioned_vertex_normals_[i] = rotate_transform * model_->vertex_normals()[i];
+  }
+#endif
+
+#ifdef FLAT_SHADING
+  // triangle centers
+  positioned_centers_.resize(model_->polygons().size());
+  for (size_t i = 0; i < positioned_centers_.size(); ++i) {
+    const Vector3 *&points = model_->polygons()[i].points;
+    positioned_centers_[i] = (positioned_points_[points[0]] + positioned_points_[points[1]]
+        + positioned_points_[points[2]]) / 3;
+  }
+#endif
 }

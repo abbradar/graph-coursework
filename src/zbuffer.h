@@ -5,6 +5,12 @@
 #include <iterator>
 #include "common/debug.h"
 #include "myfloat.h"
+#include "config.h"
+
+#ifdef MULTITHREADED_Z_BUFFER
+#include <thread>
+#include <mutex>
+#endif
 
 class ZBuffer {
  public:
@@ -81,10 +87,20 @@ class ZBuffer {
   Iterator Position(const unsigned int x, const unsigned int y);
 
  private:
+#ifdef MULTITHREADED_Z_BUFFER
+  void ClearOtherThread();
+#endif
+
   unsigned int width_;
   unsigned int height_;
   size_t size_;
   myfloat *z_buffer_;
+#ifdef MULTITHREADED_Z_BUFFER
+  myfloat *z_buffer_other_;
+  std::mutex v_from_;
+  std::condition_variable v_to_;
+  std::thread thread_;
+#endif
 };
 
 #endif // GRAPH_ZBUFFER_H_

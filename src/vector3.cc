@@ -4,29 +4,29 @@
 #ifndef USE_EIGEN
 
 Vector3 &Vector3::operator +=(const Vector3 &other) {
-  x_ += other.x_;
-  y_ += other.y_;
-  z_ += other.z_;
+  x() += other.x();
+  y() += other.y();
+  z() += other.z();
   return *this;
 }
 
 Vector3 &Vector3::operator -=(const Vector3 &other) {
-  x_ -= other.x_;
-  y_ -= other.y_;
-  z_ -= other.z_;
+  x() -= other.x();
+  y() -= other.y();
+  z() -= other.z();
   return *this;
 }
 
 Vector3 Vector3::cross(const Vector3 &b) const {
   Vector3 result;
-  result.x_ = y_ * b.z_ - z_ * b.y_;
-  result.y_ = z_ * b.x_ - x_ * b.z_;
-  result.z_ = x_ * b.y_ - y_ * b.x_;
+  result.x() = y() * b.z() - z() * b.y();
+  result.y() = z() * b.x() - x() * b.z();
+  result.z() = x() * b.y() - y() * b.x();
   return result;
 }
 
 myfloat Vector3::dot(const Vector3 &b) const {
-  return x_ * b.x_ + y_ * b.y_ + z_ * b.z_;
+  return x() * b.x() + y() * b.y() + z() * b.z();
 }
 
 const Vector3UnitX &Vector3::UnitX() {

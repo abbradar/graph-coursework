@@ -25,8 +25,8 @@ void ObjectMenu::OnSelected() {
   }
 }
 
-bool ObjectMenu::ProcessKeyDown(const SDL_keysym &key) {
-  switch (key.sym) {
+bool ObjectMenu::ProcessKeyDown(const SDL_KeyboardEvent &event) {
+  switch (event.keysym.sym) {
     case SDLK_ESCAPE: {
       context()->window->UnregisterWorker(this);
       return true;

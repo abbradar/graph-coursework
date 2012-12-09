@@ -4,13 +4,29 @@
 #include <list>
 #include <memory>
 #include <map>
+#include "common/runtimearray.h"
 #include "scene.h"
 #include "models.h"
 #include "camera.h"
+#include "config.h"
 
 class Window;
 
 typedef std::map<size_t, std::shared_ptr<Material>> MaterialOverlayMap;
+
+#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
+
+struct LightingSourceData {
+  Vector3 direction;
+  Vector3 reflection;
+};
+
+struct LightingData {
+  Vector3 viewer;
+  SizedRuntimeArray<LightingSourceData> sources_data;
+};
+
+#endif
 
 struct TransformedObject {
   TransformedObject(const std::weak_ptr<SceneObject> &object);
@@ -20,6 +36,9 @@ struct TransformedObject {
   std::vector<bool> point_flags;
   std::vector<size_t> triangle_indexes;
   std::unique_ptr<MaterialOverlayMap> material_overlay;
+#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
+  std::vector<LightingData> lighting_data;
+#endif
 };
 
 typedef std::map<SceneObject *, std::unique_ptr<TransformedObject>> TransformedObjectMap;

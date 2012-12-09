@@ -8,7 +8,7 @@
 using namespace std;
 
 SceneLoadControl::SceneLoadControl(const shared_ptr<Context> &context_) : ContextUser(context_) {
-  set_caption("Scene file");
+  set_caption("Load scene");
 }
 
 void SceneLoadControl::OnEntered() {

@@ -16,42 +16,53 @@ typedef Eigen::Matrix<myfloat, 2, 1> Vector2;
 
 class Vector2 {
  public:
-  constexpr inline Vector2() : x_(0), y_(0) {}
-  constexpr inline Vector2(myfloat x, myfloat y) : x_(x), y_(y) {}
+  constexpr inline Vector2(const myfloat x, const myfloat y) {
+    this->x() = x;
+    this->y() = y;
+  }
+  constexpr inline Vector2() : Vector2(0, 0) {}
 
   Vector2 &operator +=(const Vector2 &other);
   Vector2 &operator -=(const Vector2 &other);
 
   template <class T> Vector2 &operator *=(const T num) {
-    x_ *= num;
-    y_ *= num;
+    x() *= num;
+    y() *= num;
     return *this;
   }
 
   template <class T> Vector2 &operator /=(const T num) {
-    x_ /= num;
-    y_ /= num;
+    x() /= num;
+    y() /= num;
     return *this;
   }
 
   inline Vector2 operator -() const {
-    return Vector2(-x_, -y_);
+    return Vector2(-x(), -y());
   }
 
   inline myfloat &x() {
-    return x_;
+    return data_.dim.x;
   }
 
   inline myfloat &y() {
-    return y_;
+    return data_.dim.y;
   }
 
-  inline const myfloat &x() const {
-    return x_;
+  inline myfloat x() const {
+    return data_.dim.x;
   }
 
-  inline const myfloat &y() const {
-    return y_;
+  inline myfloat y() const {
+    return data_.dim.y;
+  }
+
+  inline myfloat operator ()(const size_t i) const {
+    return data_.arr[i];
+  }
+
+  inline myfloat &operator ()(const size_t i) {
+    return data_.arr[i];
   }
 
   myfloat norm() const {
@@ -66,9 +77,26 @@ class Vector2 {
     return Vector2(*this) /= norm();
   }
 
+  inline constexpr size_t cols() {
+    return 1;
+  }
+
+  inline constexpr size_t rows() {
+    return kDimension;
+  }
+
+  inline const
+
  private:
-  myfloat x_;
-  myfloat y_;
+  static constexpr size_t kDimension = 2;
+
+  union {
+    struct {
+      myfloat x;
+      myfloat y;
+    } dim;
+    myfloat arr[kDimension];
+  } data_;
 
   friend Vector2 operator +(const Vector2 &a, const Vector2 &b);
   friend Vector2 operator -(const Vector2 &a, const Vector2 &b);

@@ -10,7 +10,7 @@ class ObjectMenu : public ListControl, public ContextUser {
 
  protected:
   virtual void OnSelected();
-  virtual bool ProcessKeyDown(const SDL_keysym &key);
+  virtual bool ProcessKeyDown(const SDL_KeyboardEvent &event);
 };
 
 #endif // GRAPH_OBJECTMENU_H_

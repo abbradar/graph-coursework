@@ -29,14 +29,14 @@ myfloat NormAngle(const Vector2 &a, const Vector2 &b) {
 #ifndef USE_EIGEN
 
 Vector2 &Vector2::operator +=(const Vector2 &other) {
-  x_ += other.x_;
-  y_ += other.y_;
+  x() += other.x();
+  y() += other.y();
   return *this;
 }
 
 Vector2 &Vector2::operator -=(const Vector2 &other) {
-  x_ -= other.x_;
-  y_ -= other.y_;
+  x() -= other.x();
+  y() -= other.y();
   return *this;
 }
 

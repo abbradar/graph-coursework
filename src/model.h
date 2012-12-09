@@ -11,6 +11,7 @@
 #include "material.h"
 #include "indexedtriangle.h"
 #include "matrix4.h"
+#include "config.h"
 
 typedef std::vector<Vector2> Vector2Vector;
 typedef std::vector<Vector3> Vector3Vector;
@@ -62,11 +63,14 @@ class Model {
   Vector3Vector points_;
   TriangleVector polygons_;
   Vector3Vector vertex_normals_;
-  Vector3Vector polygon_normals_;
   MaterialVector materials_;
   std::shared_ptr<Vector2Vector> uv_coords_;
 
+#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
+  Vector3Vector polygon_normals_;
+
   void ComputePolygonNormals();
+#endif
 };
 
 #endif // GRAPH_MODEL_H_

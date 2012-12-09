@@ -23,7 +23,9 @@ void Model::set_model(const Vector3Vector &points, const TriangleVector &polygon
   polygons_ = polygons;
   vertex_normals_ = vertex_normals;
   materials_ = materials;
+#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
   ComputePolygonNormals();
+#endif
 }
 
 void Model::set_uv_coords(std::shared_ptr<Vector2Vector> &uv_coords) {
@@ -32,6 +34,8 @@ void Model::set_uv_coords(std::shared_ptr<Vector2Vector> &uv_coords) {
   }
   uv_coords_ = uv_coords;
 }
+
+#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
 
 void Model::ComputePolygonNormals() {
   polygon_normals_.clear();
@@ -48,3 +52,5 @@ void Model::ComputePolygonNormals() {
     polygon_normals_.push_back(result.normalized());
   }
 }
+
+#endif

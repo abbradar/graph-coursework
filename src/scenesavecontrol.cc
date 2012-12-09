@@ -8,7 +8,7 @@
 using namespace std;
 
 SceneSaveControl::SceneSaveControl(const shared_ptr<Context> &context_) : ContextUser(context_) {
-  set_caption("Scene file");
+  set_caption("Save scene");
 }
 
 void SceneSaveControl::OnEntered() {

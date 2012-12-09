@@ -22,54 +22,67 @@ class Vector3UnitZ;
 
 class Vector3 {
  public:
-  constexpr inline Vector3() : x_(0), y_(0), z_(0) {}
-  constexpr inline Vector3(myfloat x, myfloat y, myfloat z) :
-      x_(x), y_(y), z_(z) {}
+  constexpr inline Vector3(const myfloat x, const myfloat y, const myfloat z) {
+    this->x() = x;
+    this->y() = y;
+    this->z() = z;
+  }
+
+  constexpr inline Vector3() : Vector3(0, 0, 0) {}
+
   inline ~Vector3() = default;
 
   inline myfloat &x() {
-    return x_;
+    return data_.dim.x;
   }
 
   inline myfloat &y() {
-    return y_;
+    return data_.dim.y;
   }
 
   inline myfloat &z() {
-    return z_;
+    return data_.dim.z;
   }
 
-  inline const myfloat &x() const {
-    return x_;
+  inline myfloat x() const {
+    return data_.dim.x;
   }
 
-  inline const myfloat &y() const {
-    return y_;
+  inline myfloat y() const {
+    return data_.dim.y;
   }
 
-  inline const myfloat &z() const {
-    return z_;
+  inline myfloat z() const {
+    return data_.dim.z;
+  }
+
+  inline myfloat operator ()(const size_t i) const {
+    return data_.arr[i];
+  }
+
+  inline myfloat &operator ()(const size_t i) {
+    return data_.arr[i];
   }
 
   Vector3 &operator +=(const Vector3 &other);
   Vector3 &operator -=(const Vector3 &other);
 
   template <class T> Vector3 &operator *=(const T num) {
-    x_ *= num;
-    y_ *= num;
-    z_ *= num;
+    x() *= num;
+    y() *= num;
+    z() *= num;
     return *this;
   }
 
   template <class T> Vector3 &operator /=(const T num) {
-    x_ /= num;
-    y_ /= num;
-    z_ /= num;
+    x() /= num;
+    y() /= num;
+    z() /= num;
     return *this;
   }
 
   inline Vector3 operator -() const {
-    return Vector3(-x_, -y_, -z_);
+    return Vector3(-x(), -y(), -z());
   }
 
   Vector3 cross(const Vector3 &b) const;
@@ -84,17 +97,32 @@ class Vector3 {
   }
 
   myfloat squaredNorm() const {
-    return Sqr(x_) + Sqr(y_) + Sqr(z_);
+    return Sqr(x()) + Sqr(y()) + Sqr(z());
   }
 
   Vector3 normalized() const {
     return Vector3(*this) /= norm();
   }
 
+  inline constexpr size_t cols() {
+    return 1;
+  }
+
+  inline constexpr size_t rows() {
+    return kDimension;
+  }
+
  private:
-  myfloat x_;
-  myfloat y_;
-  myfloat z_;
+  static constexpr size_t kDimension = 3;
+
+  union {
+    struct {
+      myfloat x_;
+      myfloat y_;
+      myfloat z_;
+    } dim;
+    myfloat arr[kDimension];
+  } data_;
 
   friend Vector3 operator +(const Vector3 &a, const Vector3 &b);
   friend Vector3 operator -(const Vector3 &a, const Vector3 &b);
@@ -140,5 +168,9 @@ class Vector3UnitZ : public Vector3 {
 #endif
 
 void AxisToEuler(const Vector3 &p, const myfloat angle, myfloat &roll, myfloat &pitch, myfloat &yaw);
+
+inline Vector3 Reflection(const Vector3 &a, const Vector3 &n) {
+  return 2 * a.dot(n) * n - a;
+}
 
 #endif // GRAPH_VECTOR3_H_

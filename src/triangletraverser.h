@@ -65,9 +65,6 @@ template <class Integral> class Traversable {
 
   template <class Context> class HorizontalTraversable {
    public:
-    // There should also be:
-    // inline HorizontalTraversable(Context *context, const ScreenLine<Integral> &la, const Traversable<Integral> &a,
-    //                              const ScreenLine<Integral> &lb, const Traversable<Integral> &b)
     inline HorizontalTraversable() {
       static_assert(std::is_arithmetic<Integral>::value, "Template type should be arithmetic.");
     }
@@ -83,10 +80,10 @@ template <class Integral> class ZTraversable {
   class HorizontalTraversable {
    public:
     inline HorizontalTraversable(const ScreenLine<Integral> &la, const ZTraversable<Integral> &a,
-                                 const ScreenLine<Integral> &lb, const ZTraversable<Integral> &b) {
+                                 const ScreenLine<Integral> &lb, const ZTraversable<Integral> &b,
+                                 const myfloat dx) {
       static_assert(std::is_arithmetic<Integral>::value, "Template type should be arithmetic.");
 
-      myfloat dx = (Integral)lb.x() - (Integral)la.x();
       if (dx != 0) {
         z_ = a.z();
         dz_ = (b.z() - z_) / dx;
@@ -119,10 +116,8 @@ template <class Integral> class ZTraversable {
 
   inline ZTraversable() = default;
 
-  inline ZTraversable(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) {
+  inline ZTraversable(const ScreenLine<Integral> &line, const myfloat dy, const DataType &a, const DataType &b) {
     static_assert(std::is_arithmetic<Integral>::value, "Template type should be arithmetic.");
-
-    myfloat dy = line.fy() - line.y();
     if (dy != 0) {
       z_ = a;
       dz_ = (b - a) / dy;
@@ -186,21 +181,21 @@ template <class T> class TriangleTraverser {
         std::swap(data_ptr[0], data_ptr[1]);
       }
       big_ = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[2]);
-      tbig_ = T(big_, *data_ptr[0], *data_ptr[2]);
+      tbig_ = T(big_, big_.fy() - big_.y(), *data_ptr[0], *data_ptr[2]);
       small1_ = ScreenLine<IntegralType>(*points_ptr[1], *points_ptr[2]);
-      tsmall1_ = T(small1_, *data_ptr[1], *data_ptr[2]);
+      tsmall1_ = T(small1_, small1_.fy() - small1_.y(), *data_ptr[1], *data_ptr[2]);
       horizontal_ = true;
     } else {
       big_ = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[2]);
-      tbig_ = T(big_, *data_ptr[0], *data_ptr[2]);
+      tbig_ = T(big_, big_.fy() - big_.y(), *data_ptr[0], *data_ptr[2]);
       small1_ = ScreenLine<IntegralType>(*points_ptr[0], *points_ptr[1]);
-      tsmall1_ = T(small1_, *data_ptr[0], *data_ptr[1]);
+      tsmall1_ = T(small1_, small1_.fy() - small1_.y(), *data_ptr[0], *data_ptr[1]);
 
       right_big_ = big_.dx() > small1_.dx();
 
       if (big_.y() != big_.fy()) {
         small2_ = ScreenLine<IntegralType>(*points_ptr[1], *points_ptr[2]);
-        tsmall2_ = T(small2_, *data_ptr[1], *data_ptr[2]);
+        tsmall2_ = T(small2_, small2_.fy() - small2_.y(), *data_ptr[1], *data_ptr[2]);
       } else {
         horizontal_ = true;
       }
@@ -271,21 +266,21 @@ template <class T> class TriangleTraverser {
         std::swap(data_ptr[0], data_ptr[1]);
       }
       ScreenLine<IntegralType> a(*points_ptr[0], *points_ptr[2]);
-      T ta(a, *data_ptr[0], *data_ptr[2]);
+      T ta(a, a.fy() - a.y(), *data_ptr[0], *data_ptr[2]);
       ScreenLine<IntegralType> b(*points_ptr[1], *points_ptr[2]);
-      T tb(b, *data_ptr[1], *data_ptr[2]);
+      T tb(b, b.fy() - b.y(), *data_ptr[1], *data_ptr[2]);
       TraverseLines(a, ta, b, tb, a.fy(), context);
     } else {
       ScreenLine<IntegralType> big(*points_ptr[0], *points_ptr[2]);
-      T tbig(big, *data_ptr[0], *data_ptr[2]);
+      T tbig(big, big.fy() - big.y(), *data_ptr[0], *data_ptr[2]);
       ScreenLine<IntegralType> small1(*points_ptr[0], *points_ptr[1]);
-      T tsmall1(small1, *data_ptr[0], *data_ptr[1]);
+      T tsmall1(small1, small1.fy() - small1.y(), *data_ptr[0], *data_ptr[1]);
       if (big.dx() <= small1.dx()) {
         TraverseLines(big, tbig, small1, tsmall1, small1.fy(), context);
 
         if (big.y() != big.fy()) {
           ScreenLine<IntegralType> small2(*points_ptr[1], *points_ptr[2]);
-          T tsmall2(small2, *data_ptr[1], *data_ptr[2]);
+          T tsmall2(small2, small2.fy() - small2.y(), *data_ptr[1], *data_ptr[2]);
           TraverseLines(big, tbig, small2, tsmall2, big.fy(), context);
         }
       } else {
@@ -293,7 +288,7 @@ template <class T> class TriangleTraverser {
 
         if (big.y() != big.fy()) {
           ScreenLine<IntegralType> small2(*points_ptr[1], *points_ptr[2]);
-          T tsmall2(small2, *data_ptr[1], *data_ptr[2]);
+          T tsmall2(small2, small2.fy() - small2.y(), *data_ptr[1], *data_ptr[2]);
           TraverseLines(small2, tsmall2, big, tbig, big.fy(), context);
         }
       }
@@ -330,21 +325,21 @@ template <class T> class TriangleTraverser {
         std::swap(data_ptr[0], data_ptr[1]);
       }
       ScreenLine<IntegralType> a(*points_ptr[0], *points_ptr[2]);
-      T ta = T(a, *data_ptr[0], *data_ptr[2]);
+      T ta = T(a, a.fy() - a.y(), *data_ptr[0], *data_ptr[2]);
       ScreenLine<IntegralType> b(*points_ptr[1], *points_ptr[2]);
-      T tb = T(b, *data_ptr[1], *data_ptr[2]);
+      T tb = T(b, b.fy() - b.y(), *data_ptr[1], *data_ptr[2]);
       return PointLines<kContinue>(a, ta, b, tb, x, y, context);
     } else {
       ScreenLine<IntegralType> big(*points_ptr[0], *points_ptr[2]);
-      T tbig(big, *data_ptr[0], *data_ptr[2]);
+      T tbig(big, big.fy() - big.y(), *data_ptr[0], *data_ptr[2]);
       ScreenLine<IntegralType> small1(*points_ptr[0], *points_ptr[1]);
-      T tsmall1(small1, *data_ptr[0], *data_ptr[1]);
+      T tsmall1(small1, small1.fy() - small1.y(), *data_ptr[0], *data_ptr[1]);
       if (big.dx() <= small1.dx()) {
         if (y <= small1.fy()) {
           return PointLines<kContinue>(big, tbig, small1, tsmall1, x, y, context);
         } else {
           ScreenLine<IntegralType> small2(*points_ptr[1], *points_ptr[2]);
-          T tsmall2(small2, *data_ptr[1], *data_ptr[2]);
+          T tsmall2(small2, small2.fy() - small2.y(), *data_ptr[1], *data_ptr[2]);
           return PointLines<kContinue>(big, tbig, small2, tsmall2, x, y, context);
         }
       } else {
@@ -352,7 +347,7 @@ template <class T> class TriangleTraverser {
           return PointLines<kContinue>(small1, tsmall1, big, tbig, x, y, context);
         } else {
           ScreenLine<IntegralType> small2(*points_ptr[1], *points_ptr[2]);
-          T tsmall2(small2, *data_ptr[1], *data_ptr[2]);
+          T tsmall2(small2, small2.fy() - small2.y(), *data_ptr[1], *data_ptr[2]);
           return PointLines<kContinue>(small2, tsmall2, big, tbig, x, y, context);
         }
       }
@@ -408,9 +403,9 @@ template <class T> class TriangleTraverser {
                                   ScreenLine<IntegralType> &b, T &tb,
                                   ContextType *context) {
     if (a.x() <= b.x()) {
-      auto tr = HorizontalTraversable(context, a, ta, b, tb);
       IntegralType y = a.y();
       IntegralType bx = b.x();
+      auto tr = HorizontalTraversable(context, a, ta, b, tb, bx - y);
       for (IntegralType x = a.x(); x < bx; ++x) {
         tr.Process(context, x, y);
         tr.Advance();
