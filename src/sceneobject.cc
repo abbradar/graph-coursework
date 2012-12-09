@@ -49,7 +49,7 @@ void SceneObject::UpdatePositioned() {
   // triangle centers
   positioned_centers_.resize(model_->polygons().size());
   for (size_t i = 0; i < positioned_centers_.size(); ++i) {
-    const Vector3 *&points = model_->polygons()[i].points;
+    const int *const &points = model_->polygons()[i].points;
     positioned_centers_[i] = (positioned_points_[points[0]] + positioned_points_[points[1]]
         + positioned_points_[points[2]]) / 3;
   }

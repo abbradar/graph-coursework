@@ -40,6 +40,18 @@ Vector2 &Vector2::operator -=(const Vector2 &other) {
   return *this;
 }
 
+Vector2 &Vector2::operator *=(const myfloat num) {
+  x() *= num;
+  y() *= num;
+  return *this;
+}
+
+Vector2 &Vector2::operator /=(const myfloat num) {
+  x() /= num;
+  y() /= num;
+  return *this;
+}
+
 Vector2 operator +(const Vector2 &a, const Vector2 &b) {
   Vector2 r(a);
   r += b;
@@ -50,6 +62,24 @@ Vector2 operator -(const Vector2 &a, const Vector2 &b) {
   Vector2 r(a);
   r -= b;
   return r;
+}
+
+Vector2 operator *(const Vector2 &point, const myfloat num) {
+  Vector2 p(point);
+  p *= num;
+  return p;
+}
+
+Vector2 operator *(const myfloat num, const Vector2 &point) {
+  Vector2 p(point);
+  p *= num;
+  return p;
+}
+
+Vector2 operator /(const Vector2 &point, const myfloat num) {
+  Vector2 p(point);
+  p /= num;
+  return p;
 }
 
 #endif

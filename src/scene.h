@@ -28,7 +28,7 @@ class Scene {
     return light_sources_;
   }
 
-  inline const LightSourceList &light_sources() const {
+  inline const LightSourceVector &light_sources() const {
     return light_sources_;
   }
 

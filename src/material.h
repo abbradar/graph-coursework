@@ -36,17 +36,17 @@ class Material {
 
   void set_specular_color(const Vector3 &specular_color);
 
-  inline const Vector3 &emissive_color() const {
-    return emissive_color_;
+  inline const Vector3 &diffuse_color() const {
+    return diffuse_color_;
   }
 
-  void set_emissive_color(const Vector3 &emissive_color);
+  void set_diffuse_color(const Vector3 &diffuse_color);
 
  private:
   myfloat shininess_;
   Vector3 ambient_color_;
   Vector3 specular_color_;
-  Vector3 emissive_color_;
+  Vector3 diffuse_color_;
 
   std::shared_ptr<sdlobj::Surface> texture_;
 };

@@ -14,12 +14,16 @@ class Window;
 
 typedef std::map<size_t, std::shared_ptr<Material>> MaterialOverlayMap;
 
-#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
+#ifndef NO_LIGHTING
 
 struct LightingSourceData {
   Vector3 direction;
   Vector3 reflection;
 };
+
+#endif
+
+#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
 
 struct LightingData {
   Vector3 viewer;

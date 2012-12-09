@@ -19,9 +19,9 @@ void LoadScene(Scene &scene, istream &in, const Models &models) {
   }
 
   for (auto &mi : doc["light-sources"]) {
-    LightSource *obj = new LightSource();
-    mi >> *obj;
-    scene.light_sources().push_back(shared_ptr<LightSource>(obj));
+    LightSource obj;
+    mi >> obj;
+    scene.light_sources().push_back(obj);
   }
 
   myfloat ambient_light;
@@ -45,7 +45,7 @@ void SaveScene(Scene &scene, ostream &out) {
     emitter << YAML::BeginSeq;
 
     for (auto &i : scene.light_sources()) {
-      emitter << *i;
+      emitter << i;
     }
 
     emitter << YAML::EndSeq;

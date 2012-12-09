@@ -15,8 +15,8 @@ template <class Integral = myfloat> class PointTraceTraverser : public Traversab
    public:
 
     inline HorizontalTraversable(myfloat *, const ScreenLine<Integral> &la, const PointTraceTraverser &a,
-                                 const ScreenLine<Integral> &lb, const PointTraceTraverser &b) :
-      ZTraversableHorizontal(la, a, lb, b) {}
+                                 const ScreenLine<Integral> &lb, const PointTraceTraverser &b, const myfloat dx) :
+      ZTraversableHorizontal(la, a, lb, b, dx) {}
 
     virtual inline bool Process(myfloat *zp, const Integral, const Integral) {
       if (this->z() < *zp && this->z() >= 0) {
@@ -35,8 +35,8 @@ template <class Integral = myfloat> class PointTraceTraverser : public Traversab
     }
   };
 
-  inline PointTraceTraverser(const ScreenLine<Integral> &line, const DataType &a, const DataType &b) :
-    ZTraversable<Integral>(line, a, b) {}
+  inline PointTraceTraverser(const ScreenLine<Integral> &line, const myfloat dy, const DataType &a, const DataType &b) :
+    ZTraversable<Integral>(line, dy, a, b) {}
 
   inline void Advance() {
     ZTraversable<Integral>::Advance();

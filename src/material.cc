@@ -9,7 +9,7 @@ Material::Material() = default;
 Material::Material(const Material &other) {
   ambient_color_ = other.ambient_color_;
   specular_color_ = other.specular_color_;
-  emissive_color_ = other.emissive_color_;
+  diffuse_color_ = other.diffuse_color_;
   shininess_ = other.shininess_;
   if (other.texture_) {
     texture_ = make_shared<Surface>(*other.texture_);
@@ -32,6 +32,6 @@ void Material::set_specular_color(const Vector3 &specular_color) {
   specular_color_ = specular_color;
 }
 
-void Material::set_emissive_color(const Vector3 &emissive_color) {
-  emissive_color_ = emissive_color;
+void Material::set_diffuse_color(const Vector3 &diffuse_color) {
+  diffuse_color_ = diffuse_color;
 }

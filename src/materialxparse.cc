@@ -24,7 +24,7 @@ Material LoadFromMaterial(const XData *data) {
   material.set_ambient_color(LoadFloatFromColorRGBA(*(data->data[0]->data().node_value)));
   material.set_shininess(data->data[1]->data().float_value);
   material.set_specular_color(LoadFloatFromColorRGB(*(data->data[2]->data().node_value)));
-  material.set_emissive_color(LoadFloatFromColorRGB(*(data->data[3]->data().node_value)));
+  material.set_diffuse_color(LoadFloatFromColorRGB(*(data->data[3]->data().node_value)));
   for (auto &i : data->nested_data) {
     Assert(i.type() == XNestedData::kNode);
     XData *texture = i.data().node;

@@ -44,9 +44,11 @@ class Model {
     return vertex_normals_;
   }
 
+#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
   inline const Vector3Vector &polygon_normals() const {
     return polygon_normals_;
   }
+#endif
 
   inline MaterialVector &materials() {
     return materials_;

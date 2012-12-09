@@ -12,30 +12,22 @@ typedef Eigen::Matrix<myfloat, 2, 1> Vector2;
 
 #else
 
+#include <cstring>
 #include "common/math.h"
 
 class Vector2 {
  public:
-  constexpr inline Vector2(const myfloat x, const myfloat y) {
+  inline Vector2(const myfloat x, const myfloat y) {
     this->x() = x;
     this->y() = y;
   }
-  constexpr inline Vector2() : Vector2(0, 0) {}
+  inline Vector2() : Vector2(0, 0) {}
 
   Vector2 &operator +=(const Vector2 &other);
   Vector2 &operator -=(const Vector2 &other);
 
-  template <class T> Vector2 &operator *=(const T num) {
-    x() *= num;
-    y() *= num;
-    return *this;
-  }
-
-  template <class T> Vector2 &operator /=(const T num) {
-    x() /= num;
-    y() /= num;
-    return *this;
-  }
+  Vector2 &operator *=(const myfloat num);
+  Vector2 &operator /=(const myfloat num);
 
   inline Vector2 operator -() const {
     return Vector2(-x(), -y());
@@ -70,22 +62,20 @@ class Vector2 {
   }
 
   myfloat squaredNorm() const {
-    return Sqr(x_) + Sqr(y_);
+    return Sqr(x()) + Sqr(y());
   }
 
   Vector2 normalized() const {
     return Vector2(*this) /= norm();
   }
 
-  inline constexpr size_t cols() {
+  static inline constexpr size_t cols() {
     return 1;
   }
 
-  inline constexpr size_t rows() {
+  static inline constexpr size_t rows() {
     return kDimension;
   }
-
-  inline const
 
  private:
   static constexpr size_t kDimension = 2;
@@ -105,23 +95,9 @@ class Vector2 {
 Vector2 operator +(const Vector2 &a, const Vector2 &b);
 Vector2 operator -(const Vector2 &a, const Vector2 &b);
 
-template <class T> Vector2 operator *(const Vector2 &point, const T num) {
-  Vector2 p(point);
-  p *= num;
-  return p;
-}
-
-template <class T> Vector2 operator *(const T num, const Vector2 &point) {
-  Vector2 p(point);
-  p *= num;
-  return p;
-}
-
-template <class T> Vector2 operator /(const Vector2 &point, const T num) {
-  Vector2 p(point);
-  p /= num;
-  return p;
-}
+Vector2 operator *(const Vector2 &point, const myfloat num);
+Vector2 operator *(const myfloat num, const Vector2 &point);
+Vector2 operator /(const Vector2 &point, const myfloat num);
 
 #endif
 
@@ -129,5 +105,9 @@ myfloat Angle(const Vector2 &vec);
 myfloat NormAngle(const Vector2 &vec);
 myfloat Angle(const Vector2 &a, const Vector2 &b);
 myfloat NormAngle(const Vector2 &a, const Vector2 &b);
+
+inline Vector2 Componentwise(const Vector2 &a, const Vector2 &b) {
+  return Vector2(a.x() * b.x(), a.y() * b.y());
+}
 
 #endif // GRAPH_VECTOR2_H_

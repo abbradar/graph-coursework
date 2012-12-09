@@ -41,12 +41,12 @@ Matrix34 operator *(const Matrix34 &a, const Matrix34 &b) {
 Vector3 operator *(const Matrix34 &matrix, const Vector3 &vector) {
   Vector3 r;
   const myfloat *c = matrix.data();
-  r.x_ = c[Matrix34::kMatrixHeight * 0 + 0] * vector.x_ + c[Matrix34::kMatrixHeight * 1 + 0] * vector.y_
-      + c[Matrix34::kMatrixHeight * 2 + 0] * vector.z_ + c[Matrix34::kMatrixHeight * 3 + 0];
-  r.y_ = c[Matrix34::kMatrixHeight * 0 + 1] * vector.x_ + c[Matrix34::kMatrixHeight * 1 + 1] * vector.y_
-      + c[Matrix34::kMatrixHeight * 2 + 1] * vector.z_ + c[Matrix34::kMatrixHeight * 3 + 1];
-  r.z_ = c[Matrix34::kMatrixHeight * 0 + 2] * vector.x_ + c[Matrix34::kMatrixHeight * 1 + 2] * vector.y_
-      + c[Matrix34::kMatrixHeight * 2 + 2] * vector.z_ + c[Matrix34::kMatrixHeight * 3 + 2];
+  r.x() = c[Matrix34::kMatrixHeight * 0 + 0] * vector.x() + c[Matrix34::kMatrixHeight * 1 + 0] * vector.y()
+      + c[Matrix34::kMatrixHeight * 2 + 0] * vector.z() + c[Matrix34::kMatrixHeight * 3 + 0];
+  r.y() = c[Matrix34::kMatrixHeight * 0 + 1] * vector.x() + c[Matrix34::kMatrixHeight * 1 + 1] * vector.y()
+      + c[Matrix34::kMatrixHeight * 2 + 1] * vector.z() + c[Matrix34::kMatrixHeight * 3 + 1];
+  r.z() = c[Matrix34::kMatrixHeight * 0 + 2] * vector.x() + c[Matrix34::kMatrixHeight * 1 + 2] * vector.y()
+      + c[Matrix34::kMatrixHeight * 2 + 2] * vector.z() + c[Matrix34::kMatrixHeight * 3 + 2];
   return r;
 }
 

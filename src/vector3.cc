@@ -17,6 +17,20 @@ Vector3 &Vector3::operator -=(const Vector3 &other) {
   return *this;
 }
 
+Vector3 &Vector3::operator *=(const myfloat num) {
+  x() *= num;
+  y() *= num;
+  z() *= num;
+  return *this;
+}
+
+Vector3 &Vector3::operator /=(const myfloat num) {
+  x() /= num;
+  y() /= num;
+  z() /= num;
+  return *this;
+}
+
 Vector3 Vector3::cross(const Vector3 &b) const {
   Vector3 result;
   result.x() = y() * b.z() - z() * b.y();
@@ -54,6 +68,24 @@ Vector3 operator -(const Vector3 &a, const Vector3 &b) {
   Vector3 r(a);
   r -= b;
   return r;
+}
+
+Vector3 operator *(const Vector3 &point, const myfloat num) {
+  Vector3 p(point);
+  p *= num;
+  return p;
+}
+
+Vector3 operator *(const myfloat num, const Vector3 &point) {
+  Vector3 p(point);
+  p *= num;
+  return p;
+}
+
+Vector3 operator /(const Vector3 &point, const myfloat num) {
+  Vector3 p(point);
+  p /= num;
+  return p;
 }
 
 #endif

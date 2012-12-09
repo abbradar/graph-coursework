@@ -379,7 +379,7 @@ template <class T> class TriangleTraverser {
     b.Advance(dby);
     tb.Advance(dby);
     if (!kContinue && (x < a.x() || x > b.x())) return false;
-    auto tr = HorizontalTraversable(context, a, ta, b, tb);
+    auto tr = HorizontalTraversable(context, a, ta, b, tb, b.x() - a.x());
     tr.Advance(x - a.x());
     return tr.Process(context, x, y);
   }
@@ -405,7 +405,7 @@ template <class T> class TriangleTraverser {
     if (a.x() <= b.x()) {
       IntegralType y = a.y();
       IntegralType bx = b.x();
-      auto tr = HorizontalTraversable(context, a, ta, b, tb, bx - y);
+      auto tr = HorizontalTraversable(context, a, ta, b, tb, bx - a.x());
       for (IntegralType x = a.x(); x < bx; ++x) {
         tr.Process(context, x, y);
         tr.Advance();

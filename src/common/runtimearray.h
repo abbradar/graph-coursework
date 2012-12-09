@@ -10,7 +10,7 @@ template <class T> class RuntimeArray {
   inline RuntimeArray() : data_(nullptr) {}
 
   inline RuntimeArray(const size_t size) {
-    data_ = malloc(size * sizeof(T));
+    data_ = (T *)malloc(size * sizeof(T));
     if (!data_) throw Exception("Memory allocation error");
     for (size_t i = 0; i < size; ++i) {
       ::new(data_ + i) T();
@@ -103,16 +103,16 @@ template <class T> class SizedRuntimeArray : private RuntimeArray<T> {
   }
 
   inline T *data() {
-    return RuntimeArray::data();
+    return RuntimeArray<T>::data();
   }
 
   void Assign(T *&&data, size_t size) {
-    RuntimeArray::Assign(std::forward(data));
+    RuntimeArray<T>::Assign(std::forward(data));
     size_ = size;
   }
 
   void Assign(const T *data, size_t size) {
-    RuntimeArray::Assign(data, size);
+    RuntimeArray<T>::Assign(data, size);
     size_ = size;
   }
 
