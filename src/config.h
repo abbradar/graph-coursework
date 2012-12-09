@@ -10,7 +10,7 @@
 #define COMPILE_TIME_BPP
 //#define MULTITHREADED_Z_BUFFER
 
-//#define FLAT_SHADING
+#define FLAT_SHADING
 //#define GOURAUD_SHADING
 //#define PHONG_SHADING
 

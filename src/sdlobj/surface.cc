@@ -4,15 +4,11 @@ namespace sdlobj {
 
 Surface::Surface() : surface_(), surface_struct_(nullptr) {}
 Surface::Surface(SDL_Surface *surface) : surface_(new SurfaceWrapper(surface)), surface_struct_(surface_->surface) {}
-Surface::Surface(const Surface &other) : surface_(other.surface_), surface_struct_(other.surface_struct_) {}
 
+Surface::Surface(const Surface &other) = default;
 Surface::Surface(Surface &&other) = default;
-
-Surface &Surface::operator =(const Surface &other) {
-  surface_ = other.surface_;
-  surface_struct_ = other.surface_struct_;
-  return *this;
-}
+Surface &Surface::operator =(const Surface &other) = default;
+Surface &Surface::operator =(Surface &&other) = default;
 
 Surface::Surface(const unsigned int width, const unsigned int height, const Uint32 flags, const unsigned int bpp,
                  const Uint32 Rmask, const Uint32 Gmask, const Uint32 Bmask, const Uint32 Amask)

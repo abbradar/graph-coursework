@@ -10,7 +10,7 @@ template <class T> class RuntimeArray {
   inline RuntimeArray() : data_(nullptr) {}
 
   inline RuntimeArray(const size_t size) {
-    data_ = (T *)malloc(size * sizeof(T));
+    data_ = (T *)calloc(size, sizeof(T));
     if (!data_) throw Exception("Memory allocation error");
     for (size_t i = 0; i < size; ++i) {
       ::new(data_ + i) T();
@@ -39,11 +39,20 @@ template <class T> class RuntimeArray {
     Copy(data, size);
   }
 
+  void Assign(RuntimeArray &&other) {
+    Assign(other.data());
+    other.data_ = nullptr;
+  }
+
+  void Assign(const RuntimeArray &other, const size_t size) {
+    Assign(other.data(), size);
+  }
+
   RuntimeArray &operator =(const RuntimeArray<T> &other) = delete;
 
   inline RuntimeArray &operator =(RuntimeArray<T> &&other) {
-    Assign(std::forward(other));
-    other.data_ = nullptr;
+    Assign(std::forward<RuntimeArray<T>>(other));
+    return *this;
   }
 
   RuntimeArray(const RuntimeArray<T> &other) = delete;
@@ -57,6 +66,10 @@ template <class T> class RuntimeArray {
     return data_;
   }
 
+  inline const T *data() const {
+    return data_;
+  }
+
   inline T &operator [](const size_t i) {
     return data_[i];
   }
@@ -67,7 +80,7 @@ template <class T> class RuntimeArray {
 
  private:
   inline void Copy(const T *data, const size_t size) {
-    data_ = malloc(size * sizeof(T));
+    data_ = (T *)calloc(size, sizeof(T));
     if (!data_) throw Exception("Memory allocation error");
     for (size_t i = 0; i < size; ++i) {
       ::new(data_ + i) T(data[i]);
@@ -98,7 +111,7 @@ template <class T> class SizedRuntimeArray : private RuntimeArray<T> {
 
   SizedRuntimeArray(SizedRuntimeArray<T> &&other) = default;
 
-  inline size_t size() {
+  inline size_t size() const {
     return size_;
   }
 
@@ -106,22 +119,56 @@ template <class T> class SizedRuntimeArray : private RuntimeArray<T> {
     return RuntimeArray<T>::data();
   }
 
-  void Assign(T *&&data, size_t size) {
-    RuntimeArray<T>::Assign(std::forward(data));
+  inline const T *data() const {
+    return RuntimeArray<T>::data();
+  }
+
+  inline T &operator [](const size_t i) {
+    return RuntimeArray<T>::operator [](i);
+  }
+
+  inline const T &operator [](const size_t i) const {
+    return RuntimeArray<T>::operator [](i);
+  }
+
+  void Assign(T *&&data, const size_t size) {
+    RuntimeArray<T>::Assign(std::forward<T *>(data));
     size_ = size;
   }
 
-  void Assign(const T *data, size_t size) {
+  void Assign(const T *data, const size_t size) {
     RuntimeArray<T>::Assign(data, size);
     size_ = size;
   }
 
+  void Assign(SizedRuntimeArray<T> &&other) {
+    RuntimeArray<T>::Assign(std::forward<SizedRuntimeArray<T>>(other));
+    size_ = other.size_;
+  }
+
+  void Assign(const SizedRuntimeArray<T> &other) {
+    RuntimeArray<T>::Assign(other, other.size());
+    size_ = other.size_;
+  }
+
+  void Assign(RuntimeArray<T> &&other, const size_t size) {
+    RuntimeArray<T>::Assign(std::forward<RuntimeArray<T>>(other));
+    size_ = size;
+  }
+
+  void Assign(const RuntimeArray<T> &other, const size_t size) {
+    RuntimeArray<T>::Assign(other, size);
+    size_ = size;
+  }
+
   SizedRuntimeArray &operator =(const SizedRuntimeArray<T> &other) {
-    Assign(other.data(), other.size());
+    Assign(other);
+    return *this;
   }
 
   inline SizedRuntimeArray &operator =(SizedRuntimeArray<T> &&other) {
-    Assign(std::forward(other), other.size());
+    Assign(std::forward<SizedRuntimeArray<T>>(other));
+    return *this;
   }
 
  private:

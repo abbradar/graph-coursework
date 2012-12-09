@@ -24,6 +24,7 @@ public:
   Surface(Surface &&other);
 
   Surface &operator =(const Surface &other);
+  Surface &operator =(Surface &&other);
 
   ~Surface();
 
