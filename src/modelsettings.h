@@ -7,7 +7,8 @@
 
 namespace settings {
 
-Model LoadModel(const YAML::Node &node, const xparse::XFile &templates);
+Model LoadModel(const YAML::Node &node, const xparse::XFile &templates,
+                const std::string &textures_path);
 
 }
 

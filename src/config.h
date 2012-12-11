@@ -3,16 +3,19 @@
 
 //#define USE_EIGEN
 #define NO_GRAB_INPUT
-//#define NO_NORMAL_FACE_CLIPPING
-//#define PERSPECTIVE_NORMAL_CLIPPING
 #define NO_DRAW_SURFACE
 #define AFFINE_TEXTURES
 #define COMPILE_TIME_BPP
 //#define MULTITHREADED_Z_BUFFER
+#define Z_BUFFER_UNSAFE_MEMSET
+#define LIGHTSOURCES_UNSAFE_MEMCPY
 
 #define FLAT_SHADING
 //#define GOURAUD_SHADING
 //#define PHONG_SHADING
+
+#define DUMB_NORMAL_CLIPPING
+//#define PERSPECTIVE_NORMAL_CLIPPING
 
 constexpr unsigned kDefaultBpp = 32;
 
@@ -20,6 +23,10 @@ constexpr unsigned kDefaultBpp = 32;
 
 #if !(defined(FLAT_SHADING) || defined(GOURAUD_SHADING) || defined(PHONG_SHADING))
 #define NO_SHADING
+#endif
+
+#if !(defined(PERSPECTIVE_NORMAL_CLIPPING) || defined(DUMB_NORMAL_CLIPPING))
+#define NO_NORMAL_FACE_CLIPPING
 #endif
 
 #endif // GRAPH_CONFIG_H_

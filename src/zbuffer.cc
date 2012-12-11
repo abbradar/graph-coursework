@@ -1,5 +1,9 @@
 #include "zbuffer.h"
 
+#ifdef Z_BUFFER_UNSAFE_MEMSET
+#include <limits>
+#endif
+
 #ifdef MULTITHREADED_Z_BUFFER
 #include <condition_variable>
 #endif
@@ -54,7 +58,11 @@ void ZBuffer::Clear() {
   v_from_.unlock();
   v_to_.notify_one();
 #else
+#ifdef Z_BUFFER_UNSAFE_MEMSET
   memset(z_buffer_, 0x7F, size_ * sizeof(myfloat));
+#else
+  std::fill_n(z_buffer_, size_, std::numeric_limits<myfloat>::max());
+#endif
 #endif
 }
 
@@ -64,13 +72,15 @@ ZBuffer::Iterator ZBuffer::Position(const unsigned int x, const unsigned int y) 
 
 #ifdef MULTITHREADED_Z_BUFFER
 void ZBuffer::ClearOtherThread() {
-  //static const myfloat max = std::numeric_limits<myfloat>::max();
   std::mutex m_to;
   std::unique_lock<std::mutex> lock(m_to);
   while (z_buffer_other_) {
     v_from_.lock();
-    //std::fill_n(z_buffer_other_, size_, max);
+#ifdef Z_BUFFER_UNSAFE_MEMSET
     memset(z_buffer_other_, 0x7F, size_ * sizeof(myfloat));
+#else
+    std::fill_n(z_buffer_other_, size_, std::numeric_limits<myfloat>::max());
+#endif
     v_from_.unlock();
     v_to_.wait(lock);
   }

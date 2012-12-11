@@ -16,7 +16,8 @@ using namespace xparse;
 namespace xparse {
 
 Model LoadModel(istream &in, const string &name, const XFile &templates,
-                const string &root_frame, const string &model_frame) {
+                const string &root_frame, const string &model_frame,
+                const string &textures_path) {
   static const myfloat system_transform_m[] = {1, 0, 0, 0,
                                                0, 0, 1, 0,
                                                0, 1, 0, 0,
@@ -130,7 +131,7 @@ Model LoadModel(istream &in, const string &name, const XFile &templates,
     Assert(materials_i.type() == XNestedData::kNode);
     XData *material = materials_i.data().node;
     if (material->template_id == "Material") {
-      materials.push_back(make_shared<Material>(LoadFromMaterial(material)));
+      materials.push_back(make_shared<Material>(LoadFromMaterial(material, textures_path)));
     }
   }
   if (materials.size() == 0) throw Exception("Material not found");

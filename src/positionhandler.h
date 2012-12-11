@@ -30,6 +30,12 @@ class PositionHandler : public EventWorker, public PreRenderWorker, public Conte
 
   void set_rotation_speed(const myfloat rotation_speed);
 
+  inline myfloat keys_rotation_step() {
+    return keys_rotation_step_;
+  }
+
+  void set_keys_rotation_step(const myfloat keys_rotation_step);
+
  private:
   enum PreRenderAction {
     kNone = 0,
@@ -59,6 +65,7 @@ class PositionHandler : public EventWorker, public PreRenderWorker, public Conte
 
   myfloat move_speed_;
   myfloat rotation_speed_;
+  myfloat keys_rotation_step_;
   myfloat move_step_;
   myfloat rotation_k_;
 

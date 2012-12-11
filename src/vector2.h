@@ -21,7 +21,8 @@ class Vector2 {
     this->x() = x;
     this->y() = y;
   }
-  inline Vector2() : Vector2(0, 0) {}
+
+  inline Vector2() = default;
 
   Vector2 &operator +=(const Vector2 &other);
   Vector2 &operator -=(const Vector2 &other);
@@ -108,6 +109,11 @@ myfloat NormAngle(const Vector2 &a, const Vector2 &b);
 
 inline Vector2 Componentwise(const Vector2 &a, const Vector2 &b) {
   return Vector2(a.x() * b.x(), a.y() * b.y());
+}
+
+inline void ComponentwiseInPlace(Vector2 &a, const Vector2 &b) {
+  a.x() *= b.x();
+  a.y() *= b.y();
 }
 
 #endif // GRAPH_VECTOR2_H_

@@ -16,7 +16,7 @@ class Runnable {
  public:
   Runnable() = default;
   Runnable(const Runnable &other) = delete;
-  Runnable(const Runnable &&other) = delete;
+  Runnable(Runnable &&other) = delete;
 
  protected:
   friend class Application;

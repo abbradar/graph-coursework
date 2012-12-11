@@ -29,6 +29,12 @@ class MoveTransform : public EventWorker, public ContextUser, public PostRenderW
 
   void set_rotation_speed(const myfloat rotation_speed);
 
+  inline myfloat keys_rotation_step() {
+    return keys_rotation_step_;
+  }
+
+  void set_keys_rotation_step(const myfloat keys_rotation_step);
+
  private:
   static const Vector3 kP0, kP1, kP2, kP3;
   Vector3 p0_, p1_, p2_;
@@ -40,6 +46,7 @@ class MoveTransform : public EventWorker, public ContextUser, public PostRenderW
   bool wait_finish_, finish_, rotate_, z_rotate_;
   Position old_position_;
   myfloat rotation_speed_;
+  myfloat keys_rotation_step_;
 };
 
 #endif // GRAPH_MOVETRANSFORM_H_

@@ -59,6 +59,9 @@ void WindowSettings::operator <<(const YAML::Node &node) {
     myfloat rotation_speed;
     interface_node["rotation-speed"] >> rotation_speed;
     window_->set_rotation_speed(rotation_speed);
+    myfloat keys_rotation_step;
+    interface_node["keys-rotation-step"] >> keys_rotation_step;
+    window_->set_keys_rotation_step(keys_rotation_step);
   }
 
   {
@@ -68,6 +71,13 @@ void WindowSettings::operator <<(const YAML::Node &node) {
     video_mode_node["height"] >> height;
     video_mode_node["bpp"] >> bpp;
     window_->SetVideoMode(width, height, bpp);
+  }
+
+  {
+    const YAML::Node &rendering_node = node["rendering"];
+    sdlobj::Color surface_color;
+    rendering_node["surface-color"] >> surface_color;
+    window_->set_surface_color(surface_color);
   }
 }
 

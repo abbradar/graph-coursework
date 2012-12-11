@@ -37,8 +37,13 @@ struct TransformedObject {
 
   std::weak_ptr<SceneObject> object;
   Vector3Vector points;
+#ifdef PERSPECTIVE_NORMAL_CLIPPING
+  Vector3Vector polygon_normals;
+#endif
+#ifndef NO_NORMAL_FACE_CLIPPING
   std::vector<bool> point_flags;
   std::vector<size_t> triangle_indexes;
+#endif
   std::unique_ptr<MaterialOverlayMap> material_overlay;
 #if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
   std::vector<LightingData> lighting_data;

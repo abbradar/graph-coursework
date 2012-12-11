@@ -8,7 +8,8 @@
 namespace xparse {
 
 Model LoadModel(std::istream &in, const std::string &name, const xparse::XFile &templates,
-                const std::string &root_frame, const std::string &model_frame);
+                const std::string &root_frame, const std::string &model_frame,
+                const std::string &textures_path);
 
 }
 

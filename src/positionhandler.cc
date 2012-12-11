@@ -9,7 +9,11 @@
 using namespace std;
 
 PositionHandler::PositionHandler(const std::shared_ptr<Context> &context)
-  : ContextUser(context), move_speed_(1), rotation_speed_(1), action_(kNone) {}
+  : ContextUser(context), move_speed_(1), rotation_speed_(1),
+    keys_rotation_step_(1), action_(kNone) {
+  move_step_ = move_speed_ / context->window->fps();
+  rotation_k_ = M_PI_2 / (context->window->height() * rotation_speed_);
+}
 
 void PositionHandler::set_move_speed(const myfloat move_speed) {
   move_speed_ = move_speed;
@@ -19,6 +23,10 @@ void PositionHandler::set_move_speed(const myfloat move_speed) {
 void PositionHandler::set_rotation_speed(const myfloat rotation_speed) {
   rotation_speed_ = rotation_speed;
   rotation_k_ = M_PI_2 / (context()->window->height() * rotation_speed_);
+}
+
+void PositionHandler::set_keys_rotation_step(const myfloat keys_rotation_step) {
+  keys_rotation_step_ = keys_rotation_step;
 }
 
 bool PositionHandler::ProcessKeyDown(const SDL_KeyboardEvent &event) {
@@ -168,8 +176,8 @@ void PositionHandler::EventStep() {
 
   char cam_left_right = move_state_.cam_left + move_state_.cam_right;
   char cam_up_down = move_state_.cam_up + move_state_.cam_down;
-  camera.pitch -= cam_up_down * rotation_k_ * 10;
-  camera.yaw += cam_left_right * rotation_k_ * 10;
+  camera.pitch -= cam_up_down * rotation_k_ * keys_rotation_step_;
+  camera.yaw += cam_left_right * rotation_k_ * keys_rotation_step_;
   camera.pitch = Trim<myfloat>(camera.pitch, -M_PI_2, M_PI_2);
   camera.yaw = Circle<myfloat>(camera.yaw, -M_PI, M_PI);
 
@@ -210,6 +218,7 @@ void PositionHandler::PreRenderStep() {
     if (context()->traced_object.lock()->object.lock()) {
       auto ti = make_shared<MoveTransform>(context());
       ti->set_rotation_speed(rotation_speed_);
+      ti->set_keys_rotation_step(keys_rotation_step_);
       context()->window->RegisterWorker(ti);
     }
   }
@@ -217,6 +226,7 @@ void PositionHandler::PreRenderStep() {
     if (context()->traced_object.lock()->object.lock()) {
       auto ti = make_shared<WeldTransform>(context());
       ti->set_rotation_speed(rotation_speed_);
+      ti->set_keys_rotation_step(keys_rotation_step_);
       context()->window->RegisterWorker(ti);
     }
   }

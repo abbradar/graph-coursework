@@ -28,7 +28,7 @@ class Vector3 {
     this->z() = z;
   }
 
-  inline Vector3() : Vector3(0, 0, 0) {}
+  inline Vector3() = default;
 
   inline ~Vector3() = default;
 
@@ -144,6 +144,12 @@ void AxisToEuler(const Vector3 &p, const myfloat angle, myfloat &roll, myfloat &
 
 inline Vector3 Componentwise(const Vector3 &a, const Vector3 &b) {
   return Vector3 (a.x() * b.x(), a.y() * b.y(), a.z() * b.z());
+}
+
+inline void ComponentwiseInPlace(Vector3 &a, const Vector3 &b) {
+  a.x() *= b.x();
+  a.y() *= b.y();
+  a.z() *= b.z();
 }
 
 inline Vector3 Reflection(const Vector3 &a, const Vector3 &n) {

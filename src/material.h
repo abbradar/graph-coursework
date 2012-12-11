@@ -6,11 +6,13 @@
 #include "sdlobj/surface.h"
 #include "vector3.h"
 #include "myfloat.h"
+#include "surfaceloader.h"
 
 class Material {
  public:
   Material();
   Material(const Material &other);
+  Material(Material &&other);
 
   inline const Vector3 &ambient_color() const {
     return ambient_color_;
@@ -18,11 +20,15 @@ class Material {
 
   void set_ambient_color(const Vector3 &ambient_color);
 
-  inline const std::shared_ptr<sdlobj::Surface> &texture() const {
-    return texture_;
+  inline const std::shared_ptr<SurfaceLoader> &texture_loader() const {
+    return texture_loader_;
   }
 
-  void set_texture(const std::shared_ptr<sdlobj::Surface> &texture);
+  void set_texture_loader(const std::shared_ptr<SurfaceLoader> &texture_loader);
+
+  inline const std::unique_ptr<sdlobj::Surface> &texture() const {
+    return transformed_texture_;
+  }
 
   inline myfloat shininess() const {
     return shininess_;
@@ -43,12 +49,15 @@ class Material {
   void set_diffuse_color(const Vector3 &diffuse_color);
 
  private:
+  void LoadTexture();
+
   myfloat shininess_;
   Vector3 ambient_color_;
   Vector3 specular_color_;
   Vector3 diffuse_color_;
 
-  std::shared_ptr<sdlobj::Surface> texture_;
+  std::shared_ptr<SurfaceLoader> texture_loader_;
+  std::unique_ptr<sdlobj::Surface> transformed_texture_;
 };
 
 #endif // GRAPH_MATERIAL_H_

@@ -6,7 +6,7 @@
 
 namespace xparse {
 
-Material LoadFromMaterial(const XData *data);
+Material LoadFromMaterial(const XData *data, const std::string &textures_path);
 
 }
 

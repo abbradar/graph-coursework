@@ -31,6 +31,12 @@ class WeldTransform : public EventWorker, public ContextUser, public PostRenderW
 
   void set_rotation_speed(const myfloat rotation_speed);
 
+  inline myfloat keys_rotation_step() {
+    return keys_rotation_step_;
+  }
+
+  void set_keys_rotation_step(const myfloat keys_rotation_step);
+
  private:
   Vector3 tp_, tn_, tnl_;
 
@@ -40,6 +46,7 @@ class WeldTransform : public EventWorker, public ContextUser, public PostRenderW
   bool wait_finish_, finish_, rotate_;
   Position old_position_;
   myfloat rotation_speed_;
+  myfloat keys_rotation_step_;
 };
 
 #endif // GRAPH_WELDTRANSFORM_H_

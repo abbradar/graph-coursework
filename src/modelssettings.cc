@@ -35,27 +35,32 @@ void ModelsSettings::operator <<(const YAML::Node &node) {
     throw Exception("Cannot load .x templates.");
   }
   x_templates.close();
+  std::string x_models_path;
+  node["models-path"] >> x_models_path;
   std::string x_models_name;
+  std::string x_textures_path;
+  node["textures-path"] >> x_textures_path;
   node["models"] >> x_models_name;
-  std::ifstream x_models(x_models_name);
 
+  x_textures_path = absolute(x_textures_path).string();
+  std::ifstream x_models(x_models_name);
   path curr_path = current_path();
-  path new_path = absolute(path(x_models_name).parent_path());
+  path new_path = absolute(x_models_path);
   current_path(new_path);
-  loader.Load(x_models);
+  loader.Load(x_models, x_textures_path);
   x_models.close();
   current_path(curr_path);
 }
 
 ModelsLoader::ModelsLoader(Models *models) : models_(models) {}
 
-void ModelsLoader::Load(istream &in) {
+void ModelsLoader::Load(istream &in, string &textures_path) {
   YAML::Parser parser(in);
   YAML::Node doc;
   parser.GetNextDocument(doc);
 
   for (auto &mi : doc) {
-    shared_ptr<Model> model = make_shared<Model>(LoadModel(mi, templates_));
+    shared_ptr<Model> model = make_shared<Model>(LoadModel(mi, templates_, textures_path));
     const string &name = model->name();
     models_->models().insert(pair<string, shared_ptr<Model>>(name, move(model)));
   }

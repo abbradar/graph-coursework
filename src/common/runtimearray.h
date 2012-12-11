@@ -10,11 +10,8 @@ template <class T> class RuntimeArray {
   inline RuntimeArray() : data_(nullptr) {}
 
   inline RuntimeArray(const size_t size) {
-    data_ = (T *)calloc(size, sizeof(T));
+    data_ = new T[size];
     if (!data_) throw Exception("Memory allocation error");
-    for (size_t i = 0; i < size; ++i) {
-      ::new(data_ + i) T();
-    }
   }
 
   inline RuntimeArray(T *&&data) {
@@ -80,10 +77,10 @@ template <class T> class RuntimeArray {
 
  private:
   inline void Copy(const T *data, const size_t size) {
-    data_ = (T *)calloc(size, sizeof(T));
+    data_ = new T[size];
     if (!data_) throw Exception("Memory allocation error");
     for (size_t i = 0; i < size; ++i) {
-      ::new(data_ + i) T(data[i]);
+      data_[i] = data[i];
     }
   }
 

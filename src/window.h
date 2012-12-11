@@ -97,12 +97,12 @@ class Window : public sdlobj::EventHandler {
 
   void set_grab_input(const bool grab_input);
 
-  bool show_cursor();
+  bool show_cursor() const;
   void set_show_cursor(const bool show_cursor);
 
-  unsigned width();
-  unsigned height();
-  unsigned bpp();
+  unsigned width() const;
+  unsigned height() const;
+  unsigned bpp() const;
 
   inline unsigned cursor_x() {
     return cursor_x_;
@@ -112,13 +112,19 @@ class Window : public sdlobj::EventHandler {
     return cursor_y_;
   }
 
-  myfloat move_speed();
+  myfloat move_speed() const;
   void set_move_speed(const myfloat move_speed);
 
-  myfloat rotation_speed();
+  myfloat rotation_speed() const;
   void set_rotation_speed(const myfloat rotation_speed);
 
-  const sdlobj::Surface &pointer();
+  myfloat keys_rotation_step() const;
+  void set_keys_rotation_step(const myfloat keys_rotation_step);
+
+  sdlobj::Color surface_color() const;
+  void set_surface_color(const sdlobj::Color &surface_color);
+
+  const sdlobj::Surface &pointer() const;
   void set_pointer(const sdlobj::Surface &pointer);
 
   void SetVideoMode(const unsigned width, const unsigned height, const unsigned bpp);

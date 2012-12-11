@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "sdlobj/surface.h"
+#include "sdlobj/color.h"
 #include "myfloat.h"
 #include "zbuffer.h"
 #include "renderworker.h"
@@ -17,9 +18,16 @@ class Rasterizer : public PreRenderWorker, RenderWorker, public ContextUser {
 
   virtual void Paint(sdlobj::Surface &surface);
 
+  inline const sdlobj::Color &surface_color() const {
+    return surface_color_;
+  }
+
+  void set_surface_color(const sdlobj::Color &surface_color);
+
  private:
   std::shared_ptr<TransformedObjectMap> cache_;
   ZBuffer z_buffer_;
+  sdlobj::Color surface_color_;
 };
 
 #endif // GRAPH_RASTERIZER_H_

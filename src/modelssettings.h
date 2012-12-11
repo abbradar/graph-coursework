@@ -12,7 +12,7 @@ class ModelsLoader {
  public:
   ModelsLoader(Models *models);
 
-  void Load(std::istream &in);
+  void Load(std::istream &in, std::string &textures_path);
   bool LoadTemplates(std::istream &in);
 
  private:

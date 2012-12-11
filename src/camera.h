@@ -35,8 +35,12 @@ class Camera : public Position {
 
   void set_view_limit(const myfloat view_limit);
 
-  void PerspectiveTransform(Vector3 &point) const;
-  void ReversePerspectiveTransform(Vector3 &point) const;
+
+
+  Vector3 PerspectiveTransform(const Vector3 &point) const;
+  Vector3 ReversePerspectiveTransform(const Vector3 &point) const;
+  void PerspectiveTransformInPlace(Vector3 &point) const;
+  void ReversePerspectiveTransformInPlace(Vector3 &point) const;
 
  private:
   myfloat viewer_distance_;

@@ -139,7 +139,7 @@ Frame Root {
            0.000000; 0.000000; 0.000000;;
            
            TextureFilename {
-               "../textures/cube.jpg";
+               "cube.png";
            }
         }
       } //End of Cube_001 Material List

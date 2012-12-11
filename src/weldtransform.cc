@@ -5,7 +5,7 @@
 
 WeldTransform::WeldTransform(const std::shared_ptr<Context> &context) :
  ContextUser(context), xrel_(0), yrel_(0), wait_finish_(false), finish_(false),
-  rotate_(false), rotation_speed_(1) {
+  rotate_(false), rotation_speed_(1), keys_rotation_step_(1) {
   auto traced = context->traced_object.lock();
   object_ = traced->object;
   auto lock = object_.lock();
@@ -17,7 +17,7 @@ WeldTransform::WeldTransform(const std::shared_ptr<Context> &context) :
   tp_.x() = traced->x;
   tp_.y() = traced->y;
   tp_.z() = traced->z;
-  context->camera.ReversePerspectiveTransform(tp_);
+  context->camera.ReversePerspectiveTransformInPlace(tp_);
   tp_ = Vector3(tp_.z(), -tp_.x(), -tp_.y());
   tp_ = old_position_.GetMatrixTo() * context->camera.GetMatrixFrom() * tp_;
 
@@ -62,7 +62,7 @@ void WeldTransform::ProcessEnter() {
     np.x() = traced->x;
     np.y() = traced->y;
     np.z() = traced->z;
-    context()->camera.ReversePerspectiveTransform(np);
+    context()->camera.ReversePerspectiveTransformInPlace(np);
     np = Vector3(np.z(), -np.x(), -np.y());
     np = context()->camera.GetMatrixFrom() * np;
 
@@ -173,8 +173,8 @@ void WeldTransform::PostRenderStep() {
 
     char cam_left_right = move_state_.cam_left + move_state_.cam_right;
     char cam_up_down = move_state_.cam_up + move_state_.cam_down;
-    xrel_ += cam_left_right * 10;
-    yrel_ += cam_up_down * 10;
+    xrel_ += cam_left_right * keys_rotation_step_;
+    yrel_ += cam_up_down * keys_rotation_step_;
     myfloat dist = sqrt(Sqr(xrel_) + Sqr(yrel_));
     if (dist != 0) {
       myfloat angle = dist * rotation_k_;
@@ -205,4 +205,8 @@ void WeldTransform::PostRenderStep() {
 
 void WeldTransform::set_rotation_speed(const myfloat rotation_speed) {
   rotation_speed_ = rotation_speed;
+}
+
+void WeldTransform::set_keys_rotation_step(const myfloat keys_rotation_step) {
+  keys_rotation_step_ = keys_rotation_step;
 }

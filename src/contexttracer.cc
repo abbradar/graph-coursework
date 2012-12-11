@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "config.h"
 #include "contexttracer.h"
 
 using namespace std;
@@ -16,8 +17,14 @@ void ContextTracer::PreRenderStep() {
   size_t index = 0;
   for (auto &i : *objects) {
     auto object = i.second->object.lock();
+    const TriangleVector &polygons = object->model()->polygons();
+#ifndef NO_NORMAL_FACE_CLIPPING
     for (auto &j : i.second->triangle_indexes) {
-      if(tracer_.TraceNext(object->model()->polygons()[j], i.second->points)) {
+#else
+    size_t psize = polygons.size();
+    for (size_t j = 0; j < psize; ++j) {
+#endif
+      if(tracer_.TraceNext(polygons[j], i.second->points)) {
         traced = object;
         index = j;
       }

@@ -49,7 +49,7 @@ Window::Window(unsigned width, unsigned height, unsigned bpp, unsigned fps) :
   log_control_->set_max_items(5);
   log_control_destination_->set_log_control(log_control_);
 
-  context_tracer_->material().set_ambient_color(Vector3(0, 0xFF, 0));
+  context_tracer_->material().set_ambient_color(Vector3(0, 1, 0));
 
   RegisterWorker(static_pointer_cast<ConveyorWorker>(rasterizer_));
   RegisterWorker(static_pointer_cast<ConveyorWorker>(context_tracer_));
@@ -330,7 +330,7 @@ void Window::set_grab_input(const bool grab_input) {
   }
 }
 
-const sdlobj::Surface &Window::pointer() {
+const sdlobj::Surface &Window::pointer() const {
   return pointer_drawer_->pointer();
 }
 
@@ -338,19 +338,19 @@ void Window::set_pointer(const Surface &pointer) {
   pointer_drawer_->set_pointer(pointer);
 }
 
-unsigned Window::width() {
+unsigned Window::width() const {
   return SDL::instance().surface().width();
 }
 
-unsigned Window::height() {
+unsigned Window::height() const {
   return SDL::instance().surface().height();
 }
 
-unsigned Window::bpp() {
+unsigned Window::bpp() const {
   return SDL::instance().surface().bpp();
 }
 
-myfloat Window::move_speed() {
+myfloat Window::move_speed() const {
   return position_handler_->move_speed();
 }
 
@@ -358,12 +358,28 @@ void Window::set_move_speed(const myfloat move_speed) {
   position_handler_->set_move_speed(move_speed);
 }
 
-myfloat Window::rotation_speed() {
+myfloat Window::rotation_speed() const {
   return position_handler_->rotation_speed();
 }
 
 void Window::set_rotation_speed(const myfloat rotation_speed) {
   position_handler_->set_rotation_speed(rotation_speed);
+}
+
+myfloat Window::keys_rotation_step() const {
+  return position_handler_->keys_rotation_step();
+}
+
+void Window::set_keys_rotation_step(const myfloat keys_rotation_step) {
+  position_handler_->set_keys_rotation_step(keys_rotation_step);
+}
+
+Color Window::surface_color() const {
+  return rasterizer_->surface_color();
+}
+
+void Window::set_surface_color(const Color &surface_color) {
+  rasterizer_->set_surface_color(surface_color);
 }
 
 void Window::SetVideoMode(const unsigned width, const unsigned height, const unsigned bpp) {
@@ -450,7 +466,7 @@ void Window::SaveSettings(ostream &out) {
   settings_.SaveSettings(out);
 }
 
-bool Window::show_cursor() {
+bool Window::show_cursor() const {
   return SDL::instance().show_cursor();
 }
 

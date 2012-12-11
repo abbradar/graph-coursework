@@ -8,7 +8,8 @@ using namespace boost::filesystem;
 
 namespace settings {
 
-Model LoadModel(const YAML::Node &node, const XFile &templates) {
+Model LoadModel(const YAML::Node &node, const XFile &templates,
+                const std::string &textures_path) {
   std::string name;
   node["name"] >> name;
   std::string root_frame;
@@ -21,7 +22,8 @@ Model LoadModel(const YAML::Node &node, const XFile &templates) {
   path curr_path = current_path();
   path new_path = absolute(path(x_model).parent_path());
   current_path(new_path);
-  Model model = xparse::LoadModel(in, name, templates, root_frame, model_frame);
+  Model model = xparse::LoadModel(in, name, templates, root_frame, model_frame,
+                                  textures_path);
   in.close();
   current_path(curr_path);
   return model;
