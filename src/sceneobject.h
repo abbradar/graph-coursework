@@ -7,6 +7,7 @@
 #include "models.h"
 #include "model.h"
 #include "config.h"
+#include "lightsource.h"
 
 /** Scene object */
 class SceneObject {
@@ -49,6 +50,12 @@ class SceneObject {
 
   void set_position(const Position &position);
 
+  inline const std::shared_ptr<LightSource> &light_source() const {
+    return light_source_;
+  }
+
+  void set_light_source(const std::shared_ptr<LightSource> &light_source);
+
  private:
   std::shared_ptr<Model> model_;
   Vector3Vector positioned_points_;
@@ -65,6 +72,8 @@ class SceneObject {
 #ifdef FLAT_SHADING
   Vector3Vector positioned_centers_;
 #endif
+
+  std::shared_ptr<LightSource> light_source_;
 
   void UpdatePositioned();
 };

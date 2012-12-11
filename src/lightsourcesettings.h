@@ -6,8 +6,8 @@
 
 namespace settings {
 
-void operator >>(const YAML::Node &node, LightSource &light_source);
-void operator <<(YAML::Emitter &emitter, const LightSource &light_source);
+void operator >>(const YAML::Node &node, FullLightSource &light_source);
+void operator <<(YAML::Emitter &emitter, const FullLightSource &light_source);
 
 }
 

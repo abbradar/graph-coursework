@@ -1,8 +1,15 @@
 - name: Cone
   root-frame: Root
   model-frame: Cone
+  lighting: true
   model: cone.x
 - name: Cube
   root-frame: Root
   model-frame: Cube
+  lighting: true
   model: textured_cube.x
+- name: Sphere
+  root-frame: Root
+  model-frame: SurfSphere
+  lighting: false
+  model: sphere.x

@@ -10,7 +10,9 @@ using namespace sdlobj;
 using namespace std;
 
 Material::Material() : shininess_(0), ambient_color_(1, 1, 1), specular_color_(0, 0, 0),
-  diffuse_color_(0, 0, 0) {}
+    diffuse_color_(0, 0, 0), lighting_(true) {
+  color_ = VectorToColor(ambient_color_ * 0xFF);
+}
 
 Material::Material(const Material &other) {
   ambient_color_ = other.ambient_color_;
@@ -28,6 +30,7 @@ Material::Material(Material &&other) = default;
 
 void Material::set_ambient_color(const Vector3 &ambient_color) {
   ambient_color_ = ambient_color;
+  color_ = VectorToColor(ambient_color_ * 0xFF);
   //LoadTexture();
 }
 
@@ -46,6 +49,10 @@ void Material::set_specular_color(const Vector3 &specular_color) {
 
 void Material::set_diffuse_color(const Vector3 &diffuse_color) {
   diffuse_color_ = diffuse_color;
+}
+
+void Material::set_lighting(const bool lighting) {
+  lighting_ = lighting;
 }
 
 void Material::LoadTexture() {

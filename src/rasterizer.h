@@ -7,6 +7,8 @@
 #include "myfloat.h"
 #include "zbuffer.h"
 #include "renderworker.h"
+#include "lightsource.h"
+#include "config.h"
 #include "context.h"
 
 class Rasterizer : public PreRenderWorker, RenderWorker, public ContextUser {
@@ -28,6 +30,10 @@ class Rasterizer : public PreRenderWorker, RenderWorker, public ContextUser {
   std::shared_ptr<TransformedObjectMap> cache_;
   ZBuffer z_buffer_;
   sdlobj::Color surface_color_;
+
+#ifndef NO_SHADING
+  std::shared_ptr<std::vector<FullLightSource>> light_sources_;
+#endif
 };
 
 #endif // GRAPH_RASTERIZER_H_

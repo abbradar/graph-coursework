@@ -13,8 +13,13 @@ using namespace sdlobj;
 
 Rasterizer::Rasterizer(const std::shared_ptr<Context> &context) :
    ContextUser(context), cache_(new TransformedObjectMap()), z_buffer_(0, 0),
-   surface_color_(0x5F, 0x5F, 0x5F) {
+   surface_color_(0x5F, 0x5F, 0x5F)
+#ifndef NO_SHADING
+ , light_sources_(new std::vector<FullLightSource>)
+#endif
+{
   context->transformed_objects = cache_;
+  context->light_sources = light_sources_;
 }
 
 /* These functions are safe to call with result = a | b */
@@ -151,14 +156,14 @@ struct FullLightingData : public LightingData {
   Vector3 normal;
 };
 
-template <class Integral = myfloat> class LightingTraversable : virtual public Traversable<Integral> {
+template <class Integral = myfloat> class LightDataTraversable : virtual public Traversable<Integral> {
  public:
   typedef FullLightingData DataType;
 
   class HorizontalTraversable : virtual public Traversable<Integral>::template HorizontalTraversable<DataType> {
    public:
-    inline HorizontalTraversable(FullLightingData *, const ScreenLine<Integral> &la, const LightingTraversable<Integral> &a,
-                                 const ScreenLine<Integral> &lb, const LightingTraversable<Integral> &b,
+    inline HorizontalTraversable(FullLightingData *, const ScreenLine<Integral> &la, const LightDataTraversable<Integral> &a,
+                                 const ScreenLine<Integral> &lb, const LightDataTraversable<Integral> &b,
                                  const myfloat dx) :
         normal_(a.normal()), viewer_(a.viewer()), sources_size_(a.sources_size())
 #ifdef LIGHTSOURCES_UNSAFE_MEMCPY
@@ -303,7 +308,7 @@ template <class Integral = myfloat> class LightingTraversable : virtual public T
 
   inline LightingTraversable() = default;
 
-  inline LightingTraversable(const ScreenLine<Integral> &line, const myfloat dy, const DataType &a, const DataType &b) :
+  inline LightDataTraversable(const ScreenLine<Integral> &line, const myfloat dy, const DataType &a, const DataType &b) :
       normal_(a.normal), viewer_(a.viewer), sources_size_(a.sources_data.size())
 #ifdef LIGHTSOURCES_UNSAFE_MEMCPY
       , sources_(sources_size_)
@@ -325,13 +330,13 @@ template <class Integral = myfloat> class LightingTraversable : virtual public T
     }
   }
 
-  inline LightingTraversable(LightingTraversable &&other) :
+  inline LightDataTraversable(LightDataTraversable &&other) :
     normal_(other.normal_), dnormal_(other.dnormal_), viewer_(other.viewer_),
     dviewer_(other.dviewer_), sources_size_(other.sources_size_),
     sources_(std::forward<RuntimeArray<LightingSourceData>>(other.sources_)),
     dsources_(std::forward<RuntimeArray<LightingSourceData>>(other.dsources_)) {}
 
-  inline LightingTraversable(const LightingTraversable &other) :
+  inline LightDataTraversable(const LightDataTraversable &other) :
       normal_(other.normal_), dnormal_(other.dnormal_), viewer_(other.viewer_),
       dviewer_(other.dviewer_), sources_size_(other.sources_size_)
 #ifdef LIGHTSOURCES_UNSAFE_MEMCPY
@@ -353,7 +358,7 @@ template <class Integral = myfloat> class LightingTraversable : virtual public T
     }
   }
 
-  inline LightingTraversable &operator =(LightingTraversable &&other) {
+  inline LightDataTraversable &operator =(LightDataTraversable &&other) {
     normal_ = other.normal_;
     viewer_ = other.viewer_;
     dnormal_ = other.dnormal_;
@@ -364,7 +369,7 @@ template <class Integral = myfloat> class LightingTraversable : virtual public T
     return *this;
   }
 
-  LightingTraversable &operator =(const LightingTraversable &other) {
+  LightDataTraversable &operator =(const LightDataTraversable &other) {
     normal_ = other.normal_;
     viewer_ = other.viewer_;
     sources_size_ = other.sources_size_;
@@ -437,66 +442,67 @@ template <class Integral = myfloat> class LightingTraversable : virtual public T
 
 #elif defined(GOURAUD_SHADING)
 
-template <class Integral = myfloat> class ColorTraversable : virtual public Traversable<Integral> {
+template <class Integral = myfloat> class LightTraversable : virtual public Traversable<Integral> {
  public:
   typedef Vector3 DataType;
 
   class HorizontalTraversable : virtual public Traversable<Integral>::template HorizontalTraversable<DataType> {
    public:
-    inline HorizontalTraversable(Vector3 *, const ScreenLine<Integral> &la, const ColorTraversable<Integral> &a,
-                                 const ScreenLine<Integral> &lb, const ColorTraversable<Integral> &b,
-                                 const myfloat dx) : color_(a.color()) {
+    inline HorizontalTraversable(Vector3 *, const ScreenLine<Integral> &la, const LightTraversable<Integral> &a,
+                                 const ScreenLine<Integral> &lb, const LightTraversable<Integral> &b,
+                                 const myfloat dx) : light_(a.light())
+    {
       if (dx != 0) {
-        dcolor_ = (b.color() - color_) / dx;
+        dlight_ = (b.light() - light_) / dx;
       }
     }
 
     inline bool Process(DataType *context, const Integral, const Integral) {
-      *context = color_;
+      *context = light_;
       return true;
     }
 
     inline void Advance() {
-      color_ += dcolor_;
+      light_ += dlight_;
     }
 
     inline void Advance(const Integral value) {
-      color_ += dcolor_ * value;
+      light_ += dlight_ * value;
     }
 
-    inline const Vector3 &color() const {
-      return color_;
+    inline const Vector3 &light() const {
+      return light_;
     }
 
    private:
-    Vector3 color_;
-    Vector3 dcolor_;
+    Vector3 light_;
+    Vector3 dlight_;
   };
 
-  inline ColorTraversable() = default;
+  inline LightTraversable() = default;
 
-  inline ColorTraversable(const ScreenLine<Integral> &line, const myfloat dy, const DataType &a, const DataType &b) :
-      color_(a) {
+  inline LightTraversable(const ScreenLine<Integral> &line, const myfloat dy, const DataType &a, const DataType &b) :
+      light_(a) {
     if (dy != 0) {
-      dcolor_ = (b - a) / dy;
+      dlight_ = (b - a) / dy;
     }
   }
 
   inline void Advance() {
-    color_ += dcolor_;
+    light_ += dlight_;
   }
 
   inline void Advance(const Integral value) {
-    color_ += dcolor_ * value;
+    light_ += dlight_ * value;
   }
 
-  inline const Vector3 &color() const {
-    return color_;
+  inline const Vector3 &light() const {
+    return light_;
   }
 
  private:
-  Vector3 color_;
-  Vector3 dcolor_;
+  Vector3 light_;
+  Vector3 dlight_;
 };
 
 #endif
@@ -505,22 +511,39 @@ struct ZTraversableData {
   myfloat z;
 };
 
-struct TextureTraversableData : virtual public ZTraversableData {
+struct UVTraversableData
+#ifndef AFFINE_TEXTURES
+    : virtual public ZTraversableData
+#endif
+{
   Vector2 uv;
 };
 
-template <class Integral = myfloat> class TextureTraversable : virtual public Traversable<Integral>,
-    virtual public ZTraversable<Integral> {
+template <class Integral = myfloat> class UVTraversable : virtual public Traversable<Integral>
+#ifndef AFFINE_TEXTURES
+    , virtual public ZTraversable<Integral>
+#endif
+{
  public:
-  typedef TextureTraversableData DataType;
-  typedef typename ZTraversable<Integral>::HorizontalTraversable ZTraversableHorizontal;
+  typedef UVTraversableData DataType;
   typedef typename Traversable<Integral>::template HorizontalTraversable<Vector2> TraversableHorizontal;
+#ifndef AFFINE_TEXTURES
+  typedef typename ZTraversable<Integral>::HorizontalTraversable ZTraversableHorizontal;
+#endif
 
-  class HorizontalTraversable : public TraversableHorizontal, public virtual ZTraversableHorizontal {
+  class HorizontalTraversable : public TraversableHorizontal
+#ifndef AFFINE_TEXTURES
+      , public virtual ZTraversableHorizontal
+#endif
+  {
    public:
-    inline HorizontalTraversable(Vector2 *, const ScreenLine<Integral> &la, const TextureTraversable &a,
-                                 const ScreenLine<Integral> &lb, const TextureTraversable &b, const myfloat dx) :
-      ZTraversableHorizontal(la, a, lb, b, dx), uv_z_(a.uv_z()) {
+    inline HorizontalTraversable(Vector2 *, const ScreenLine<Integral> &la, const UVTraversable &a,
+                                 const ScreenLine<Integral> &lb, const UVTraversable &b, const myfloat dx) :
+#ifndef AFFINE_TEXTURES
+      : ZTraversableHorizontal(la, a, lb, b, dx),
+#endif
+      uv_z_(a.uv_z())
+    {
       if (dx != 0) {
         duv_z_ = (b.uv_z() - uv_z_) / dx;
       }
@@ -531,10 +554,24 @@ template <class Integral = myfloat> class TextureTraversable : virtual public Tr
     }
 
     inline void Advance() {
+#ifndef AFFINE_TEXTURES
+      ZTraversableHorizontal::Advance();
+#endif
+      AdvanceUV();
+    }
+
+    inline void AdvanceUV() {
       uv_z_ += duv_z_;
     }
 
     inline void Advance(const Integral value) {
+#ifndef AFFINE_TEXTURES
+      ZTraversableHorizontal::Advance(value);
+ #endif
+      AdvanceUV(value);
+    }
+
+    inline void AdvanceUV(const Integral value) {
       uv_z_ += duv_z_ * value;
     }
 
@@ -556,11 +593,14 @@ template <class Integral = myfloat> class TextureTraversable : virtual public Tr
     Vector2 duv_z_;
   };
 
-  inline TextureTraversable() = default;
+  inline UVTraversable() = default;
 
-  inline TextureTraversable(const ScreenLine<Integral> &line, const myfloat dy,
-                            const DataType &a, const DataType &b) :
-      ZTraversable<Integral>(line, dy, a.z, b.z) {
+  inline UVTraversable(const ScreenLine<Integral> &line, const myfloat dy,
+                            const DataType &a, const DataType &b)
+#ifndef AFFINE_TEXTURES
+      : ZTraversable<Integral>(line, dy, a.z, b.z)
+#endif
+  {
 #ifndef AFFINE_TEXTURES
     myfloat iz = 1 / this->z();
     uv_z_ = a.uv * iz;
@@ -582,10 +622,24 @@ template <class Integral = myfloat> class TextureTraversable : virtual public Tr
   }
 
   inline void Advance() {
+#ifndef AFFINE_TEXTURES
+    ZTraversable::Advance();
+#endif
+    AdvanceUV();
+  }
+
+  inline void AdvanceUV() {
     uv_z_ += duv_z_;
   }
 
   inline void Advance(const Integral value) {
+#ifndef AFFINE_TEXTURES
+    ZTraversable::Advance(value);
+#endif
+    AdvanceUV(value);
+  }
+
+  inline void AdvanceUV(const Integral value) {
     uv_z_ += duv_z_ * value;
   }
 
@@ -602,22 +656,11 @@ template <class Integral = myfloat> class TextureTraversable : virtual public Tr
   Vector2 duv_z_;
 };
 
-struct RasterizerTraversableData : virtual public ZTraversableData
-#ifdef PHONG_SHADING
-    , public FullLightingData
-#endif
-{
- public:
-#ifdef GOURAUD_SHADING
-  Vector3 color;
-#endif
-};
-
 #ifndef NO_SHADING
 
 inline Vector3 PhongLight(const LightingSourceData *int_sources, const Material &material,
                           const Vector3 &normal, const Vector3 &viewer,
-                          const std::vector<LightSource> &sources) {
+                          const std::vector<FullLightSource> &sources) {
   Vector3 result;
   for (size_t d = 0; d < (size_t)result.rows(); ++d) {
     result(d) = 0;
@@ -631,16 +674,10 @@ inline Vector3 PhongLight(const LightingSourceData *int_sources, const Material 
 
 #endif
 
+struct RasterizerData : virtual public ZTraversableData {};
+
 template <class Integral = unsigned> class RasterizerTraversable :
-    public virtual ZTraversable<Integral>
-#if defined(PHONG_SHADING)
-    , public LightingTraversable<Integral>
-#elif defined(GOURAUD_SHADING)
-    , public ColorTraversable<Integral>
-#else
-    , public Traversable<Integral>
-#endif
-{
+    public virtual ZTraversable<Integral>, public Traversable<Integral> {
  public:
   struct TraversableContext {
    public:
@@ -648,63 +685,28 @@ template <class Integral = unsigned> class RasterizerTraversable :
     Surface *surface;
     ZBuffer *z_buffer;
     SurfacePainterWrapper *surface_painter;
-#ifndef NO_SHADING
-    Vector3 ambient;
-#endif
-#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
-    const vector<LightSource> *light_sources;
-#else
     Uint32 pixel;
-#endif
   };
 
-  typedef RasterizerTraversableData DataType;
+  typedef RasterizerData DataType;
+
   typedef typename ZTraversable<Integral>::HorizontalTraversable ZTraversableHorisontal;
   typedef typename Traversable<Integral>::template HorizontalTraversable<TraversableContext> TraversableHorisontal;
-#if defined(PHONG_SHADING)
-  typedef typename LightingTraversable<Integral>::HorizontalTraversable LightingHorizontal;
-#elif defined(GOURAUD_SHADING)
-  typedef typename ColorTraversable<Integral>::HorizontalTraversable ColorHorizontal;
-#endif
 
-  class HorizontalTraversable : public TraversableHorisontal, public virtual ZTraversableHorisontal
-#ifdef PHONG_SHADING
-      , public LightingHorizontal
-#elif defined(GOURAUD_SHADING)
-      , public ColorHorizontal
-#endif
-  {
+  class HorizontalTraversable : public TraversableHorisontal, public virtual ZTraversableHorisontal {
    public:
     typedef TraversableContext ContextType;
 
     inline HorizontalTraversable(TraversableContext *context, const ScreenLine<Integral> &a, const RasterizerTraversable &da,
                                  const ScreenLine<Integral> &b, const RasterizerTraversable &db, const myfloat dx) :
-      ZTraversableHorisontal(a, da, b, db, dx)
-#if defined(PHONG_SHADING)
-      , LightingHorizontal(nullptr, a, da, b, db, dx)
-#elif defined(GOURAUD_SHADING)
-      , ColorHorizontal(nullptr, a, da, b, db, dx)
-#endif
-    {
+        ZTraversableHorisontal(a, da, b, db, dx) {
       z_buffer_ = context->z_buffer->Position(a.x(), a.y());
       painter_ = context->surface_painter->Position(a.x(), a.y());
     }
 
     inline bool Process(TraversableContext *context, const Integral x, const Integral y) {
       if (!z_buffer().Check(this->z())) return false;
-#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
-#ifdef GOURAUD_SHADING
-      Vector3 result = (context->ambient + this->color()) * 0xFF;
-#else
-      Vector3 result = (context->ambient +
-          PhongLight(this->sources().data(), *context->material, this->normal(),
-                     this->viewer(), *context->light_sources)) * 0xFF;
-#endif
-      Uint32 pixel = context->surface->ColorToPixel(VectorToColor(result));
-      painter().SetPixel(pixel);
-#else
       painter().SetPixel(context->pixel);
-#endif
       return true;
     }
 
@@ -718,22 +720,12 @@ template <class Integral = unsigned> class RasterizerTraversable :
 
     inline void Advance() {
       ZTraversableHorisontal::Advance();
-#if defined(PHONG_SHADING)
-      LightingHorizontal::Advance();
-#elif defined(GOURAUD_SHADING)
-      ColorHorizontal::Advance();
-#endif
       ++z_buffer_;
       ++painter_;
     }
 
     inline void Advance(const Integral value) {
       ZTraversableHorisontal::Advance(value);
-#if defined(PHONG_SHADING)
-      LightingHorizontal::Advance(value);
-#elif defined(GOURAUD_SHADING)
-      ColorHorizontal::Advance(value);
-#endif
       z_buffer_ += value;
       painter_ += value;
     }
@@ -745,65 +737,198 @@ template <class Integral = unsigned> class RasterizerTraversable :
 
   RasterizerTraversable(const ScreenLine<Integral> &line, const myfloat dy,
                         const DataType &a, const DataType &b) :
-      ZTraversable<Integral>(line, dy, a.z, b.z)
-#if defined(PHONG_SHADING)
-    , LightingTraversable<Integral>(line, dy, a, b)
-#elif defined(GOURAUD_SHADING)
-    , ColorTraversable<Integral>(line, dy, a.color, b.color)
-#endif
-  {}
+      ZTraversable<Integral>(line, dy, a.z, b.z) {}
 
   inline void Advance() {
     ZTraversable<Integral>::Advance();
-#if defined(PHONG_SHADING)
-    LightingTraversable<Integral>::Advance();
-#elif defined(GOURAUD_SHADING)
-    ColorTraversable<Integral>::Advance();
-#endif
   }
 
   inline void Advance(const Integral value) {
     ZTraversable<Integral>::Advance(value);
-#if defined(PHONG_SHADING)
-    LightingTraversable<Integral>::Advance(value);
-#elif defined(GOURAUD_SHADING)
-    ColorTraversable<Integral>::Advance(value);
-#endif
   }
 };
 
-struct RasterizerTexturedTraversableData : public RasterizerTraversableData,
-    public TextureTraversableData {
+#ifndef NO_SHADING
+
+struct RasterizerLightingData : virtual public RasterizerData
+#ifdef PHONG_SHADING
+    , public FullLightingData
+#endif
+{
+ public:
+#if defined(GOURAUD_SHADING) || defined(FLAT_SHADING)
+  Vector3 light;
+#endif
 };
 
-template <class Integral = unsigned> struct RasterizerTexturedTraversable : public RasterizerTraversable<Integral>,
-    public TextureTraversable<Integral> {
+template <class Integral = unsigned> class RasterizerLightingTraversable :
+    public virtual RasterizerTraversable<Integral>
+#if defined(PHONG_SHADING)
+    , public LightDataTraversable<Integral>
+#elif defined(GOURAUD_SHADING)
+    , public LightTraversable<Integral>
+#endif
+{
  public:
-  struct TraversableContext : public RasterizerTraversable<Integral>::TraversableContext {
-    const SurfacePainterWrapper *texture;
-#ifdef FLAT_SHADING
+  struct TraversableContext : virtual public RasterizerTraversable<Integral>::TraversableContext {
+   public:
+    Vector3 ambient;
+#if defined(GOURAUD_SHADING) || defined(FLAT_SHADING)
+    const vector<FullLightSource> *light_sources;
+#else
     Vector3 light;
 #endif
   };
 
-  typedef RasterizerTexturedTraversableData DataType;
-  typedef typename TextureTraversable<Integral>::HorizontalTraversable TextureTraversableHorizontal;
-  typedef typename RasterizerTraversable<Integral>::HorizontalTraversable RasterizerHorizontal;
-  typedef typename ZTraversable<Integral>::HorizontalTraversable ZTraversableHorisontal;
+  typedef RasterizerLightingData DataType;
 
-  class HorizontalTraversable : public RasterizerHorizontal,
-      public TextureTraversableHorizontal, virtual public ZTraversableHorisontal {
+  typedef typename RasterizerTraversable<Integral>::HorizontalTraversable
+    RasterizerTraversableHorisontal;
+  typedef typename ZTraversable<Integral>::HorizontalTraversable
+    ZHorisontal;
+#if defined(PHONG_SHADING)
+  typedef typename LightDataTraversable<Integral>::HorizontalTraversable LightingHorizontal;
+#elif defined(GOURAUD_SHADING)
+  typedef typename LightTraversable<Integral>::HorizontalTraversable LightHorizontal;
+#endif
+
+  class HorizontalTraversable : public virtual RasterizerTraversableHorisontal
+#ifdef PHONG_SHADING
+      , public LightingHorizontal
+#elif defined(GOURAUD_SHADING)
+      , public LightHorizontal
+#endif
+  {
+   public:
+    typedef TraversableContext ContextType;
+
+    inline HorizontalTraversable(TraversableContext *context, const ScreenLine<Integral> &a, const RasterizerLightingTraversable &da,
+                                 const ScreenLine<Integral> &b, const RasterizerLightingTraversable &db, const myfloat dx) :
+      ZHorisontal(a, da, b, db, dx),
+      RasterizerTraversableHorisontal(context, a, da, b, db, dx)
+#if defined(PHONG_SHADING)
+      , LightingHorizontal(nullptr, a, da, b, db, dx)
+#elif defined(GOURAUD_SHADING)
+      , LightHorizontal(nullptr, a, da, b, db, dx)
+#endif
+    {}
+
+    inline bool Process(TraversableContext *context, const Integral x, const Integral y) {
+      if (!this->z_buffer().Check(this->z())) return false;
+#ifdef GOURAUD_SHADING
+      Vector3 result = (context->ambient + this->light()) * 0xFF;
+#else
+      Vector3 result = (context->ambient +
+          PhongLight(this->sources().data(), *context->material, this->normal(),
+                     this->viewer(), *context->light_sources)) * 0xFF;
+#endif
+      Uint32 pixel = context->surface->ColorToPixel(VectorToColor(result));
+      this->painter().SetPixel(pixel);
+      return true;
+    }
+
+    inline void Advance() {
+      RasterizerTraversableHorisontal::Advance();
+      AdvanceLight();
+    }
+
+    inline void AdvanceLight() {
+#if defined(PHONG_SHADING)
+      LightingHorizontal::Advance();
+#elif defined(GOURAUD_SHADING)
+      LightHorizontal::Advance();
+#endif
+    }
+
+    inline void Advance(const Integral value) {
+      RasterizerTraversableHorisontal::Advance(value);
+      AdvanceLight(value);
+    }
+
+    inline void AdvanceLight(const Integral value) {
+#if defined(PHONG_SHADING)
+      LightingHorizontal::Advance(value);
+#elif defined(GOURAUD_SHADING)
+      LightHorizontal::Advance(value);
+#endif
+    }
+  };
+
+  RasterizerLightingTraversable(const ScreenLine<Integral> &line, const myfloat dy,
+                        const DataType &a, const DataType &b) :
+      ZTraversable<Integral>(line, dy, a.z, b.z),
+      RasterizerTraversable<Integral>(line, dy, a, b)
+#if defined(PHONG_SHADING)
+    , LightDataTraversable<Integral>(line, dy, a, b)
+#elif defined(GOURAUD_SHADING)
+    , LightTraversable<Integral>(line, dy, a.light, b.light)
+#endif
+  {}
+
+  inline void Advance() {
+    RasterizerTraversable<Integral>::Advance();
+    AdvanceLight();
+  }
+
+  inline void AdvanceLight() {
+#if defined(PHONG_SHADING)
+    LightDataTraversable<Integral>::Advance();
+#elif defined(GOURAUD_SHADING)
+    LightTraversable<Integral>::Advance();
+#endif
+  }
+
+  inline void Advance(const Integral value) {
+    RasterizerTraversable<Integral>::Advance(value);
+    AdvanceLight(value);
+  }
+
+  inline void AdvanceLight(const Integral value) {
+#if defined(PHONG_SHADING)
+    LightDataTraversable<Integral>::Advance(value);
+#elif defined(GOURAUD_SHADING)
+    LightTraversable<Integral>::Advance(value);
+#endif
+  }
+};
+
+#endif
+
+struct RasterizerTexturedData : virtual public RasterizerData,
+    public UVTraversableData {};
+
+template <class Integral = unsigned> struct RasterizerTexturedTraversable : public virtual
+    RasterizerTraversable<Integral>,
+    public UVTraversable<Integral> {
+ public:
+  struct TraversableContext : virtual public RasterizerTraversable<Integral>::TraversableContext {
+    const SurfacePainterWrapper *texture;
+  };
+
+  typedef RasterizerTexturedData DataType;
+
+  typedef typename UVTraversable<Integral>::HorizontalTraversable UVTraversableHorizontal;
+  typedef typename RasterizerTraversable<Integral>::HorizontalTraversable RasterizerHorizontal;
+  typedef typename ZTraversable<Integral>::HorizontalTraversable ZHorizontal;
+
+  class HorizontalTraversable : public virtual RasterizerHorizontal,
+      public UVTraversableHorizontal {
    public:
     typedef TraversableContext ContextType;
 
     inline HorizontalTraversable(TraversableContext *context, const ScreenLine<Integral> &a, const RasterizerTexturedTraversable &da,
                                  const ScreenLine<Integral> &b, const RasterizerTexturedTraversable &db, const myfloat dx) :
-      ZTraversableHorisontal(a, da, b, db, dx),
+      ZHorizontal(a, da, b, db, dx),
       RasterizerHorizontal(context, a, da, b, db, dx),
-      TextureTraversableHorizontal(nullptr, a, da, b, db, dx) {}
+      UVTraversableHorizontal(nullptr, a, da, b, db, dx) {}
 
     inline bool Process(TraversableContext *context, const Integral x, const Integral y) {
       if (!this->z_buffer().Check(this->z())) return false;
+      this->painter().SetPixel(GetPixel(context));
+      return true;
+    }
+
+    inline Uint32 GetPixel(const TraversableContext *context) {
       Vector2 uv = this->GetUV();
       int uvx = uv.x(),
           uvy = uv.y();
@@ -819,12 +944,89 @@ template <class Integral = unsigned> struct RasterizerTexturedTraversable : publ
       if (uvy > h)
         uvy = h;
 //#endif
-      Uint32 pixel = context->texture->GetPixel(uvx, uvy);
+      return context->texture->GetPixel(uvx, uvy);
+    }
+
+    inline void Advance() {
+      RasterizerHorizontal::Advance();
+      AdvanceTexture();
+    }
+
+    inline void AdvanceTexture() {
+      UVTraversableHorizontal::AdvanceUV();
+    }
+
+    inline void Advance(const Integral value) {
+      RasterizerHorizontal::Advance(value);
+      AdvanceTexture(value);
+    }
+
+    inline void AdvanceTexture(const Integral value) {
+      UVTraversableHorizontal::AdvanceUV(value);
+    }
+  };
+
+  inline RasterizerTexturedTraversable(const ScreenLine<Integral> &line, const myfloat dy,
+                                       const DataType &a, const DataType &b) :
+      ZTraversable<Integral>(line, dy, a.z, b.z),
+      RasterizerTraversable<Integral>(line, dy, a, b),
+      UVTraversable<Integral>(line, dy, a, b) {}
+
+  inline void Advance() {
+    RasterizerTraversable<Integral>::Advance();
+    AdvanceTexture();
+  }
+
+  inline void AdvanceTexture() {
+    UVTraversable<Integral>::AdvanceUV();
+  }
+
+  inline void Advance(const Integral value) {
+    RasterizerTraversable<Integral>::Advance(value);
+    AdvanceTexture(value);
+  }
+
+  inline void AdvanceTexture(const Integral value) {
+    UVTraversable<Integral>::AdvanceUV(value);
+  }
+};
+
 #ifndef NO_SHADING
+
+struct RasterizerTexturedLightingData : public RasterizerTexturedData,
+    public RasterizerLightingData {};
+
+template <class Integral = unsigned> struct RasterizerTexturedLightingTraversable
+    : public RasterizerTexturedTraversable<Integral>, public RasterizerLightingTraversable<Integral> {
+ public:
+  struct TraversableContext : public RasterizerTexturedTraversable<Integral>::TraversableContext,
+      public RasterizerLightingTraversable<Integral>::TraversableContext {};
+
+  typedef RasterizerTexturedLightingData DataType;
+
+  typedef typename ZTraversable<Integral>::HorizontalTraversable ZHorizontal;
+  typedef typename RasterizerTraversable<Integral>::HorizontalTraversable RasterizerHorizontal;
+  typedef typename RasterizerTexturedTraversable<Integral>::HorizontalTraversable RasterizerTexturedHorizontal;
+  typedef typename RasterizerLightingTraversable<Integral>::HorizontalTraversable RasterizerLightingHorizontal;
+
+  class HorizontalTraversable : public RasterizerTexturedHorizontal, public RasterizerLightingHorizontal {
+   public:
+    typedef TraversableContext ContextType;
+
+    inline HorizontalTraversable(ContextType *context, const ScreenLine<Integral> &a, const RasterizerTexturedLightingTraversable &da,
+                                 const ScreenLine<Integral> &b, const RasterizerTexturedLightingTraversable &db, const myfloat dx) :
+      ZHorizontal(a, da, b, db, dx),
+      RasterizerHorizontal(context, a, da, b, db, dx),
+      RasterizerTexturedHorizontal(context, a, da, b, db, dx),
+      RasterizerLightingHorizontal(context, a, da, b, db, dx) {}
+
+    inline bool Process(TraversableContext *context, const Integral x, const Integral y) {
+      if (!this->z_buffer().Check(this->z())) return false;
+      Uint32 pixel = this->GetPixel(context);
       sdlobj::Color tcolor = context->material->texture()->PixelToColor(pixel);
       Vector3 result = ColorToVector(tcolor);
 #if defined(GOURAUD_SHADING)
-      ComponentwiseInPlace(result, context->ambient + this->color());
+      ComponentwiseInPlace(result, context->ambient + this->light());
 #elif defined(FLAT_SHADING)
       ComponentwiseInPlace(result, context->light);
 #else
@@ -833,41 +1035,56 @@ template <class Integral = unsigned> struct RasterizerTexturedTraversable : publ
                   *context->light_sources));
 #endif
       pixel = context->surface->ColorToPixel(VectorToColor(result));
-#endif
-
       this->painter().SetPixel(pixel);
       return true;
     }
 
     inline void Advance() {
       RasterizerHorizontal::Advance();
-      TextureTraversableHorizontal::Advance();
+      RasterizerTexturedHorizontal::AdvanceTexture();
+      RasterizerLightingHorizontal::AdvanceLight();
     }
 
     inline void Advance(const Integral value) {
       RasterizerHorizontal::Advance(value);
-      TextureTraversableHorizontal::Advance(value);
+      RasterizerTexturedHorizontal::AdvanceTexture(value);
+      RasterizerLightingHorizontal::AdvanceLight(value);
     }
   };
 
-  inline RasterizerTexturedTraversable(const ScreenLine<Integral> &line, const myfloat dy,
+  inline RasterizerTexturedLightingTraversable(const ScreenLine<Integral> &line, const myfloat dy,
                                        const DataType &a, const DataType &b) :
-      ZTraversable<Integral>(line, dy, a.z, b.z), RasterizerTraversable<Integral>(line, dy, a, b),
-      TextureTraversable<Integral>(line, dy, a, b) {}
+      ZTraversable<Integral>(line, dy, a.z, b.z),
+      RasterizerTraversable<Integral>(line, dy, a, b),
+      RasterizerTexturedTraversable<Integral>(line, dy, a, b),
+      RasterizerLightingTraversable<Integral>(line, dy, a, b) {}
 
   inline void Advance() {
     RasterizerTraversable<Integral>::Advance();
-    TextureTraversable<Integral>::Advance();
+    RasterizerTexturedTraversable<Integral>::AdvanceTexture();
+    RasterizerLightingTraversable<Integral>::AdvanceLight();
   }
 
   inline void Advance(const Integral value) {
     RasterizerTraversable<Integral>::Advance(value);
-    TextureTraversable<Integral>::Advance(value);
+    RasterizerTexturedTraversable<Integral>::AdvanceTexture(value);
+    RasterizerLightingTraversable<Integral>::AdvanceLight(value);
   }
 };
 
-template <bool kTextures> void DrawTriangle(const size_t tri_i, const TransformedObject &cacheobject,
-        const SceneObject &object, RasterizerTexturedTraversable<unsigned>::TraversableContext *context) {
+#endif
+
+#ifndef NO_LIGHTING
+typedef RasterizerTexturedLightingData RasterizerFullData;
+typedef RasterizerTexturedLightingTraversable<unsigned>::TraversableContext RasterizerFullContext;
+#else
+typedef RasterizerTexturedTraversable::DataType RasterizerFullData;
+typedef RasterizerTexturedTraversable::TraversableContext RasterizerFullContext;
+#endif
+
+template <bool kTextures, bool kLighting> void DrawTriangle(const size_t tri_i,
+        const TransformedObject &cacheobject, const SceneObject &object,
+        RasterizerFullContext *context) {
   size_t triangles_size = 1;
   size_t points_size = IndexedTriangle::kPointsSize;
 
@@ -894,120 +1111,120 @@ template <bool kTextures> void DrawTriangle(const size_t tri_i, const Transforme
   if (ClipTriangles<YClipper<Greater<myfloat>>>(triangles_buf, triangles_size, points_buf,
                                                        points_size, context->surface->height() - 1)) return;
 
-  RasterizerTexturedTraversableData data[points_size];
+  RasterizerFullData data[points_size];
+
   for (size_t i = 0; i < points_size; ++i) {
     data[i].z = points_buf[i].z();
   }
 
-#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
-
-  for (size_t i = 0; i < IndexedTriangle::kPointsSize; ++i) {
-    const int pt = tri.points[i];
-#if defined(PHONG_SHADING)
-    data[i].normal = object.positioned_vertex_normals()[pt];
-    data[i].viewer = cacheobject.lighting_data[pt].viewer;
-    data[i].sources_data = cacheobject.lighting_data[pt].sources_data;
-#elif defined(GOURAUD_SHADING)
-    data[i].color = PhongLight(cacheobject.lighting_data[pt].sources_data.data(), *context->material,
-                               object.positioned_vertex_normals()[pt], cacheobject.lighting_data[pt].viewer,
-                               *context->light_sources);
-#endif
-  }
-  bool normal_found[points_size];
-  if (points_size > 3) {
-#if defined(PHONG_SHADING)
-    TriangleTraverser<LightingTraversable<myfloat>> traverser(points_buf[0], data[0],
-                                                    points_buf[1], data[1],
-                                                    points_buf[2], data[2]);
-#elif defined(GOURAUD_SHADING)
-    TriangleTraverser<ColorTraversable<myfloat>> traverser(points_buf[0], data[0].color,
-                                                    points_buf[1], data[1].color,
-                                                    points_buf[2], data[2].color);
-#endif
-    memset((bool *)&normal_found, true, IndexedTriangle::kPointsSize * sizeof(bool));
-    memset((bool *)&normal_found + IndexedTriangle::kPointsSize,
-           false, (points_size - IndexedTriangle::kPointsSize) * sizeof(bool));
-    for (size_t i = 0; i < triangles_size; ++i) {
-      IndexedTriangle &pol = triangles_buf[i];
-      if (pol.points[0] == -1) continue;
-      for (size_t j = 0; j < IndexedTriangle::kPointsSize; ++j) {
-        size_t pt = pol.points[j];
-        if (!normal_found[pt]) {
-#if defined(PHONG_SHADING)
-          Assert(traverser.Point<true>(&data[pt], points_buf[pt].x(), points_buf[pt].y()));
-#elif defined(GOURAUD_SHADING)
-          Assert(traverser.Point<true>(&data[pt].color, points_buf[pt].x(), points_buf[pt].y()));
-#endif
-          normal_found[pt] = true;
-        }
-      }
-    }
-  }
-
-#endif
-
-  if (kTextures) {
+  if (kLighting || kTextures) {
     for (size_t i = 0; i < IndexedTriangle::kPointsSize; ++i) {
-      data[i].uv = (*object.model()->uv_coords())[tri.points[i]];
-      data[i].uv.x() *= context->texture->surface()->width() - 1;
-      data[i].uv.y() *= context->texture->surface()->height() - 1;
-    }
-    if (points_size > 3) {
-      TriangleTraverser<TextureTraversable<myfloat>> traverser(points_buf[0], data[0],
-                                                       points_buf[1], data[1],
-                                                       points_buf[2], data[2]);
-#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
-      for (size_t i = IndexedTriangle::kPointsSize; i < points_size; ++i) {
-        if (normal_found[i]) {
-          Assert(traverser.Point<true>(&data[i].uv, points_buf[i].x(), points_buf[i].y()));
-        }
+      const int pt = tri.points[i];
+#if defined(PHONG_SHADING)
+      data[i].normal = object.positioned_vertex_normals()[pt];
+      data[i].viewer = cacheobject.lighting_data[pt].viewer;
+      data[i].sources_data = cacheobject.lighting_data[pt].sources_data;
+#elif defined(GOURAUD_SHADING)
+      data[i].light = PhongLight(cacheobject.lighting_data[pt].sources_data.data(), *context->material,
+                                 object.positioned_vertex_normals()[pt], cacheobject.lighting_data[pt].viewer,
+                                 *context->light_sources);
+#endif
+      if (kTextures) {
+        data[i].uv = (*object.model()->uv_coords())[tri.points[i]];
+        data[i].uv.x() *= context->texture->surface()->width() - 1;
+        data[i].uv.y() *= context->texture->surface()->height() - 1;
       }
-#else
-      bool normal_found[points_size];
-      /*std::fill_n((bool *)&normal_found, IndexedTriangle::kPointsSize, true);
-      std::fill_n((bool *)&normal_found + IndexedTriangle::kPointsSize,
-                  points_size - IndexedTriangle::kPointsSize, true);*/
-      memset((bool *)&normal_found, true, IndexedTriangle::kPointsSize * sizeof(bool));
-      memset((bool *)&normal_found + IndexedTriangle::kPointsSize,
+    }
+
+    if (points_size > 3) {
+      bool points_needed[points_size];
+      memset((bool *)&points_needed, true, IndexedTriangle::kPointsSize * sizeof(bool));
+      memset((bool *)&points_needed + IndexedTriangle::kPointsSize,
              false, (points_size - IndexedTriangle::kPointsSize) * sizeof(bool));
-      for (size_t i = 0; i < triangles_size; ++i) {
-        IndexedTriangle &pol = triangles_buf[i];
-        if (pol.points[0] == -1) continue;
-        for (size_t j = 0; j < IndexedTriangle::kPointsSize; ++j) {
-          size_t pt = pol.points[j];
-          if (!normal_found[pt]) {
-            Assert(traverser.Point<true>(&data[pt].uv, points_buf[pt].x(), points_buf[pt].y()));
-            normal_found[pt] = true;
+
+      if (kLighting) {
+#if defined(PHONG_SHADING)
+        TriangleTraverser<LightDataTraversable<myfloat>> traverser(points_buf[0], data[0],
+                                                        points_buf[1], data[1],
+                                                        points_buf[2], data[2]);
+#elif defined(GOURAUD_SHADING)
+        TriangleTraverser<LightTraversable<myfloat>> traverser(points_buf[0], data[0].light,
+                                                        points_buf[1], data[1].light,
+                                                        points_buf[2], data[2].light);
+    #endif
+        for (size_t i = 0; i < triangles_size; ++i) {
+          IndexedTriangle &pol = triangles_buf[i];
+          if (pol.points[0] == -1) continue;
+          for (size_t j = 0; j < IndexedTriangle::kPointsSize; ++j) {
+            size_t pt = pol.points[j];
+            if (!points_needed[pt]) {
+    #if defined(PHONG_SHADING)
+              Assert(traverser.Point<true>(&data[pt], points_buf[pt].x(), points_buf[pt].y()));
+    #elif defined(GOURAUD_SHADING)
+              Assert(traverser.Point<true>(&data[pt].light, points_buf[pt].x(), points_buf[pt].y()));
+    #endif
+              points_needed[pt] = true;
+            }
           }
         }
       }
-#endif
+      if (kTextures) {
+        TriangleTraverser<UVTraversable<myfloat>> traverser(points_buf[0], data[0],
+                                                         points_buf[1], data[1],
+                                                         points_buf[2], data[2]);
+        if (kLighting) {
+          for (size_t i = IndexedTriangle::kPointsSize; i < points_size; ++i) {
+            if (points_needed[i]) {
+              Assert(traverser.Point<true>(&data[i].uv, points_buf[i].x(), points_buf[i].y()));
+            }
+          }
+        } else {
+          for (size_t i = 0; i < triangles_size; ++i) {
+            IndexedTriangle &pol = triangles_buf[i];
+            if (pol.points[0] == -1) continue;
+            for (size_t j = 0; j < IndexedTriangle::kPointsSize; ++j) {
+              size_t pt = pol.points[j];
+              if (!points_needed[pt]) {
+                Assert(traverser.Point<true>(&data[pt].uv, points_buf[pt].x(), points_buf[pt].y()));
+                points_needed[pt] = true;
+              }
+            }
+          }
+        }
+      }
     }
+  }
 
-    for (size_t i = 0; i < triangles_size; ++i) {
-      if (triangles_buf[i].points[0] == -1) continue;
-      const int *pts = triangles_buf[i].points;
-      TriangleTraverser<RasterizerTexturedTraversable<>>::OneTraverse(context,
+  for (size_t i = 0; i < triangles_size; ++i) {
+    if (triangles_buf[i].points[0] == -1) continue;
+    const int *const &pts = triangles_buf[i].points;
+    if (kTextures && kLighting)
+      TriangleTraverser<RasterizerTexturedLightingTraversable<>>::OneTraverse(context,
           points_buf[pts[0]], data[pts[0]],
           points_buf[pts[1]], data[pts[1]],
           points_buf[pts[2]], data[pts[2]]);
-    }
-  } else {
-    for (size_t i = 0; i < triangles_size; ++i) {
-      if (triangles_buf[i].points[0] == -1) continue;
-      const int *pts = triangles_buf[i].points;
+    else if (kTextures)
+      TriangleTraverser<RasterizerTexturedTraversable<>>::OneTraverse(context,
+        points_buf[pts[0]], data[pts[0]],
+        points_buf[pts[1]], data[pts[1]],
+        points_buf[pts[2]], data[pts[2]]);
+    else if (kLighting)
+      TriangleTraverser<RasterizerLightingTraversable<>>::OneTraverse(context,
+          points_buf[pts[0]], data[pts[0]],
+          points_buf[pts[1]], data[pts[1]],
+          points_buf[pts[2]], data[pts[2]]);
+    else
       TriangleTraverser<RasterizerTraversable<>>::OneTraverse(context,
           points_buf[pts[0]], data[pts[0]],
           points_buf[pts[1]], data[pts[1]],
           points_buf[pts[2]], data[pts[2]]);
-    }
   }
 }
 
 #if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
 
-inline void FillLightingData(LightingData &lighting, const Position &src, const Position &camera,
-                      const vector<LightingSourceData> &light_sources,
+inline void FillLightingData(LightingData &lighting, const Vector3 &src, const Vector3 &camera,
+                      const vector<FullLightSource> &light_sources,
                       const Vector3 &normal) {
   lighting.viewer = (camera - src).normalized();
   for (size_t i = 0; i < light_sources.size(); ++i) {
@@ -1044,7 +1261,21 @@ void Rasterizer::PreRenderStep() {
 
 #if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
   Vector3 camera = context()->camera.GetVector3();
-  Scene::LightSourceVector &light_sources = context()->scene.light_sources();
+#endif
+
+#ifndef NO_SHADING
+  std::vector<FullLightSource> &light_sources = *light_sources_;
+  light_sources.resize(context()->scene.objects().size());
+
+  size_t i = 0;
+  for (auto &object : context()->scene.objects()) {
+    if (object->light_source()) {
+      FullLightSource &source = light_sources[i];
+      source.position = object->position().GetVector3();
+      source.diffuse = object->light_source()->diffuse;
+      source.specular = object->light_source()->specular;
+    }
+  }
 #endif
 
   for (auto &object : context()->scene.objects()) {
@@ -1159,7 +1390,7 @@ void Rasterizer::PreRenderStep() {
 }
 
 #ifndef NO_DRAW_SURFACE
-void DrawSurface(RasterizerTexturedTraversable<>::TraversableContext &context, const Camera &camera,
+void DrawSurface(RasterizerFullContext &context, const Camera &camera,
                  const Uint32 pixel) {
   AffineTransform transform = system_transform * RotateTransform(-camera.pitch, Vector3::UnitY());
 
@@ -1197,34 +1428,36 @@ void DrawSurface(RasterizerTexturedTraversable<>::TraversableContext &context, c
 }
 #endif
 
-inline void PrepareAndDraw(RasterizerTexturedTraversable<>::TraversableContext &tcontext,
+template <bool kTexture, bool kLighting>
+  void PrepareAndDrawTemplated(RasterizerFullContext &tcontext,
                     const Material &material, SurfacePainterWrapper *&texture_painter,
                     Surface *&texture, const size_t t, const Surface &surface,
                     const TransformedObject &transformed, const SceneObject &object,
                     const Context &ccontext) {
   tcontext.material = &material;
-#ifndef NO_SHADING
-  tcontext.ambient = ccontext.scene.ambient_light() * material.ambient_color();
-#endif
+  if (kLighting)
+    tcontext.ambient = ccontext.scene.ambient_light() * material.ambient_color();
 #ifdef FLAT_SHADING
-  // getting camera vector each triangle
-  Vector3 viewer = (ccontext.camera.GetVector3() - object.positioned_centers()[t]).normalized();
-  const std::vector<LightSource> &light_sources = ccontext.scene.light_sources();
-  const Vector3 &vertex_normal = object.positioned_polygon_normals()[t];
-  RuntimeArray<LightingSourceData> sources(light_sources.size());
-  for (size_t i = 0; i < ccontext.scene.light_sources().size(); ++i) {
-    sources[i].direction = (light_sources[i].position - object.positioned_centers()[t]).normalized();
-    sources[i].reflection = Reflection(sources[i].direction,
-                                       vertex_normal);
-  }
-  tcontext.light = tcontext.ambient + PhongLight(sources.data(), material,
-                        vertex_normal, viewer, light_sources);
-  if (!material.texture()) {
-    tcontext.light *= 0xFF;
-    tcontext.pixel = surface.ColorToPixel(VectorToColor(tcontext.light));
+  if (kLighting) {
+    // getting camera vector each triangle
+    Vector3 viewer = (ccontext.camera.GetVector3() - object.positioned_centers()[t]).normalized();
+    const std::vector<LightSource> &light_sources = ccontext.scene.light_sources();
+    const Vector3 &vertex_normal = object.positioned_polygon_normals()[t];
+    RuntimeArray<LightingSourceData> sources(light_sources.size());
+    for (size_t i = 0; i < ccontext.scene.light_sources().size(); ++i) {
+      sources[i].direction = (light_sources[i].position - object.positioned_centers()[t]).normalized();
+      sources[i].reflection = Reflection(sources[i].direction,
+                                         vertex_normal);
+    }
+    tcontext.light = tcontext.ambient + PhongLight(sources.data(), material,
+                          vertex_normal, viewer, light_sources);
+    if (!kTexture) {
+      tcontext.light *= 0xFF;
+      tcontext.pixel = surface.ColorToPixel(VectorToColor(tcontext.light));
+    }
   }
 #endif
-  if (material.texture()) {
+  if (kTexture) {
     if (texture != material.texture().get()) {
       if (texture_painter) delete texture_painter;
       texture = material.texture().get();
@@ -1232,12 +1465,35 @@ inline void PrepareAndDraw(RasterizerTexturedTraversable<>::TraversableContext &
       texture_painter->StartDrawing();
     }
     tcontext.texture = texture_painter;
-    DrawTriangle<true>(t, transformed, object, &tcontext);
   } else {
-#ifdef NO_SHADING
-    tcontext.pixel = surface.ColorToPixel(VectorToColor(material.ambient_color()));
-#endif
-    DrawTriangle<false>(t, transformed, object, &tcontext);
+    if (!kLighting) {
+      tcontext.pixel = surface.ColorToPixel(material.color());
+    }
+  }
+  DrawTriangle<kTexture, kLighting>(t, transformed, object, &tcontext);
+}
+
+inline void PrepareAndDraw(RasterizerFullContext &tcontext,
+                    const Material &material, SurfacePainterWrapper *&texture_painter,
+                    Surface *&texture, const size_t t, const Surface &surface,
+                    const TransformedObject &transformed, const SceneObject &object,
+                    const Context &ccontext) {
+  if (material.texture()) {
+    if (material.lighting()) {
+      PrepareAndDrawTemplated<true, true>(tcontext, material, texture_painter, texture,
+                                          t, surface, transformed, object, ccontext);
+    } else {
+      PrepareAndDrawTemplated<true, false>(tcontext, material, texture_painter, texture,
+                                          t, surface, transformed, object, ccontext);
+    }
+  } else {
+    if (material.lighting()) {
+      PrepareAndDrawTemplated<false, true>(tcontext, material, texture_painter, texture,
+                                          t, surface, transformed, object, ccontext);
+    } else {
+      PrepareAndDrawTemplated<false, false>(tcontext, material, texture_painter, texture,
+                                          t, surface, transformed, object, ccontext);
+    }
   }
 }
 
@@ -1247,12 +1503,12 @@ void Rasterizer::Paint(sdlobj::Surface &surface) {
 
   SurfacePainterWrapper *surface_painter = GetSurfacePainter(&surface);
 
-  RasterizerTexturedTraversable<>::TraversableContext tcontext;
+  RasterizerFullContext tcontext;
   tcontext.surface = &surface;
   tcontext.z_buffer = &z_buffer_;
   tcontext.surface_painter = surface_painter;
 #if defined(GOURAUD_SHADING) || defined(PHONG_SHADING)
-  tcontext.light_sources = &context()->scene.light_sources();
+  tcontext.light_sources = light_sources_.get();
 #endif
 
 #ifndef NO_DRAW_SURFACE

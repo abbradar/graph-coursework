@@ -18,12 +18,6 @@ void LoadScene(Scene &scene, istream &in, const Models &models) {
     scene.objects().push_back(shared_ptr<SceneObject>(obj));
   }
 
-  for (auto &mi : doc["light-sources"]) {
-    LightSource obj;
-    mi >> obj;
-    scene.light_sources().push_back(obj);
-  }
-
   myfloat ambient_light;
   doc["ambient-light"] >> ambient_light;
   scene.set_ambient_light(ambient_light);
@@ -39,19 +33,6 @@ void SaveScene(Scene &scene, ostream &out) {
   }
 
   emitter << YAML::EndSeq;
-  emitter << YAML::Key << "light-sources" << YAML::Value;
-
-  if (scene.light_sources().size() > 0) {
-    emitter << YAML::BeginSeq;
-
-    for (auto &i : scene.light_sources()) {
-      emitter << i;
-    }
-
-    emitter << YAML::EndSeq;
-  } else {
-    emitter << "";
-  }
 
   emitter << YAML::Key << "ambient-light" << YAML::Value << scene.ambient_light();
   emitter << YAML::EndMap;

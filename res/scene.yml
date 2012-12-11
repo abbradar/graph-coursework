@@ -1,11 +1,11 @@
-position: [0,0,0,0,0,0]
 objects:
-  - model-name: Cube
-    position: [0,0,0,0,0,0]
   - model-name: Cone
-    position: [-500,0,0,0,0,0]
-ambient-light: 0.5
-light-sources:
-  - position: [0,100,0,0,0,0]
-    specular: 4
-    diffuse: 2
+    position: [-500, 0, 0, 0, 0, 0]
+  - model-name: Cube
+    position: [0, 0, 0, 0, 0, 0]
+  - model-name: Sphere
+    position: [0, 100, 0, 0, 0, 0]
+    light-source:
+      specular: 1
+      diffuse: 2
+ambient-light: 0.7

@@ -16,7 +16,18 @@ SceneObject LoadSceneObject(const YAML::Node &node, const Models &models) {
   }
   Position position;
   node["position"] >> position;
-  return SceneObject(model->second, move(position));
+  const YAML::Node *light = node.FindValue("light-source");
+
+  SceneObject object(model->second, move(position));
+
+  if (light) {
+    std::shared_ptr<LightSource> source = make_shared<LightSource>();
+    (*light)["specular"] >> source->specular;
+    (*light)["diffuse"] >> source->diffuse;
+    object.set_light_source(source);
+  }
+
+  return object;
 }
 
 void operator <<(YAML::Emitter &emitter, const SceneObject &scene_object) {

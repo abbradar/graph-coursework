@@ -20,6 +20,10 @@ void SceneObject::set_position(const Position &position) {
   UpdatePositioned();
 }
 
+void SceneObject::set_light_source(const std::shared_ptr<LightSource> &light_source) {
+  light_source_ = light_source;
+}
+
 void SceneObject::UpdatePositioned() {
   AffineTransform rotate_transform = position_.GetRotateMatrixFrom();
   AffineTransform transform = position_.GetTranslateMatrixFrom() * rotate_transform;

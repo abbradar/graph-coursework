@@ -18,12 +18,14 @@ Model LoadModel(const YAML::Node &node, const XFile &templates,
   node["model-frame"] >> model_frame;
   std::string x_model;
   node["model"] >> x_model;
+  bool lighting;
+  node["lighting"] >> lighting;
   std::ifstream in(x_model);
   path curr_path = current_path();
   path new_path = absolute(path(x_model).parent_path());
   current_path(new_path);
   Model model = xparse::LoadModel(in, name, templates, root_frame, model_frame,
-                                  textures_path);
+                                  textures_path, lighting);
   in.close();
   current_path(curr_path);
   return model;

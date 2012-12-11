@@ -5,9 +5,12 @@
 #include "myfloat.h"
 
 struct LightSource {
-  Vector3 position;
   myfloat specular;
   myfloat diffuse;
+};
+
+struct FullLightSource : public LightSource {
+  Vector3 position;
 };
 
 #endif // GRAPH_LIGHTSOURCE_H_

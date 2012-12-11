@@ -69,6 +69,9 @@ struct Context {
   Camera camera;
   std::weak_ptr<TransformedObjectMap> transformed_objects;
   std::weak_ptr<TracedObject> traced_object;
+#ifndef NO_SHADING
+  std::weak_ptr<std::vector<FullLightSource>> light_sources;
+#endif
 
   Window *window;
 };

@@ -6,13 +6,11 @@
 #include <string>
 #include "sdlobj/color.h"
 #include "position.h"
-#include "lightsource.h"
 #include "sceneobject.h"
 
 class Scene {
  public:
   typedef std::list<std::shared_ptr<SceneObject>> SceneObjectList;
-  typedef std::vector<LightSource> LightSourceVector;
 
   Scene();
 
@@ -24,14 +22,6 @@ class Scene {
     return objects_;
   }
 
-  inline LightSourceVector &light_sources() {
-    return light_sources_;
-  }
-
-  inline const LightSourceVector &light_sources() const {
-    return light_sources_;
-  }
-
   inline myfloat ambient_light() const {
     return ambient_light_;
   }
@@ -40,7 +30,6 @@ class Scene {
 
  private:
   SceneObjectList objects_;
-  LightSourceVector light_sources_;
   myfloat ambient_light_;
 };
 
