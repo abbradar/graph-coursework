@@ -540,7 +540,7 @@ template <class Integral = myfloat> class UVTraversable : virtual public Travers
     inline HorizontalTraversable(Vector2 *, const ScreenLine<Integral> &la, const UVTraversable &a,
                                  const ScreenLine<Integral> &lb, const UVTraversable &b, const myfloat dx) :
 #ifndef AFFINE_TEXTURES
-      : ZTraversableHorizontal(la, a, lb, b, dx),
+      ZTraversableHorizontal(la, a, lb, b, dx),
 #endif
       uv_z_(a.uv_z())
     {
@@ -623,7 +623,7 @@ template <class Integral = myfloat> class UVTraversable : virtual public Travers
 
   inline void Advance() {
 #ifndef AFFINE_TEXTURES
-    ZTraversable::Advance();
+    ZTraversable<Integral>::Advance();
 #endif
     AdvanceUV();
   }
@@ -634,7 +634,7 @@ template <class Integral = myfloat> class UVTraversable : virtual public Travers
 
   inline void Advance(const Integral value) {
 #ifndef AFFINE_TEXTURES
-    ZTraversable::Advance(value);
+    ZTraversable<Integral>::Advance(value);
 #endif
     AdvanceUV(value);
   }
@@ -665,8 +665,12 @@ inline Vector3 PhongLight(const LightingSourceData *int_sources, const Material 
   for (size_t d = 0; d < (size_t)result.rows(); ++d) {
     result(d) = 0;
     for (size_t i = 0; i < sources.size(); ++i) {
-      result(d) += material.diffuse_color()(d) * int_sources[i].direction.dot(normal) * sources[i].diffuse;
-      result(d) += material.specular_color()(d) * int_sources[i].reflection.dot(viewer) * sources[i].specular;
+      myfloat diffuse_d = int_sources[i].direction.dot(normal);
+      if (diffuse_d > 0)
+        result(d) += material.diffuse_color()(d) * diffuse_d * sources[i].diffuse;
+      myfloat specular_d = int_sources[i].reflection.dot(viewer);
+      if (specular_d > 0)
+        result(d) += material.specular_color()(d) * pow(specular_d, material.shininess()) * sources[i].specular;
     }
   }
   return result;
@@ -1251,9 +1255,7 @@ void Rasterizer::PreRenderStep() {
   AffineTransform transform = system_transform * context()->camera.GetMatrixTo();
 #endif
 
-#if defined(PERSPECTIVE_NORMAL_CLIPPING)
-  static const Vector3 normal(0, 0, 1);
-#elif defined(DUMB_NORMAL_CLIPPING)
+#if defined(DUMB_NORMAL_CLIPPING)
   Vector3 normal = context()->camera.GetRotateMatrixFrom() * Position::kCameraDirection;
 #endif
 
@@ -1360,7 +1362,7 @@ void Rasterizer::PreRenderStep() {
       const int * const &indexes = p_i->points;
       Vector3 nnormal = Vector3(points[indexes[1]] - points[indexes[0]])
           .cross(Vector3(points[indexes[2]] - points[indexes[0]]));
-      bool good = (nnormal.dot(normal) <= 0) ^ (nnormal.dot(*n_i++) <= 0);
+      bool good = (nnormal.z() <= 0) ^ (nnormal.dot(*n_i++) <= 0);
       if (good) {
 #endif
         const int * const &indexes = p_i->points;

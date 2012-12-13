@@ -11,7 +11,7 @@
 #include "config.h"
 #include "context.h"
 
-class Rasterizer : public PreRenderWorker, RenderWorker, public ContextUser {
+class Rasterizer : public PreRenderWorker, public RenderWorker, public ContextUser {
  public:
   Rasterizer(const std::shared_ptr<Context> &context);
 

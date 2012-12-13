@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build")
 add_definitions(-std=c++11 -Wall -fstack-protector -fPIE -mtune=native -march=native -ffast-math)
 
 # Build type
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 # Platform specific
 include(CheckIncludeFiles)
@@ -58,19 +58,20 @@ else()
   set(BISON_ARGS " ")
 endif()
 
-BISON_TARGET(XParser src/xparse/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser.cc COMPILE_FLAGS ${BISON_ARGS})
-FLEX_TARGET(XLexer src/xparse/lexer.ll ${CMAKE_CURRENT_BINARY_DIR}/lexer.cc COMPILE_FLAGS ${FLEX_ARGS})
-ADD_FLEX_BISON_DEPENDENCY(XLexer XParser)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+BISON_TARGET(xparser src/xparse/parser.yy "${CMAKE_CURRENT_BINARY_DIR}/parser.cc" COMPILE_FLAGS ${BISON_ARGS})
+FLEX_TARGET(xlexer src/xparse/lexer.ll "${CMAKE_CURRENT_BINARY_DIR}/lexer.cc" COMPILE_FLAGS ${FLEX_ARGS})
+ADD_FLEX_BISON_DEPENDENCY(xlexer xparser)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${SDLOBJ_LIST} ${COMMON_LIST} ${XPARSE_LIST}
-  ${CMAKE_CURRENT_BINARY_DIR}/parser.cc ${CMAKE_CURRENT_BINARY_DIR}/lexer.cc)
+  "${CMAKE_CURRENT_BINARY_DIR}/parser.cc" "${CMAKE_CURRENT_BINARY_DIR}/lexer.cc")
 
-# add a target to generate API documentation with Doxygen
-find_package(Doxygen)
-if(DOXYGEN_FOUND)
-  configure_file(build/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-  add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                    COMMENT "Generating API documentation with Doxygen" VERBATIM)
-endif(DOXYGEN_FOUND)
+set(DOXYFILE_IN "build/Doxyfile.in")
+include(UseDoxygen)
+
+# Generate LaTeX documentation
+
+include(UseLATEX)
+
+ADD_LATEX_DOCUMENT("doc/statement.tex" DEFAULT_PDF MANGLE_TARGET_NAMES)
+ADD_LATEX_DOCUMENT("doc/summary.tex" DEFAULT_PDF MANGLE_TARGET_NAMES)
