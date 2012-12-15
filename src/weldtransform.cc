@@ -66,32 +66,48 @@ void WeldTransform::ProcessEnter() {
     np = Vector3(np.z(), -np.x(), -np.y());
     np = context()->camera.GetMatrixFrom() * np;
 
-    const Vector3 &onn = -new_lock->positioned_polygon_normals()[traced->triangle_index];
-    Vector3 nn = onn;
+    const Vector3 &onn = new_lock->positioned_polygon_normals()[traced->triangle_index];
+    Vector3 nn = -onn;
     Vector3 nnl = (new_lock->positioned_points()[
                    new_lock->model()->polygons()[traced->triangle_index].points[0]]
         - np).normalized();
 
+    Position coord_position;
+    coord_position.x = tp_.x();
+    coord_position.y = tp_.y();
+    coord_position.z = tp_.z();
+    coord_position.yaw = NormAngle(Vector2(tn_.x(), tn_.y()));
+    AffineTransform z_transform(RotateTransform(-coord_position.yaw, Vector3::UnitZ()));
+    tn_ = z_transform * tn_;
+    tnl_ = z_transform * tnl_;
+    coord_position.pitch = -NormAngle(Vector2(tn_.x(), tn_.z()));
+    AffineTransform y_transform(RotateTransform(-coord_position.pitch, Vector3::UnitY()));
+    tnl_ = y_transform * tnl_;
+    coord_position.roll = NormAngle(Vector2(tnl_.y(), tnl_.z()));
+
+    AffineTransform matrix = coord_position.GetRotateMatrixTo();
+    nn = matrix * nn;
+    nnl = matrix * nnl;
+
     Position new_position;
-    new_position.yaw = NormAngle(Vector2(nn.x(), nn.y()), Vector2(tn_.x(), tn_.y()));
-    AffineTransform z_transform(RotateTransform(-new_position.yaw, Vector3::UnitZ()));
-    AffineTransform r_z_transform(RotateTransform(new_position.yaw, Vector3::UnitZ()));
+    new_position.yaw = NormAngle(Vector2(nn.x(), nn.y()));
+    z_transform = RotateTransform(-new_position.yaw, Vector3::UnitZ());
     nn = z_transform * nn;
-    tn_ = r_z_transform * tn_;
     nnl = z_transform * nnl;
-    tnl_ = r_z_transform * tnl_;
-    new_position.pitch = -NormAngle(Vector2(nn.x(), nn.z()), Vector2(tn_.x(), tn_.z()));
-    AffineTransform y_transform(RotateTransform(-new_position.pitch, Vector3::UnitY()));
-    AffineTransform r_y_transform(RotateTransform(new_position.pitch, Vector3::UnitY()));
-    nn = y_transform * nn;
-    tn_ = r_y_transform * tn_;
+    new_position.pitch = -NormAngle(Vector2(nn.x(), nn.z()));
+    y_transform = RotateTransform(-new_position.pitch, Vector3::UnitY());
     nnl = y_transform * nnl;
-    tnl_ = r_y_transform * tnl_;
-    new_position.roll = NormAngle(Vector2(nnl.y(), nnl.z()), Vector2(tnl_.y(), tnl_.z()));
-    tp_ = new_position.GetMatrixFrom() * tp_;
-    new_position.x = np.x() - tp_.x();
-    new_position.y = np.y() - tp_.y();
-    new_position.z = np.z() - tp_.z();
+    new_position.roll = NormAngle(Vector2(nnl.y(), nnl.z()));
+
+    matrix = coord_position.GetMatrixFrom() * new_position.GetRotateMatrixFrom()
+        * coord_position.GetMatrixTo();
+
+    TransformToTranslate(matrix, new_position.x, new_position.y, new_position.z);
+    TransformToEuler(matrix, new_position.roll, new_position.pitch, new_position.yaw);
+
+    new_position.x += np.x() - tp_.x();
+    new_position.y += np.y() - tp_.y();
+    new_position.z += np.z() - tp_.z();
 
     lock->set_position(new_position);
     tn_ = onn;

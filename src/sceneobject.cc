@@ -33,13 +33,11 @@ void SceneObject::UpdatePositioned() {
     positioned_points_[i] = transform * model_->points()[i];
   }
 
-#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
   // polygon normals
   positioned_polygon_normals_.resize(model_->polygon_normals().size());
   for (size_t i = 0; i < positioned_polygon_normals_.size(); ++i) {
     positioned_polygon_normals_[i] = rotate_transform * model_->polygon_normals()[i];
   }
-#endif
 
 #if defined(GOURAUD_SHADING) || defined(PHONG_SHADING)
   // vertex normals

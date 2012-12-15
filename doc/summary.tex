@@ -668,7 +668,7 @@ LightData FillLightData(Vector3 point, Vector3 vertex_normal,
   $data.\vec{N} = v$;
   $data.\vec{V} = (c - p)/(|c - p|)$;
   
-  for ($\forall E \in sources$) {
+  for (E \in sources$) {
     LightSourceData sdata;
     $sdata.L_m = (E.P - p)/(|E.P - p|)$;
     $sdata.R_m =$ Reflection($sdata.L_m$, $v$);

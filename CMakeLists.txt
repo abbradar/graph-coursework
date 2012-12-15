@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build")
 add_definitions(-std=c++11 -Wall -fstack-protector -fPIE -mtune=native -march=native -ffast-math)
 
 # Build type
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 # Platform specific
 include(CheckIncludeFiles)
@@ -66,12 +66,12 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${SDLOBJ_LIST} ${COMMON_LIST} ${XPARSE_LIST}
   "${CMAKE_CURRENT_BINARY_DIR}/parser.cc" "${CMAKE_CURRENT_BINARY_DIR}/lexer.cc")
 
-set(DOXYFILE_IN "build/Doxyfile.in")
-include(UseDoxygen)
+#set(DOXYFILE_IN "build/Doxyfile.in")
+#include(UseDoxygen)
 
 # Generate LaTeX documentation
 
-include(UseLATEX)
+#include(UseLATEX)
 
-ADD_LATEX_DOCUMENT("doc/statement.tex" DEFAULT_PDF MANGLE_TARGET_NAMES)
-ADD_LATEX_DOCUMENT("doc/summary.tex" DEFAULT_PDF MANGLE_TARGET_NAMES)
+#ADD_LATEX_DOCUMENT("doc/statement.tex" DEFAULT_PDF MANGLE_TARGET_NAMES)
+#ADD_LATEX_DOCUMENT("doc/summary.tex" DEFAULT_PDF MANGLE_TARGET_NAMES)

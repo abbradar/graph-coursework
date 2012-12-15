@@ -26,11 +26,9 @@ class SceneObject {
     return positioned_points_;
   }
 
-#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
   inline const Vector3Vector &positioned_polygon_normals() const {
     return positioned_polygon_normals_;
   }
-#endif
 
 #if defined(GOURAUD_SHADING) || defined(PHONG_SHADING)
   inline const Vector3Vector &positioned_vertex_normals() const {
@@ -61,9 +59,7 @@ class SceneObject {
   Vector3Vector positioned_points_;
   Position position_;
 
-#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
   Vector3Vector positioned_polygon_normals_;
-#endif
 
 #if defined(GOURAUD_SHADING) || defined(PHONG_SHADING)
   Vector3Vector positioned_vertex_normals_;
