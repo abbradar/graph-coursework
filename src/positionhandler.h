@@ -18,7 +18,7 @@ class PositionHandler : public EventWorker, public PreRenderWorker, public Conte
 
   /** Speed of movement */
   inline myfloat move_speed() {
-    return move_step_;
+    return move_speed_;
   }
 
   void set_move_speed(const myfloat move_speed);
@@ -66,7 +66,6 @@ class PositionHandler : public EventWorker, public PreRenderWorker, public Conte
   myfloat move_speed_;
   myfloat rotation_speed_;
   myfloat keys_rotation_step_;
-  myfloat move_step_;
   myfloat rotation_k_;
 
   int action_;

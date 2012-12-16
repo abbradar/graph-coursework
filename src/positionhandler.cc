@@ -11,13 +11,11 @@ using namespace std;
 PositionHandler::PositionHandler(const std::shared_ptr<Context> &context)
   : ContextUser(context), move_speed_(1), rotation_speed_(1),
     keys_rotation_step_(1), action_(kNone) {
-  move_step_ = move_speed_ / context->window->fps();
   rotation_k_ = M_PI_2 / (context->window->height() * rotation_speed_);
 }
 
 void PositionHandler::set_move_speed(const myfloat move_speed) {
   move_speed_ = move_speed;
-  move_step_ = move_speed_ / context()->window->fps();
 }
 
 void PositionHandler::set_rotation_speed(const myfloat rotation_speed) {
@@ -143,7 +141,7 @@ bool PositionHandler::ProcessResize(const SDL_ResizeEvent &event) {
 }
 
 void PositionHandler::EventStep() {
-  move_step_ = move_speed_ / context()->window->fps();
+  myfloat move_step_ = move_speed_ / context()->window->measured_fps();
   char forward_back = move_state_.forward + move_state_.back;
   char left_right = move_state_.left + move_state_.right;
   char up_down = move_state_.up + move_state_.down;

@@ -1267,15 +1267,15 @@ void Rasterizer::PreRenderStep() {
 
 #ifndef NO_SHADING
   std::vector<FullLightSource> &light_sources = *light_sources_;
-  light_sources.resize(context()->scene.objects().size());
+  light_sources.clear();
 
-  size_t i = 0;
   for (auto &object : context()->scene.objects()) {
     if (object->light_source()) {
-      FullLightSource &source = light_sources[i];
+      FullLightSource source;
       source.position = object->position().GetVector3();
       source.diffuse = object->light_source()->diffuse;
       source.specular = object->light_source()->specular;
+      light_sources.push_back(std::move(source));
     }
   }
 #endif
