@@ -35,8 +35,6 @@ void Model::set_uv_coords(std::shared_ptr<Vector2Vector> &uv_coords) {
   uv_coords_ = uv_coords;
 }
 
-#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
-
 void Model::ComputePolygonNormals() {
   polygon_normals_.clear();
   polygon_normals_.reserve(polygons_.size());
@@ -52,5 +50,3 @@ void Model::ComputePolygonNormals() {
     polygon_normals_.push_back(result.normalized());
   }
 }
-
-#endif

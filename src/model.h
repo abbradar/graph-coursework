@@ -44,11 +44,9 @@ class Model {
     return vertex_normals_;
   }
 
-#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
   inline const Vector3Vector &polygon_normals() const {
     return polygon_normals_;
   }
-#endif
 
   inline MaterialVector &materials() {
     return materials_;
@@ -68,11 +66,9 @@ class Model {
   MaterialVector materials_;
   std::shared_ptr<Vector2Vector> uv_coords_;
 
-#if !defined(NO_NORMAL_FACE_CLIPPING) || defined(FLAT_SHADING)
   Vector3Vector polygon_normals_;
 
   void ComputePolygonNormals();
-#endif
 };
 
 #endif // GRAPH_MODEL_H_

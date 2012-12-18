@@ -34,6 +34,14 @@ void operator <<(YAML::Emitter &emitter, const SceneObject &scene_object) {
   emitter << YAML::BeginMap;
   emitter << YAML::Key << "model-name" << YAML::Value << scene_object.model()->name();
   emitter << YAML::Key << "position"  << YAML::Value << scene_object.position();
+  if (scene_object.light_source()) {
+    emitter << YAML::Key << "light-source" << YAML::Value << YAML::BeginMap;
+    emitter << YAML::Key << "specular" << YAML::Value <<
+               scene_object.light_source()->specular;
+    emitter << YAML::Key << "diffuse" << YAML::Value <<
+               scene_object.light_source()->diffuse;
+    emitter << YAML::EndMap;
+  }
   emitter << YAML::EndMap;
 }
 

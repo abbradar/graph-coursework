@@ -8,8 +8,8 @@ window:
     width: 640
     height: 480
     bpp: 32
-  fps: 60
-  show-fps-rate: 10
+  fps: 1000
+  show-fps-rate: 500
   show-fps: true
   interface:
     move-speed: 120

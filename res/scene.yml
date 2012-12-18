@@ -1,10 +1,10 @@
 objects:
   - model-name: Cone
-    position: [-500, 0, 0, 0, 0, 0]
+    position: [209.426, 171.316, 6.06375, -0.00266706, 0.0445494, 3.32414]
   - model-name: Cube
-    position: [0, 0, 0, 0, 0, 0]
+    position: [192.284, 5.19744, -6.07013, -8.15072e-05, -0.00637631, 0.0382583]
   - model-name: Sphere
-    position: [0, 100, 0, 0, 0, 0]
+    position: [99.3502, 110.172, -4.83988, 0.00129985, -0.0126871, -7.62939e-06]
     light-source:
       specular: 1
       diffuse: 2

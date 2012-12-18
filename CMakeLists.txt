@@ -4,10 +4,10 @@ cmake_minimum_required(VERSION 2.8)
 # Additional modules dir
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build")
 
-add_definitions(-std=c++11 -Wall -fstack-protector -fPIE -mtune=native -march=native -ffast-math)
+add_definitions(-std=c++11 -Wall -fstack-protector -funsafe-loop-optimizations -fPIE -mtune=native -march=native -ffast-math)
 
 # Build type
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 # Platform specific
 include(CheckIncludeFiles)
@@ -17,10 +17,10 @@ if(HAS_UNISTD_H)
 endif()
 
 # Debug levels
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
+if(CMAKE_BUILD_TYPE STREQUAL Release)
   add_definitions(-DDEBUG_LEVEL=3 -O0)
 else()
-  add_definitions(-DDEBUG_LEVEL=1 -O3 -fomit-frame-pointer)
+  add_definitions(-DDEBUG_LEVEL=1 -O3 -funswitch-loops -fomit-frame-pointer)
 endif()
 
 # Various packages

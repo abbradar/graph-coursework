@@ -2,6 +2,14 @@ syntax: regexp
 
 \.aux$
 \.log$
+\.fdb_latexmk$
+\.fls$
+\.snm$
+\.toc$
+\.blg$
+\.run\.xml$
+\.bbl$
+\.nav$
 \.synctex\.gz$
 \.pdf$
 \.out$
