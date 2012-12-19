@@ -17,6 +17,7 @@ typedef std::map<size_t, std::shared_ptr<Material>> MaterialOverlayMap;
 #ifndef NO_LIGHTING
 
 struct LightingSourceData {
+  const LightSource *light_source;
   Vector3 direction;
   Vector3 reflection;
 };
@@ -28,6 +29,7 @@ struct LightingSourceData {
 struct LightingData {
   Vector3 viewer;
   SizedRuntimeArray<LightingSourceData> sources_data;
+  size_t sources_size;
 };
 
 #endif

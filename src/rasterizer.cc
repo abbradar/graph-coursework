@@ -311,7 +311,7 @@ template <class Integral = myfloat> class LightDataTraversable : virtual public 
   inline LightDataTraversable() = default;
 
   inline LightDataTraversable(const ScreenLine<Integral> &line, const myfloat dy, const DataType &a, const DataType &b) :
-      normal_(a.normal), viewer_(a.viewer), sources_size_(a.sources_data.size())
+      normal_(a.normal), viewer_(a.viewer), sources_size_(a.sources_size)
 #ifdef LIGHTSOURCES_UNSAFE_MEMCPY
       , sources_(sources_size_)
 #endif
@@ -691,19 +691,20 @@ template <class Integral = myfloat> class UVTraversable : virtual public Travers
 
 #ifndef NO_SHADING
 
-inline Vector3 PhongLight(const LightingSourceData *int_sources, const Material &material,
-                          const Vector3 &normal, const Vector3 &viewer,
-                          const std::vector<FullLightSource> &sources) {
+inline Vector3 PhongLight(const LightingSourceData *int_sources, const size_t size,
+                          const Material &material, const Vector3 &normal,
+                          const Vector3 &viewer) {
   Vector3 result;
   for (size_t d = 0; d < (size_t)result.rows(); ++d) {
     result(d) = 0;
-    for (size_t i = 0; i < sources.size(); ++i) {
+    for (size_t i = 0; i < size; ++i) {
       myfloat diffuse_d = int_sources[i].direction.dot(normal);
       if (diffuse_d > 0)
-        result(d) += material.diffuse_color()(d) * diffuse_d * sources[i].diffuse;
+        result(d) += material.diffuse_color()(d) * diffuse_d * int_sources[i].light_source->diffuse;
       myfloat specular_d = int_sources[i].reflection.dot(viewer);
       if (specular_d > 0)
-        result(d) += material.specular_color()(d) * pow(specular_d, material.shininess()) * sources[i].specular;
+        result(d) += material.specular_color()(d) * pow(specular_d, material.shininess()) *
+            int_sources[i].light_source->specular;
     }
   }
   return result;
@@ -810,8 +811,8 @@ template <class Integral = unsigned> class RasterizerLightingTraversable :
   struct TraversableContext : virtual public RasterizerTraversable<Integral>::TraversableContext {
    public:
     Vector3 ambient;
-    const vector<FullLightSource> *light_sources;
 #ifdef FLAT_SHADING
+    const vector<FullLightSource> *light_sources;
     Vector3 light;
 #endif
   };
@@ -856,8 +857,8 @@ template <class Integral = unsigned> class RasterizerLightingTraversable :
       Vector3 result = (context->ambient + this->light()) * 0xFF;
 #else
       Vector3 result = (context->ambient +
-          PhongLight(this->sources().data(), *context->material, this->normal(),
-                     this->viewer(), *context->light_sources)) * 0xFF;
+          PhongLight(this->sources().data(), this->sources_size(), *context->material, this->normal(),
+                     this->viewer())) * 0xFF;
 #endif
       Uint32 pixel = context->surface->ColorToPixel(VectorToColor(result));
       this->painter().SetPixel(pixel);
@@ -1069,8 +1070,7 @@ template <class Integral = unsigned> struct RasterizerTexturedLightingTraversabl
       ComponentwiseInPlace(result, context->light);
 #else
       ComponentwiseInPlace(result, context->ambient + PhongLight(this->sources().data(),
-                  *context->material, this->normal(), this->viewer(),
-                  *context->light_sources));
+                  this->sources_size(), *context->material, this->normal(), this->viewer()));
 #endif
       pixel = context->surface->ColorToPixel(VectorToColor(result));
       this->painter().SetPixel(pixel);
@@ -1164,9 +1164,9 @@ template <bool kTextures, bool kLighting> void DrawTriangle(const size_t tri_i,
       data[i].viewer = cacheobject.lighting_data[pt].viewer;
       data[i].sources_data = cacheobject.lighting_data[pt].sources_data;
 #elif defined(GOURAUD_SHADING)
-      data[i].light = PhongLight(cacheobject.lighting_data[pt].sources_data.data(), *context->material,
-                                 object.positioned_vertex_normals()[pt], cacheobject.lighting_data[pt].viewer,
-                                 *context->light_sources);
+      data[i].light = PhongLight(cacheobject.lighting_data[pt].sources_data.data(),
+                                 cacheobject.lighting_data[pt].sources_size, *context->material,
+                                 object.positioned_vertex_normals()[pt], cacheobject.lighting_data[pt].viewer);
 #endif
 #endif
       if (kTextures) {
@@ -1191,18 +1191,18 @@ template <bool kTextures, bool kLighting> void DrawTriangle(const size_t tri_i,
         TriangleTraverser<LightTraversable<myfloat>> traverser(points_buf[0], data[0].light,
                                                         points_buf[1], data[1].light,
                                                         points_buf[2], data[2].light);
-    #endif
+#endif
         for (size_t i = 0; i < triangles_size; ++i) {
           IndexedTriangle &pol = triangles_buf[i];
           if (pol.points[0] == -1) continue;
           for (size_t j = 0; j < IndexedTriangle::kPointsSize; ++j) {
             size_t pt = pol.points[j];
             if (!points_needed[pt]) {
-    #if defined(PHONG_SHADING)
+#if defined(PHONG_SHADING)
               Assert(traverser.Point<true>(&data[pt], points_buf[pt].x(), points_buf[pt].y()));
-    #elif defined(GOURAUD_SHADING)
+#elif defined(GOURAUD_SHADING)
               Assert(traverser.Point<true>(&data[pt].light, points_buf[pt].x(), points_buf[pt].y()));
-    #endif
+#endif
               points_needed[pt] = true;
             }
           }
@@ -1270,12 +1270,17 @@ template <bool kTextures, bool kLighting> void DrawTriangle(const size_t tri_i,
 
 inline void FillLightingData(LightingData &lighting, const Vector3 &src, const Vector3 &camera,
                       const vector<FullLightSource> &light_sources,
-                      const Vector3 &normal) {
+                      const Vector3 &vnormal, const Vector3 &pnormal) {
   lighting.viewer = (camera - src).normalized();
-  for (size_t i = 0; i < light_sources.size(); ++i) {
-    lighting.sources_data[i].direction = (light_sources[i].position - src).normalized();
-    lighting.sources_data[i].reflection = Reflection(lighting.sources_data[i].direction,
-                                                     normal);
+  lighting.sources_size = 0;
+  for (const auto &i : light_sources) {
+    LightingSourceData &data = lighting.sources_data[lighting.sources_size];
+    data.direction = (i.position - src).normalized();
+    if (data.direction.dot(pnormal) > 0) {
+      data.reflection = Reflection(data.direction, vnormal);
+      data.light_source = &i;
+      ++lighting.sources_size;
+    }
   }
 }
 
@@ -1364,7 +1369,9 @@ void Rasterizer::PreRenderStep() {
     std::vector<size_t> &triangle_indexes = hit->second->triangle_indexes;
     triangle_indexes.clear();
     triangle_indexes.reserve(model->polygons().size() / 2);
+#endif
 
+#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING) || !defined(NO_NORMAL_FACE_CLIPPING)
     const Vector3Vector &pos_normals = object->positioned_polygon_normals();
 #endif
 
@@ -1380,9 +1387,9 @@ void Rasterizer::PreRenderStep() {
 #if defined(NO_NORMAL_FACE_CLIPPING) || defined(PERSPECTIVE_NORMAL_CLIPPING)
     for (size_t i = 0; i < srcpoints_s; ++i) {
       points[i] = context()->camera.PerspectiveTransform(transform * srcpoints[i]);
-#if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
+#if (defined(PHONG_SHADING) || defined(GOURAUD_SHADING)) && !defined(PERSPECTIVE_NORMAL_CLIPPING)
       FillLightingData(lighting_data[i], points[i], camera, light_sources,
-                       srcnormals[i]);
+                       srcnormals[i], pos_normals[index]);
 #endif
     }
 #endif
@@ -1391,19 +1398,27 @@ void Rasterizer::PreRenderStep() {
 
     auto p_i = model->polygons().begin();
     size_t i = 0;
-#if defined(DUMB_NORMAL_CLIPPING)
-    auto n_i = pos_normals.begin();
-#elif defined(PERSPECTIVE_NORMAL_CLIPPING)
-    auto n_i = polygon_normals.begin();
+#if defined(DUMB_NORMAL_CLIPPING) || defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
+    auto pn_i = pos_normals.begin();
 #endif
-    for (auto pe = model->polygons().end(); p_i != pe; ++p_i, ++i) {
+#if defined(PERSPECTIVE_NORMAL_CLIPPING)
+    auto nn_i = polygon_normals.begin();
+#endif
+    for (auto pe = model->polygons().end(); p_i != pe; ++p_i, ++i
+#if defined(DUMB_NORMAL_CLIPPING) || defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
+         , ++pn_i
+#endif
+#if defined(PERSPECTIVE_NORMAL_CLIPPING)
+         , ++nn_i
+#endif
+         ) {
 #if defined(DUMB_NORMAL_CLIPPING)
-      if (normal.dot(*n_i++) <= 0) {
+      if (normal.dot(*pn_i) <= 0) {
 #elif defined(PERSPECTIVE_NORMAL_CLIPPING)
       const int * const &indexes = p_i->points;
       Vector3 nnormal = Vector3(points[indexes[1]] - points[indexes[0]])
           .cross(Vector3(points[indexes[2]] - points[indexes[0]]));
-      bool good = (nnormal.z() <= 0) ^ (nnormal.dot(*n_i++) <= 0);
+      bool good = (nnormal.z() <= 0) ^ (nnormal.dot(*nn_i) <= 0);
       if (good) {
 #endif
         const int * const &indexes = p_i->points;
@@ -1416,7 +1431,7 @@ void Rasterizer::PreRenderStep() {
 #endif
 #if defined(PHONG_SHADING) || defined(GOURAUD_SHADING)
             FillLightingData(lighting_data[index], srcpoints[index], camera, light_sources,
-                             srcnormals[index]);
+                             srcnormals[index], *pn_i);
 #endif
             point_flags[index] = true;
           }
@@ -1486,15 +1501,20 @@ template <bool kTexture, bool kLighting>
   if (kLighting) {
     // getting camera vector each triangle
     Vector3 viewer = (ccontext.camera.GetVector3() - object.positioned_centers()[t]).normalized();
-    const Vector3 &vertex_normal = object.positioned_polygon_normals()[t];
-    RuntimeArray<LightingSourceData> sources(tcontext.light_sources->size());
-    for (size_t i = 0; i < tcontext.light_sources->size(); ++i) {
-      sources[i].direction = ((*tcontext.light_sources)[i].position - object.positioned_centers()[t]).normalized();
-      sources[i].reflection = Reflection(sources[i].direction,
-                                         vertex_normal);
+    const Vector3 &normal = object.positioned_polygon_normals()[t];
+    LightingSourceData sources[tcontext.light_sources->size()];
+    size_t sources_size = 0;
+    for (const auto &i : *tcontext.light_sources) {
+      sources[sources_size].direction = i.position - object.positioned_centers()[t]).normalized();
+      if (sources[sources_size].direction.dot(normal) > 0) {
+        sources[sources_size].reflection = Reflection(sources[sources_size].direction,
+                                           normal);
+        sources[sources_size].light_source = &i;
+        ++sources_size;
+      }
     }
-    tcontext.light = tcontext.ambient + PhongLight(sources.data(), material,
-                          vertex_normal, viewer, *tcontext.light_sources);
+    tcontext.light = tcontext.ambient + PhongLight(sources, sources_size, material,
+                          normal, viewer);
     if (!kTexture) {
       tcontext.light *= 0xFF;
       tcontext.pixel = surface.ColorToPixel(VectorToColor(tcontext.light));
@@ -1551,7 +1571,7 @@ void Rasterizer::Paint(sdlobj::Surface &surface) {
   tcontext.surface = &surface;
   tcontext.z_buffer = &z_buffer_;
   tcontext.surface_painter = surface_painter;
-#if defined(GOURAUD_SHADING) || defined(PHONG_SHADING)
+#ifdef FLAT_SHADING
   tcontext.light_sources = light_sources_.get();
 #endif
 
